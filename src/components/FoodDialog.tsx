@@ -123,7 +123,7 @@ const FoodDialog = ({
                   variant="contained"
                   color="primary"
                   onClick={handleAddFood}
-                  sx={{ mt: 2, mb: 2 }}
+                  sx={{ mt: 3, mb: 1 }}
                 >
                   Add New Visit
                 </Button>
@@ -217,7 +217,7 @@ const FoodDialog = ({
                           color: "primary.main",
                         }}
                       >
-                        Visit #{index + 1}
+                        Visit {index + 1}
                       </Typography>
                       {Object.entries(visit).map(([foodName, quantity]) => (
                         <Typography

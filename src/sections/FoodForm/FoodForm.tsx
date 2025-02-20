@@ -9,6 +9,7 @@ import {
   ListItem,
   ListItemText,
   CircularProgress,
+  IconButton,
 } from "@mui/material";
 import { Icon } from "@iconify/react";
 import debounce from "lodash.debounce";
@@ -83,6 +84,22 @@ const FoodForm = () => {
           "": 1, // Add new empty food item with quantity 1
         },
       ],
+    });
+  };
+
+  // Add a handler for deleting food items
+  const handleDeleteFood = (indexToDelete: number) => {
+    const currentFood = { ...formData.food[0] };
+    const foodKeys = Object.keys(currentFood);
+
+    // Don't delete if it's the last item
+    if (foodKeys.length <= 1) return;
+
+    delete currentFood[foodKeys[indexToDelete]];
+
+    setFormData({
+      ...formData,
+      food: [currentFood],
     });
   };
 
@@ -229,7 +246,10 @@ const FoodForm = () => {
               What are you craving?
             </Typography>
             {Object.keys(formData.food[0]).map((foodKey, index) => (
-              <div key={index} style={{ display: "flex", gap: "10px" }}>
+              <div
+                key={index}
+                style={{ display: "flex", gap: "10px", alignItems: "center" }}
+              >
                 <TextField
                   variant="outlined"
                   label="Food Name"
@@ -244,9 +264,16 @@ const FoodForm = () => {
                   type="number"
                   value={formData.food[0][foodKey]}
                   onChange={(e) => handleFoodChange(e, index, "quantity")}
-                  fullWidth
+                  sx={{ width: "150px" }}
                   required
                 />
+                <IconButton
+                  onClick={() => handleDeleteFood(index)}
+                  color="error"
+                  disabled={Object.keys(formData.food[0]).length <= 1}
+                >
+                  <Icon icon="mdi:delete" />
+                </IconButton>
               </div>
             ))}
             <Button
