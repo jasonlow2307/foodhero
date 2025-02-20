@@ -67,7 +67,7 @@ const FoodForm = () => {
       });
       const fuzzyResults = fuse.search(location).map((result) => result.item);
 
-      setSearchResults(fuzzyResults);
+      setSearchResults(fuzzyResults as Location[]);
       console.log(fuzzyResults);
     } catch (error) {
       console.error("Error fetching location data:", error);
@@ -93,9 +93,13 @@ const FoodForm = () => {
 
   const handleLocationSelect = (location: any) => {
     const filteredLocation = filterLocationAttributes(location);
+    console.log(location.display_name);
+    const displayName = location.display_name.includes(",")
+      ? location.display_name.split(",")[0]
+      : location.display_name.location;
     setFormData({
       ...formData,
-      location: filteredLocation.display_name,
+      location: displayName,
       selectedLocation: filteredLocation,
     });
     setSearchResults([]);
