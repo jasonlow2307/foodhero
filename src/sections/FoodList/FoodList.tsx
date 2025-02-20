@@ -46,7 +46,7 @@ const FoodList = () => {
       }}
     >
       <Container maxWidth="lg" style={{ marginTop: "40px" }}>
-        <Typography variant="h4" gutterBottom>
+        <Typography variant="h4" gutterBottom mb={3}>
           Food List
         </Typography>
         {foodsLoading ? (
@@ -56,12 +56,15 @@ const FoodList = () => {
             {foods.map((food) => (
               <Grid item xs={12} sm={6} md={4} lg={3} key={food.id}>
                 <Card
-                  className="food-card"
-                  style={{
+                  sx={{
                     borderRadius: "15px",
                     textAlign: "center",
                     padding: "20px",
                     transition: "transform 0.3s, box-shadow 0.3s",
+                    "&:hover": {
+                      transform: "scale(1.05)",
+                      boxShadow: "0 4px 20px rgba(0, 0, 0, 0.2)",
+                    },
                   }}
                 >
                   {images[food.id] && (
@@ -73,11 +76,9 @@ const FoodList = () => {
                     />
                   )}
                   <CardContent>
-                    <Typography variant="h6">{food.name}</Typography>
-                    <Typography color="textSecondary">
-                      {food.location}
-                    </Typography>
-                    <Typography variant="body2">{food.food}</Typography>
+                    <Typography variant="h6">{food.location}</Typography>
+                    <Typography color="textSecondary">{food.food}</Typography>
+                    <Typography variant="body2">{food.name}</Typography>
                   </CardContent>
                 </Card>
               </Grid>
