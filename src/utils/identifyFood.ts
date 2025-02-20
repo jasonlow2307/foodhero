@@ -1,16 +1,21 @@
 export function identifyFood(query: string) {
   const foodMap = {
     // Fast Food Chains
+    "McDonald": "Beef burger",
+    "McDonalds": "Beef burger",
     "McDonald's": "Beef burger",
     "KFC": "Fried chicken",
     "Pizza Hut": "Cheese pizza",
+    "Domino": "Pepperoni pizza",
     "Domino's": "Pepperoni pizza",
     "Subway": "Chicken teriyaki sandwich",
     "Texas Chicken": "Spicy fried chicken",
     "Marrybrown": "Crispy chicken rice",
     "Burger King": "Whopper beef burger",
     "A&W": "Root beer float",
+    "Nandos": "Peri-peri grilled chicken",
     "Nando's": "Peri-peri grilled chicken",
+    "TGIF": "Jack Daniel's glazed ribs",
     "TGI Fridays": "Jack Daniel's glazed ribs",
     "Chili's": "Fajitas",
     "Seoul Garden": "Korean BBQ & hotpot",

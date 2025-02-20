@@ -21,6 +21,7 @@ import {
   getGoogleMapsLink,
   getWazeLink,
 } from "../../utils/mapUtils";
+import { getTimeAgo } from "../../utils/timeUtil";
 
 const LocationList = () => {
   const { data: locations, loading: locationLoading } =
@@ -136,15 +137,7 @@ const LocationList = () => {
                     </Typography>
                     <Typography variant="body2">{food.name}</Typography>
                     <Typography variant="body2">
-                      {new Date(
-                        food.visits[food.visits.length - 1].date.seconds * 1000
-                      ).toLocaleDateString("en-US", {
-                        year: "numeric",
-                        month: "long",
-                        day: "numeric",
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })}
+                      {getTimeAgo(food.visits[food.visits.length - 1].date)}
                     </Typography>
                   </CardContent>
                 </Card>
