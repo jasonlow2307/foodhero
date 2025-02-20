@@ -7,6 +7,11 @@ import {
   Typography,
   CircularProgress,
   CardMedia,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Button,
 } from "@mui/material";
 import useFirestoreCollection from "../../firebase/useFirestoreCollection";
 import { useUnsplash } from "../../utils/useUnsplash";
@@ -17,6 +22,8 @@ const FoodList = () => {
     useFirestoreCollection("foods");
   const [images, setImages] = useState<{ [key: string]: string | null }>({});
   const { fetchUnsplashImage } = useUnsplash();
+  const [selectedFood, setSelectedFood] = useState<any>(null);
+  const [open, setOpen] = useState(false);
 
   useEffect(() => {
     const fetchImages = async () => {
@@ -35,6 +42,35 @@ const FoodList = () => {
       fetchImages();
     }
   }, [foods]);
+
+  const handleClickOpen = (food: any) => {
+    console.log(food.selectedLocation.boundingBox);
+    setSelectedFood(food);
+    setOpen(true);
+  };
+
+  const handleClose = () => {
+    setOpen(false);
+    setSelectedFood(null);
+  };
+
+  const getBoundingBox = (boundingBox: number[]) => {
+    const [minLat, maxLat, minLon, maxLon] = boundingBox;
+    return `${minLon},${minLat},${maxLon},${maxLat}`;
+  };
+
+  const getMapCenter = (boundingBox: number[]) => {
+    const [minLat, maxLat, minLon, maxLon] = boundingBox.map(Number);
+    const centerLat =
+      Number.isFinite(minLat) && Number.isFinite(maxLat)
+        ? (minLat + maxLat) / 2
+        : 0;
+    const centerLon =
+      Number.isFinite(minLon) && Number.isFinite(maxLon)
+        ? (minLon + maxLon) / 2
+        : 0;
+    return `${centerLat},${centerLon}`;
+  };
 
   return (
     <div
@@ -65,7 +101,9 @@ const FoodList = () => {
                       transform: "scale(1.05)",
                       boxShadow: "0 4px 20px rgba(0, 0, 0, 0.2)",
                     },
+                    cursor: "pointer",
                   }}
+                  onClick={() => handleClickOpen(food)}
                 >
                   {images[food.id] && (
                     <CardMedia
@@ -86,6 +124,53 @@ const FoodList = () => {
           </Grid>
         )}
       </Container>
+
+      <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
+        <DialogTitle>{selectedFood?.location}</DialogTitle>
+        <DialogContent sx={{ textAlign: "center" }}>
+          {selectedFood && (
+            <>
+              {images[selectedFood.id] && (
+                <img
+                  src={images[selectedFood.id] || undefined}
+                  alt={selectedFood.location}
+                  style={{
+                    maxWidth: "80%",
+                    maxHeight: "300px",
+                    borderRadius: "15px",
+                    margin: "0 auto",
+                    display: "block",
+                    marginBottom: "20px",
+                  }}
+                />
+              )}
+              <Typography variant="h6" gutterBottom>
+                {selectedFood.location}
+              </Typography>
+              <Typography variant="body2">{selectedFood.name}</Typography>
+              <div style={{ height: "300px", marginTop: "20px" }}>
+                <iframe
+                  width="100%"
+                  height="100%"
+                  frameBorder="0"
+                  scrolling="no"
+                  src={`https://www.openstreetmap.org/export/embed.html?bbox=${getBoundingBox(
+                    selectedFood.selectedLocation.boundingBox
+                  )}&layer=mapnik&marker=${getMapCenter(
+                    selectedFood.selectedLocation.boundingBox
+                  )}`}
+                  style={{ borderRadius: "10px" }}
+                ></iframe>
+              </div>
+            </>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleClose} color="primary">
+            Close
+          </Button>
+        </DialogActions>
+      </Dialog>
     </div>
   );
 };
