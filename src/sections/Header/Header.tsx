@@ -28,7 +28,7 @@ const Header: React.FC<HeaderProps> = ({ setPage }) => {
           <a href="#" className="nav-link" onClick={() => setPage("list")}>
             {" "}
             {/* Use the CSS class */}
-            List of Foods
+            List of Locations
           </a>
         </nav>
       </div>

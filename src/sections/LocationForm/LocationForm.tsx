@@ -16,24 +16,11 @@ import debounce from "lodash.debounce";
 import Fuse from "fuse.js";
 import useFirestoreWrite from "../../firebase/useFirestoreWrite";
 import { useSnackbar } from "notistack";
-import { Timestamp } from "firebase/firestore";
+import { Location, LocationFormProp } from "../../utils/models";
 
-interface Location {
-  place_id: number;
-  display_name: string;
-  boundingBox: number[];
-  lon: number;
-  lat: number;
-}
-
-interface Visit {
-  food: { [key: string]: number };
-  date: Date;
-}
-
-const FoodForm = () => {
+const LocationForm = () => {
   const { enqueueSnackbar } = useSnackbar();
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<LocationFormProp>({
     name: "",
     location: "",
     visits: [
@@ -41,13 +28,14 @@ const FoodForm = () => {
         food: { "": 1 },
         date: new Date(),
       },
-    ] as Visit[],
-    selectedLocation: null as Location | null,
+    ],
+    selectedLocation: null,
   });
   const [searchResults, setSearchResults] = useState<Location[]>([]);
   const [loading, setLoading] = useState(false);
   const { writeData } = useFirestoreWrite();
 
+  // For handling changes in form fields
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
@@ -64,7 +52,7 @@ const FoodForm = () => {
     field: "name" | "quantity"
   ) => {
     const { value } = e.target;
-    const updatedFood = { ...formData.visits[0].food };
+    const updatedFood = { ...formData?.visits[0].food };
     const foodKeys = Object.keys(updatedFood);
     const foodKey = foodKeys[index];
 
@@ -85,7 +73,7 @@ const FoodForm = () => {
       visits: [
         {
           food: updatedFood,
-          date: formData.visits[0].date,
+          date: formData?.visits[0].date,
         },
       ],
     });
@@ -93,7 +81,7 @@ const FoodForm = () => {
 
   // Update the handleAddFood function to handle empty keys
   const handleAddFood = () => {
-    const currentVisit = formData.visits[0];
+    const currentVisit = formData?.visits[0];
     setFormData({
       ...formData,
       visits: [
@@ -110,7 +98,7 @@ const FoodForm = () => {
 
   // Add a handler for deleting food items
   const handleDeleteFood = (indexToDelete: number) => {
-    const currentFood = { ...formData.visits[0].food };
+    const currentFood = { ...formData?.visits[0].food };
     const foodKeys = Object.keys(currentFood);
 
     if (foodKeys.length <= 1) return;
@@ -122,7 +110,7 @@ const FoodForm = () => {
       visits: [
         {
           food: currentFood,
-          date: formData.visits[0].date,
+          date: formData?.visits[0].date,
         },
       ],
     });
@@ -131,8 +119,8 @@ const FoodForm = () => {
   const handleSubmit = async (e: React.ChangeEvent<HTMLFormElement>) => {
     e.preventDefault();
     try {
-      await writeData("foods", formData);
-      enqueueSnackbar("Food added successfully! 🎉", {
+      await writeData("locations", formData);
+      enqueueSnackbar("Location added successfully! 🎉", {
         variant: "success",
         autoHideDuration: 3000,
       });
@@ -245,7 +233,7 @@ const FoodForm = () => {
               variant="outlined"
               label="Your Name"
               name="name"
-              value={formData.name}
+              value={formData?.name}
               onChange={handleChange}
               fullWidth
               required
@@ -254,7 +242,7 @@ const FoodForm = () => {
               variant="outlined"
               label="Your Location"
               name="location"
-              value={formData.location}
+              value={formData?.location}
               onChange={handleChange}
               fullWidth
               required
@@ -263,7 +251,7 @@ const FoodForm = () => {
                   <>
                     <Icon
                       icon="material-symbols:search-rounded"
-                      onClick={() => handleLocationSearch(formData.location)}
+                      onClick={() => handleLocationSearch(formData?.location)}
                       fontSize={30}
                       fontWeight="bold"
                       style={{ cursor: "pointer" }}
@@ -278,7 +266,7 @@ const FoodForm = () => {
                 ),
               }}
             />
-            {formData.location && searchResults.length > 0 && (
+            {formData?.location && searchResults.length > 0 && (
               <List style={{ maxHeight: "150px", overflowY: "auto" }}>
                 {searchResults.map((location, index) => (
                   <ListItem
@@ -294,7 +282,7 @@ const FoodForm = () => {
             <Typography variant="h6" gutterBottom>
               What are you craving?
             </Typography>
-            {Object.keys(formData.visits[0].food).map((foodKey, index) => (
+            {Object.keys(formData?.visits[0].food).map((foodKey, index) => (
               <div
                 key={index}
                 style={{ display: "flex", gap: "10px", alignItems: "center" }}
@@ -311,7 +299,7 @@ const FoodForm = () => {
                   variant="outlined"
                   label="Quantity"
                   type="number"
-                  value={formData.visits[0][foodKey]}
+                  value={formData?.visits[0][foodKey]}
                   onChange={(e) => handleFoodChange(e, index, "quantity")}
                   sx={{ width: "150px" }}
                   required
@@ -319,7 +307,7 @@ const FoodForm = () => {
                 <IconButton
                   onClick={() => handleDeleteFood(index)}
                   color="error"
-                  disabled={Object.keys(formData.visits[0]).length <= 1}
+                  disabled={Object.keys(formData?.visits[0]).length <= 1}
                 >
                   <Icon icon="mdi:delete" />
                 </IconButton>
@@ -343,4 +331,4 @@ const FoodForm = () => {
   );
 };
 
-export default FoodForm;
+export default LocationForm;

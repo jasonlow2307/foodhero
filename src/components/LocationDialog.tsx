@@ -12,7 +12,7 @@ import { Icon } from "@iconify/react";
 import { useEffect, useState } from "react";
 import { Timestamp } from "firebase/firestore";
 
-interface FoodDialogProps {
+interface LocationDialogProps {
   open: boolean;
   onClose: () => void;
   selectedFood: any;
@@ -21,7 +21,7 @@ interface FoodDialogProps {
   getMapCenter: (boundingBox: number[]) => string;
   getGoogleMapsLink: (boundingBox: number[]) => string;
   getWazeLink: (boundingBox: number[]) => string;
-  onAddNewFood: (foodId: string, newFood: Visit) => Promise<void>;
+  onAddNewVisit: (foodId: string, newFood: Visit) => Promise<void>;
 }
 
 export interface Visit {
@@ -29,7 +29,7 @@ export interface Visit {
   date: Timestamp;
 }
 
-const FoodDialog = ({
+const LocationDialog = ({
   open,
   onClose,
   selectedFood,
@@ -38,8 +38,8 @@ const FoodDialog = ({
   getMapCenter,
   getGoogleMapsLink,
   getWazeLink,
-  onAddNewFood,
-}: FoodDialogProps) => {
+  onAddNewVisit: onAddNewFood,
+}: LocationDialogProps) => {
   const [localVisits, setLocalVisits] = useState<Visit[]>([]);
   const [isAddingFood, setIsAddingFood] = useState(false);
   const [newFood, setNewFood] = useState<Visit>({
@@ -353,4 +353,4 @@ const FoodDialog = ({
   );
 };
 
-export default FoodDialog;
+export default LocationDialog;

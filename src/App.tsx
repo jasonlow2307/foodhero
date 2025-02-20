@@ -1,7 +1,7 @@
 import { useState } from "react";
 import Header from "./sections/Header/Header";
-import FoodForm from "./sections/FoodForm/FoodForm";
-import FoodList from "./sections/FoodList/FoodList";
+import LocationForm from "./sections/LocationForm/LocationForm";
+import LocationList from "./sections/LocationList/LocationList";
 import { SnackbarProvider } from "notistack";
 
 function App() {
@@ -20,8 +20,8 @@ function App() {
       }}
     >
       <Header setPage={setPage} />
-      {page == "add" && <FoodForm />}
-      {page == "list" && <FoodList />}
+      {page == "add" && <LocationForm />}
+      {page == "list" && <LocationList />}
     </SnackbarProvider>
   );
 }

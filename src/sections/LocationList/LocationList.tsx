@@ -11,107 +11,70 @@ import {
 import useFirestoreCollection from "../../firebase/useFirestoreCollection";
 import { useUnsplash } from "../../utils/useUnsplash";
 import { identifyFood } from "../../utils/identifyFood";
-import FoodDialog, { Visit } from "../../components/FoodDialog";
+import LocationDialog, { Visit } from "../../components/LocationDialog";
 import { doc, getDoc, updateDoc } from "firebase/firestore";
 import { db } from "../../firebase/firebase";
+import { Images } from "../../utils/models";
+import {
+  getBoundingBox,
+  getMapCenter,
+  getGoogleMapsLink,
+  getWazeLink,
+} from "../../utils/mapUtils";
 
-const FoodList = () => {
-  const { data: foods, loading: foodsLoading } =
-    useFirestoreCollection("foods");
-  const [images, setImages] = useState<{ [key: string]: string | null }>({});
+const LocationList = () => {
+  const { data: locations, loading: locationLoading } =
+    useFirestoreCollection("locations");
+  const [images, setImages] = useState<Images>({});
   const { fetchUnsplashImage } = useUnsplash();
-  const [selectedFood, setSelectedFood] = useState<any>(null);
+  const [selectedLocation, setSelectedLocation] = useState<any>(null);
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
     const fetchImages = async () => {
-      const newImages: { [key: string]: string | null } = {};
-      for (const food of foods) {
-        if (!images[food.id]) {
-          const mainFood = await identifyFood(food.location);
+      const newImages: Images = {};
+      for (const location of locations) {
+        if (!images[location.id]) {
+          const mainFood = identifyFood(location.location);
           const imageUrl = await fetchUnsplashImage(mainFood);
-          newImages[food.id] = imageUrl;
+          newImages[location.id] = imageUrl;
         }
       }
       setImages((prevImages) => ({ ...prevImages, ...newImages }));
     };
 
-    if (foods.length > 0) {
+    if (locations.length > 0) {
       fetchImages();
     }
-  }, [foods]);
+  }, [locations]);
 
-  const handleClickOpen = (food: any) => {
-    setSelectedFood(food);
+  const handleClickOpen = (location: any) => {
+    setSelectedLocation(location);
     setOpen(true);
   };
 
   const handleClose = () => {
     setOpen(false);
-    setSelectedFood(null);
+    setSelectedLocation(null);
   };
 
-  const getBoundingBox = (boundingBox: number[]) => {
-    const [minLat, maxLat, minLon, maxLon] = boundingBox;
-    return `${minLon},${minLat},${maxLon},${maxLat}`;
-  };
-
-  const getMapCenter = (boundingBox: number[]) => {
-    const [minLat, maxLat, minLon, maxLon] = boundingBox.map(Number);
-    const centerLat =
-      Number.isFinite(minLat) && Number.isFinite(maxLat)
-        ? (minLat + maxLat) / 2
-        : 0;
-    const centerLon =
-      Number.isFinite(minLon) && Number.isFinite(maxLon)
-        ? (minLon + maxLon) / 2
-        : 0;
-    return `${centerLat},${centerLon}`;
-  };
-
-  const getGoogleMapsLink = (boundingBox: number[]) => {
-    const [minLat, maxLat, minLon, maxLon] = boundingBox.map(Number);
-    const centerLat =
-      Number.isFinite(minLat) && Number.isFinite(maxLat)
-        ? (minLat + maxLat) / 2
-        : 0;
-    const centerLon =
-      Number.isFinite(minLon) && Number.isFinite(maxLon)
-        ? (minLon + maxLon) / 2
-        : 0;
-    return `https://www.google.com/maps/dir/?api=1&destination=${centerLat},${centerLon}`;
-  };
-
-  const getWazeLink = (boundingBox: number[]) => {
-    const [minLat, maxLat, minLon, maxLon] = boundingBox.map(Number);
-    const centerLat =
-      Number.isFinite(minLat) && Number.isFinite(maxLat)
-        ? (minLat + maxLat) / 2
-        : 0;
-    const centerLon =
-      Number.isFinite(minLon) && Number.isFinite(maxLon)
-        ? (minLon + maxLon) / 2
-        : 0;
-    return `https://waze.com/ul?ll=${centerLat},${centerLon}&navigate=yes`;
-  };
-
-  const handleAddNewFood = async (foodId: string, newFood: Visit) => {
+  const handleAddNewVisit = async (foodId: string, newVisit: Visit) => {
     try {
-      const foodRef = doc(db, "foods", foodId);
-      const foodDoc = await getDoc(foodRef);
+      const locationRef = doc(db, "locations", foodId);
+      const locationDoc = await getDoc(locationRef);
 
-      if (foodDoc.exists()) {
-        const currentData = foodDoc.data();
-        const updatedFood = Array.isArray(currentData.visits)
-          ? [...currentData.visits, newFood]
-          : [currentData.visits, newFood];
+      if (locationDoc.exists()) {
+        const currentData = locationDoc.data();
+        const updatedVisit = Array.isArray(currentData.visits)
+          ? [...currentData.visits, newVisit]
+          : [currentData.visits, newVisit];
 
-        await updateDoc(foodRef, {
-          visits: updatedFood,
+        await updateDoc(locationRef, {
+          visits: updatedVisit,
         });
       }
     } catch (error) {
-      console.error("Error adding new food:", error);
+      console.error("Error adding new visit:", error);
     }
   };
 
@@ -126,13 +89,13 @@ const FoodList = () => {
     >
       <Container maxWidth="lg" style={{ marginTop: "40px" }}>
         <Typography variant="h4" gutterBottom mb={3}>
-          Food List
+          Location List
         </Typography>
-        {foodsLoading ? (
+        {locationLoading ? (
           <CircularProgress />
         ) : (
           <Grid container spacing={3}>
-            {foods.map((food) => (
+            {locations.map((food) => (
               <Grid
                 item
                 xs={12}
@@ -191,19 +154,19 @@ const FoodList = () => {
         )}
       </Container>
 
-      <FoodDialog
+      <LocationDialog
         open={open}
         onClose={handleClose}
-        selectedFood={selectedFood}
+        selectedFood={selectedLocation}
         images={images}
         getBoundingBox={getBoundingBox}
         getMapCenter={getMapCenter}
         getGoogleMapsLink={getGoogleMapsLink}
         getWazeLink={getWazeLink}
-        onAddNewFood={handleAddNewFood}
+        onAddNewVisit={handleAddNewVisit}
       />
     </div>
   );
 };
 
-export default FoodList;
+export default LocationList;
