@@ -9,13 +9,14 @@ import {
   CardMedia,
 } from "@mui/material";
 import useFirestoreCollection from "../../firebase/useFirestoreCollection";
-import { fetchUnsplashImage } from "../../utils/useUnsplash";
+import { useUnsplash } from "../../utils/useUnsplash";
 import { identifyFood } from "../../utils/identifyFood";
 
 const FoodList = () => {
   const { data: foods, loading: foodsLoading } =
     useFirestoreCollection("foods");
   const [images, setImages] = useState<{ [key: string]: string | null }>({});
+  const { fetchUnsplashImage } = useUnsplash();
 
   useEffect(() => {
     const fetchImages = async () => {
