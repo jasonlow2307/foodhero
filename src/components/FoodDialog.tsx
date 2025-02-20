@@ -10,6 +10,7 @@ import {
 } from "@mui/material";
 import { Icon } from "@iconify/react";
 import { useEffect, useState } from "react";
+import { Timestamp } from "firebase/firestore";
 
 interface FoodDialogProps {
   open: boolean;
@@ -20,10 +21,12 @@ interface FoodDialogProps {
   getMapCenter: (boundingBox: number[]) => string;
   getGoogleMapsLink: (boundingBox: number[]) => string;
   getWazeLink: (boundingBox: number[]) => string;
-  onAddNewFood: (
-    foodId: string,
-    newFood: { [key: string]: number }
-  ) => Promise<void>;
+  onAddNewFood: (foodId: string, newFood: Visit) => Promise<void>;
+}
+
+export interface Visit {
+  food: { [key: string]: number };
+  date: Timestamp;
 }
 
 const FoodDialog = ({
@@ -37,26 +40,30 @@ const FoodDialog = ({
   getWazeLink,
   onAddNewFood,
 }: FoodDialogProps) => {
-  const [localVisits, setLocalVisits] = useState<{ [key: string]: number }[]>(
-    []
-  );
+  const [localVisits, setLocalVisits] = useState<Visit[]>([]);
   const [isAddingFood, setIsAddingFood] = useState(false);
-  const [newFood, setNewFood] = useState<{ [key: string]: number }>({});
+  const [newFood, setNewFood] = useState<Visit>({
+    food: {},
+    date: Timestamp.now(),
+  });
 
   // Update useEffect to initialize localVisits when selectedFood changes
   useEffect(() => {
     if (selectedFood?.visits) {
       setLocalVisits(selectedFood.visits);
+      console.log(selectedFood.visits);
     }
   }, [selectedFood]);
 
   const handleAddFood = () => {
     setIsAddingFood(true);
-    setNewFood({});
+    setNewFood({
+      food: {},
+      date: Timestamp.now(),
+    });
   };
-
   const handleNewFoodSubmit = async () => {
-    if (Object.keys(newFood).length > 0) {
+    if (Object.keys(newFood.food).length > 0) {
       // Optimistically update the UI
       setLocalVisits([...localVisits, newFood]);
       setIsAddingFood(false);
@@ -64,7 +71,10 @@ const FoodDialog = ({
       try {
         // Attempt to update the backend
         await onAddNewFood(selectedFood.id, newFood);
-        setNewFood({});
+        setNewFood({
+          food: {},
+          date: Timestamp.now(),
+        });
       } catch (error) {
         // If the backend update fails, revert the optimistic update
         setLocalVisits(localVisits);
@@ -74,15 +84,18 @@ const FoodDialog = ({
   };
 
   const handleAddFoodItem = () => {
-    setNewFood({ ...newFood, "": 1 });
+    setNewFood({
+      ...newFood,
+      food: { ...newFood.food, "": 1 },
+    });
   };
-
+  // Update handleFoodChange
   const handleFoodChange = (
     key: string,
     value: string | number,
     type: "name" | "quantity"
   ) => {
-    const updatedFood = { ...newFood };
+    const updatedFood = { ...newFood.food };
     if (type === "name") {
       const oldValue = updatedFood[key];
       delete updatedFood[key];
@@ -91,7 +104,10 @@ const FoodDialog = ({
       const foodName = key || Object.keys(updatedFood)[0];
       updatedFood[foodName] = Number(value);
     }
-    setNewFood(updatedFood);
+    setNewFood({
+      ...newFood,
+      food: updatedFood,
+    });
   };
   return (
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
@@ -153,7 +169,7 @@ const FoodDialog = ({
                 <Typography variant="h6" gutterBottom>
                   Add New Food Items
                 </Typography>
-                {Object.entries(newFood).map(([name, quantity], index) => (
+                {Object.entries(newFood.food).map(([name, quantity], index) => (
                   <Box
                     key={index}
                     sx={{
@@ -239,24 +255,46 @@ const FoodDialog = ({
                       >
                         Visit {index + 1}
                       </Typography>
+                      <Typography
+                        variant="subtitle1"
+                        sx={{
+                          mb: 1,
+                          fontWeight: "bold",
+                          color: "primary.main",
+                        }}
+                      >
+                        {visit.date
+                          ? new Date(
+                              visit.date.seconds * 1000
+                            ).toLocaleDateString("en-US", {
+                              year: "numeric",
+                              month: "long",
+                              day: "numeric",
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            })
+                          : "No Date Found"}
+                      </Typography>
 
-                      {Object.entries(visit).map(([foodName, quantity]) => (
-                        <Typography
-                          key={foodName}
-                          color="textSecondary"
-                          component="div"
-                          sx={{
-                            display: "flex",
-                            justifyContent: "space-between",
-                            maxWidth: "300px",
-                            margin: "0 auto",
-                            py: 0.5,
-                          }}
-                        >
-                          <span>{foodName}</span>
-                          <span>× {String(quantity)}</span>
-                        </Typography>
-                      ))}
+                      {Object.entries(visit.food).map(
+                        ([foodName, quantity]) => (
+                          <Typography
+                            key={foodName}
+                            color="textSecondary"
+                            component="div"
+                            sx={{
+                              display: "flex",
+                              justifyContent: "space-between",
+                              maxWidth: "300px",
+                              margin: "0 auto",
+                              py: 0.5,
+                            }}
+                          >
+                            <span>{foodName}</span>
+                            <span>× {String(quantity)}</span>
+                          </Typography>
+                        )
+                      )}
                     </Box>
                   ))
                 ) : (

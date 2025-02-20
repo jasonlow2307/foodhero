@@ -11,7 +11,7 @@ import {
 import useFirestoreCollection from "../../firebase/useFirestoreCollection";
 import { useUnsplash } from "../../utils/useUnsplash";
 import { identifyFood } from "../../utils/identifyFood";
-import FoodDialog from "../../components/FoodDialog";
+import FoodDialog, { Visit } from "../../components/FoodDialog";
 import { doc, getDoc, updateDoc } from "firebase/firestore";
 import { db } from "../../firebase/firebase";
 
@@ -42,7 +42,6 @@ const FoodList = () => {
   }, [foods]);
 
   const handleClickOpen = (food: any) => {
-    console.log(food.selectedLocation.boundingBox);
     setSelectedFood(food);
     setOpen(true);
   };
@@ -96,10 +95,7 @@ const FoodList = () => {
     return `https://waze.com/ul?ll=${centerLat},${centerLon}&navigate=yes`;
   };
 
-  const handleAddNewFood = async (
-    foodId: string,
-    newFood: { [key: string]: number }
-  ) => {
+  const handleAddNewFood = async (foodId: string, newFood: Visit) => {
     try {
       const foodRef = doc(db, "foods", foodId);
       const foodDoc = await getDoc(foodRef);
@@ -176,6 +172,17 @@ const FoodList = () => {
                       {food.location}
                     </Typography>
                     <Typography variant="body2">{food.name}</Typography>
+                    <Typography variant="body2">
+                      {new Date(
+                        food.visits[0].date.seconds * 1000
+                      ).toLocaleDateString("en-US", {
+                        year: "numeric",
+                        month: "long",
+                        day: "numeric",
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}
+                    </Typography>
                   </CardContent>
                 </Card>
               </Grid>

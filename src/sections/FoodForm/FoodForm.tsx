@@ -16,6 +16,7 @@ import debounce from "lodash.debounce";
 import Fuse from "fuse.js";
 import useFirestoreWrite from "../../firebase/useFirestoreWrite";
 import { useSnackbar } from "notistack";
+import { Timestamp } from "firebase/firestore";
 
 interface Location {
   place_id: number;
@@ -25,12 +26,22 @@ interface Location {
   lat: number;
 }
 
+interface Visit {
+  food: { [key: string]: number };
+  date: Date;
+}
+
 const FoodForm = () => {
   const { enqueueSnackbar } = useSnackbar();
   const [formData, setFormData] = useState({
     name: "",
     location: "",
-    visits: [{ "": 1 }] as { [key: string]: number }[], // Initialize with an empty food item
+    visits: [
+      {
+        food: { "": 1 },
+        date: new Date(),
+      },
+    ] as Visit[],
     selectedLocation: null as Location | null,
   });
   const [searchResults, setSearchResults] = useState<Location[]>([]);
@@ -53,13 +64,13 @@ const FoodForm = () => {
     field: "name" | "quantity"
   ) => {
     const { value } = e.target;
-    const updatedFood = { ...formData.visits[0] };
+    const updatedFood = { ...formData.visits[0].food };
     const foodKeys = Object.keys(updatedFood);
     const foodKey = foodKeys[index];
 
     if (field === "name") {
       const newKey = value;
-      const currentValue = updatedFood[foodKey] || 1; // Keep the current quantity or default to 1
+      const currentValue = updatedFood[foodKey] || 1;
       delete updatedFood[foodKey];
       updatedFood[newKey] = currentValue;
     } else {
@@ -71,19 +82,27 @@ const FoodForm = () => {
 
     setFormData({
       ...formData,
-      visits: [updatedFood],
+      visits: [
+        {
+          food: updatedFood,
+          date: formData.visits[0].date,
+        },
+      ],
     });
   };
 
   // Update the handleAddFood function to handle empty keys
   const handleAddFood = () => {
-    const currentFood = formData.visits[0];
+    const currentVisit = formData.visits[0];
     setFormData({
       ...formData,
       visits: [
         {
-          ...currentFood,
-          "": 1, // Add new empty food item with quantity 1
+          food: {
+            ...currentVisit.food,
+            "": 1,
+          },
+          date: currentVisit.date,
         },
       ],
     });
@@ -91,25 +110,28 @@ const FoodForm = () => {
 
   // Add a handler for deleting food items
   const handleDeleteFood = (indexToDelete: number) => {
-    const currentFood = { ...formData.visits[0] };
+    const currentFood = { ...formData.visits[0].food };
     const foodKeys = Object.keys(currentFood);
 
-    // Don't delete if it's the last item
     if (foodKeys.length <= 1) return;
 
     delete currentFood[foodKeys[indexToDelete]];
 
     setFormData({
       ...formData,
-      visits: [currentFood],
+      visits: [
+        {
+          food: currentFood,
+          date: formData.visits[0].date,
+        },
+      ],
     });
   };
 
   const handleSubmit = async (e: React.ChangeEvent<HTMLFormElement>) => {
     e.preventDefault();
     try {
-      const formDataWithDate = { ...formData, date: new Date() };
-      await writeData("foods", formDataWithDate);
+      await writeData("foods", formData);
       enqueueSnackbar("Food added successfully! 🎉", {
         variant: "success",
         autoHideDuration: 3000,
@@ -118,7 +140,12 @@ const FoodForm = () => {
       setFormData({
         name: "",
         location: "",
-        visits: [{ "": 1 }],
+        visits: [
+          {
+            food: { "": 1 },
+            date: new Date(),
+          },
+        ],
         selectedLocation: null,
       });
     } catch (error) {
@@ -267,7 +294,7 @@ const FoodForm = () => {
             <Typography variant="h6" gutterBottom>
               What are you craving?
             </Typography>
-            {Object.keys(formData.visits[0]).map((foodKey, index) => (
+            {Object.keys(formData.visits[0].food).map((foodKey, index) => (
               <div
                 key={index}
                 style={{ display: "flex", gap: "10px", alignItems: "center" }}
