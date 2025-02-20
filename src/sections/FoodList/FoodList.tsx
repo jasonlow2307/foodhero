@@ -7,16 +7,13 @@ import {
   Typography,
   CircularProgress,
   CardMedia,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  Button,
 } from "@mui/material";
-import { Icon } from "@iconify/react";
 import useFirestoreCollection from "../../firebase/useFirestoreCollection";
 import { useUnsplash } from "../../utils/useUnsplash";
 import { identifyFood } from "../../utils/identifyFood";
+import FoodDialog from "../../components/FoodDialog";
+import { doc, getDoc, updateDoc } from "firebase/firestore";
+import { db } from "../../firebase/firebase";
 
 const FoodList = () => {
   const { data: foods, loading: foodsLoading } =
@@ -99,6 +96,29 @@ const FoodList = () => {
     return `https://waze.com/ul?ll=${centerLat},${centerLon}&navigate=yes`;
   };
 
+  const handleAddNewFood = async (
+    foodId: string,
+    newFood: { [key: string]: number }
+  ) => {
+    try {
+      const foodRef = doc(db, "foods", foodId);
+      const foodDoc = await getDoc(foodRef);
+
+      if (foodDoc.exists()) {
+        const currentData = foodDoc.data();
+        const updatedFood = Array.isArray(currentData.food)
+          ? [...currentData.food, newFood]
+          : [currentData.food, newFood];
+
+        await updateDoc(foodRef, {
+          food: updatedFood,
+        });
+      }
+    } catch (error) {
+      console.error("Error adding new food:", error);
+    }
+  };
+
   return (
     <div
       style={{
@@ -138,12 +158,13 @@ const FoodList = () => {
                       height="140"
                       image={images[food.id] || undefined}
                       alt={food.location}
-                      sx={{ mt: 3 }}
+                      sx={{ borderRadius: 3 }}
                     />
                   )}
                   <CardContent>
-                    <Typography variant="h6">{food.location}</Typography>
-                    <Typography color="textSecondary">{food.food}</Typography>
+                    <Typography variant="h6" sx={{ mb: 3 }}>
+                      {food.location}
+                    </Typography>
                     <Typography variant="body2">{food.name}</Typography>
                   </CardContent>
                 </Card>
@@ -153,101 +174,17 @@ const FoodList = () => {
         )}
       </Container>
 
-      <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
-        <DialogTitle
-          sx={{ textAlign: "center", fontWeight: "bold", fontSize: "1.5rem" }}
-        >
-          {selectedFood?.location}
-        </DialogTitle>
-        <DialogContent
-          sx={{
-            textAlign: "center",
-            padding: "20px",
-            backgroundColor: "#f9f9f9",
-          }}
-        >
-          {selectedFood && (
-            <>
-              {images[selectedFood.id] && (
-                <img
-                  src={images[selectedFood.id] || undefined}
-                  alt={selectedFood.location}
-                  style={{
-                    maxWidth: "80%",
-                    maxHeight: "300px",
-                    borderRadius: "15px",
-                    margin: "0 auto",
-                    display: "block",
-                    marginBottom: "20px",
-                  }}
-                />
-              )}
-              <Typography variant="h6" gutterBottom>
-                {selectedFood.food}
-              </Typography>
-              <Typography variant="body2" color="textSecondary" gutterBottom>
-                {selectedFood.name}
-              </Typography>
-              <div style={{ height: "300px", marginTop: "20px" }}>
-                <iframe
-                  width="100%"
-                  height="100%"
-                  frameBorder="0"
-                  scrolling="no"
-                  src={`https://www.openstreetmap.org/export/embed.html?bbox=${getBoundingBox(
-                    selectedFood.selectedLocation.boundingBox
-                  )}&layer=mapnik&marker=${getMapCenter(
-                    selectedFood.selectedLocation.boundingBox
-                  )}`}
-                  style={{ borderRadius: "10px" }}
-                ></iframe>
-              </div>
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "center",
-                  gap: "20px",
-                  marginTop: "20px",
-                }}
-              >
-                <a
-                  href={getGoogleMapsLink(
-                    selectedFood.selectedLocation.boundingBox
-                  )}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  style={{
-                    textDecoration: "none",
-                  }}
-                >
-                  <Icon
-                    icon="logos:google-maps"
-                    style={{ fontSize: "40px", color: "#4285F4" }}
-                  />
-                </a>
-                <a
-                  href={getWazeLink(selectedFood.selectedLocation.boundingBox)}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  style={{
-                    textDecoration: "none",
-                  }}
-                >
-                  <Icon
-                    icon="mdi:waze"
-                    style={{ fontSize: "40px", color: "#4285F4" }}
-                  />
-                </a>
-              </div>
-            </>
-          )}
-        </DialogContent>
-        <DialogActions sx={{ justifyContent: "center", padding: "20px" }}>
-          <Button onClick={handleClose} variant="contained" color="primary">
-            Close
-          </Button>
-        </DialogActions>
-      </Dialog>
+      <FoodDialog
+        open={open}
+        onClose={handleClose}
+        selectedFood={selectedFood}
+        images={images}
+        getBoundingBox={getBoundingBox}
+        getMapCenter={getMapCenter}
+        getGoogleMapsLink={getGoogleMapsLink}
+        getWazeLink={getWazeLink}
+        onAddNewFood={handleAddNewFood}
+      />
     </div>
   );
 };

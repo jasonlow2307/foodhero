@@ -27,7 +27,7 @@ const FoodForm = () => {
   const [formData, setFormData] = useState({
     name: "",
     location: "",
-    food: "",
+    food: [{ "": 1 }] as { [key: string]: number }[], // Initialize with an empty food item
     selectedLocation: null as Location | null,
   });
   const [searchResults, setSearchResults] = useState<Location[]>([]);
@@ -41,6 +41,49 @@ const FoodForm = () => {
     if (name === "location") {
       debouncedHandleLocationSearch(value);
     }
+  };
+
+  // Update the handleFoodChange function to handle empty keys better
+  const handleFoodChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
+    index: number,
+    field: "name" | "quantity"
+  ) => {
+    const { value } = e.target;
+    const updatedFood = { ...formData.food[0] };
+    const foodKeys = Object.keys(updatedFood);
+    const foodKey = foodKeys[index];
+
+    if (field === "name") {
+      const newKey = value;
+      const currentValue = updatedFood[foodKey] || 1; // Keep the current quantity or default to 1
+      delete updatedFood[foodKey];
+      updatedFood[newKey] = currentValue;
+    } else {
+      const validValue = parseInt(value, 10);
+      if (!isNaN(validValue) && validValue > 0) {
+        updatedFood[foodKey] = validValue;
+      }
+    }
+
+    setFormData({
+      ...formData,
+      food: [updatedFood],
+    });
+  };
+
+  // Update the handleAddFood function to handle empty keys
+  const handleAddFood = () => {
+    const currentFood = formData.food[0];
+    setFormData({
+      ...formData,
+      food: [
+        {
+          ...currentFood,
+          "": 1, // Add new empty food item with quantity 1
+        },
+      ],
+    });
   };
 
   const handleSubmit = (e: React.ChangeEvent<HTMLFormElement>) => {
@@ -122,7 +165,7 @@ const FoodForm = () => {
           style={{
             padding: "20px",
             textAlign: "center",
-            borderRadius: "25pxx",
+            borderRadius: "25px",
           }}
         >
           <Typography variant="h5" gutterBottom marginBottom={3}>
@@ -182,15 +225,38 @@ const FoodForm = () => {
                 ))}
               </List>
             )}
-            <TextField
+            <Typography variant="h6" gutterBottom>
+              What are you craving?
+            </Typography>
+            {Object.keys(formData.food[0]).map((foodKey, index) => (
+              <div key={index} style={{ display: "flex", gap: "10px" }}>
+                <TextField
+                  variant="outlined"
+                  label="Food Name"
+                  value={foodKey}
+                  onChange={(e) => handleFoodChange(e, index, "name")}
+                  fullWidth
+                  required
+                />
+                <TextField
+                  variant="outlined"
+                  label="Quantity"
+                  type="number"
+                  value={formData.food[0][foodKey]}
+                  onChange={(e) => handleFoodChange(e, index, "quantity")}
+                  fullWidth
+                  required
+                />
+              </div>
+            ))}
+            <Button
               variant="outlined"
-              label="What are you craving?"
-              name="food"
-              value={formData.food}
-              onChange={handleChange}
-              fullWidth
-              required
-            />
+              color="primary"
+              onClick={handleAddFood}
+              style={{ marginTop: "10px" }}
+            >
+              Add Food Item
+            </Button>
             <Button type="submit" variant="contained" color="primary" fullWidth>
               Submit 🍽️
             </Button>

@@ -13,19 +13,19 @@ export const useUnsplash = () => {
       const cachedData = data.find((d: any) => d.query === query);
       if (cachedData) {
         console.log("Using cached data for", query);
-        return cachedData.data.results.length > 0
-          ? cachedData.data.results[1].urls.small
+        return cachedData.res.results.length > 0
+          ? cachedData.res.results[1].urls.small
           : null;
       }
-      const response = await fetch(
-        `https://api.unsplash.com/search/photos?query=${encodeURIComponent(
-          query
-        )}&client_id=${UNSPLASH_ACCESS_KEY}`
-      );
-      const res = await response.json();
-      writeData("images", { query, res });
-      return res.results.length > 0 ? res.results[1].urls.small : null;
     }
+    const response = await fetch(
+      `https://api.unsplash.com/search/photos?query=${encodeURIComponent(
+        query
+      )}&client_id=${UNSPLASH_ACCESS_KEY}`
+    );
+    const res = await response.json();
+    writeData("images", { query, res });
+    return res.results.length > 0 ? res.results[1].urls.small : null;
   };
   return { fetchUnsplashImage };
 };
