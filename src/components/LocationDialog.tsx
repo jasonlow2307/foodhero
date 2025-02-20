@@ -11,6 +11,7 @@ import {
 import { Icon } from "@iconify/react";
 import { useEffect, useState } from "react";
 import { Timestamp } from "firebase/firestore";
+import { Visit } from "../utils/models";
 
 interface LocationDialogProps {
   open: boolean;
@@ -22,11 +23,6 @@ interface LocationDialogProps {
   getGoogleMapsLink: (boundingBox: number[]) => string;
   getWazeLink: (boundingBox: number[]) => string;
   onAddNewVisit: (foodId: string, newFood: Visit) => Promise<void>;
-}
-
-export interface Visit {
-  food: { [key: string]: number };
-  date: Timestamp;
 }
 
 const LocationDialog = ({
@@ -265,7 +261,7 @@ const LocationDialog = ({
                       >
                         {visit.date
                           ? new Date(
-                              visit.date.seconds * 1000
+                              (visit.date as Timestamp).seconds * 1000
                             ).toLocaleDateString("en-US", {
                               year: "numeric",
                               month: "long",

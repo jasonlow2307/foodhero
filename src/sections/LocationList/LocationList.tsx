@@ -11,10 +11,10 @@ import {
 import useFirestoreCollection from "../../firebase/useFirestoreCollection";
 import { useUnsplash } from "../../utils/useUnsplash";
 import { identifyFood } from "../../utils/identifyFood";
-import LocationDialog, { Visit } from "../../components/LocationDialog";
+import LocationDialog from "../../components/LocationDialog";
 import { doc, getDoc, updateDoc } from "firebase/firestore";
 import { db } from "../../firebase/firebase";
-import { Images } from "../../utils/models";
+import { Images, Visit } from "../../utils/models";
 import {
   getBoundingBox,
   getMapCenter,
@@ -137,7 +137,7 @@ const LocationList = () => {
                     <Typography variant="body2">{food.name}</Typography>
                     <Typography variant="body2">
                       {new Date(
-                        food.visits[0].date.seconds * 1000
+                        food.visits[food.visits.length - 1].date.seconds * 1000
                       ).toLocaleDateString("en-US", {
                         year: "numeric",
                         month: "long",

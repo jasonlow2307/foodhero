@@ -1,3 +1,5 @@
+import { Timestamp } from "firebase/firestore";
+
 export interface Location {
   place_id: number;
   display_name: string;
@@ -8,7 +10,7 @@ export interface Location {
 
 export interface Visit {
   food: { [key: string]: number };
-  date: Date;
+  date: Date | Timestamp;
 }
 
 export interface LocationFormProp {
