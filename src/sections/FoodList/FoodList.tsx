@@ -106,12 +106,12 @@ const FoodList = () => {
 
       if (foodDoc.exists()) {
         const currentData = foodDoc.data();
-        const updatedFood = Array.isArray(currentData.food)
-          ? [...currentData.food, newFood]
-          : [currentData.food, newFood];
+        const updatedFood = Array.isArray(currentData.visits)
+          ? [...currentData.visits, newFood]
+          : [currentData.visits, newFood];
 
         await updateDoc(foodRef, {
-          food: updatedFood,
+          visits: updatedFood,
         });
       }
     } catch (error) {
@@ -137,7 +137,16 @@ const FoodList = () => {
         ) : (
           <Grid container spacing={3}>
             {foods.map((food) => (
-              <Grid item xs={12} sm={6} md={4} lg={3} key={food.id}>
+              <Grid
+                item
+                xs={12}
+                sm={6}
+                md={4}
+                lg={3}
+                key={food.id}
+                pb={3}
+                pt={0}
+              >
                 <Card
                   sx={{
                     borderRadius: "15px",
@@ -149,6 +158,7 @@ const FoodList = () => {
                       boxShadow: "0 4px 20px rgba(0, 0, 0, 0.2)",
                     },
                     cursor: "pointer",
+                    height: "330px",
                   }}
                   onClick={() => handleClickOpen(food)}
                 >

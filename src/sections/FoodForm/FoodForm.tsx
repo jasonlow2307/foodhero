@@ -15,6 +15,7 @@ import { Icon } from "@iconify/react";
 import debounce from "lodash.debounce";
 import Fuse from "fuse.js";
 import useFirestoreWrite from "../../firebase/useFirestoreWrite";
+import { useSnackbar } from "notistack";
 
 interface Location {
   place_id: number;
@@ -25,10 +26,11 @@ interface Location {
 }
 
 const FoodForm = () => {
+  const { enqueueSnackbar } = useSnackbar();
   const [formData, setFormData] = useState({
     name: "",
     location: "",
-    food: [{ "": 1 }] as { [key: string]: number }[], // Initialize with an empty food item
+    visits: [{ "": 1 }] as { [key: string]: number }[], // Initialize with an empty food item
     selectedLocation: null as Location | null,
   });
   const [searchResults, setSearchResults] = useState<Location[]>([]);
@@ -51,7 +53,7 @@ const FoodForm = () => {
     field: "name" | "quantity"
   ) => {
     const { value } = e.target;
-    const updatedFood = { ...formData.food[0] };
+    const updatedFood = { ...formData.visits[0] };
     const foodKeys = Object.keys(updatedFood);
     const foodKey = foodKeys[index];
 
@@ -69,16 +71,16 @@ const FoodForm = () => {
 
     setFormData({
       ...formData,
-      food: [updatedFood],
+      visits: [updatedFood],
     });
   };
 
   // Update the handleAddFood function to handle empty keys
   const handleAddFood = () => {
-    const currentFood = formData.food[0];
+    const currentFood = formData.visits[0];
     setFormData({
       ...formData,
-      food: [
+      visits: [
         {
           ...currentFood,
           "": 1, // Add new empty food item with quantity 1
@@ -89,7 +91,7 @@ const FoodForm = () => {
 
   // Add a handler for deleting food items
   const handleDeleteFood = (indexToDelete: number) => {
-    const currentFood = { ...formData.food[0] };
+    const currentFood = { ...formData.visits[0] };
     const foodKeys = Object.keys(currentFood);
 
     // Don't delete if it's the last item
@@ -99,14 +101,33 @@ const FoodForm = () => {
 
     setFormData({
       ...formData,
-      food: [currentFood],
+      visits: [currentFood],
     });
   };
 
-  const handleSubmit = (e: React.ChangeEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.ChangeEvent<HTMLFormElement>) => {
     e.preventDefault();
-    console.log("Form submitted:", formData);
-    writeData("foods", formData);
+    try {
+      const formDataWithDate = { ...formData, date: new Date() };
+      await writeData("foods", formDataWithDate);
+      enqueueSnackbar("Food added successfully! 🎉", {
+        variant: "success",
+        autoHideDuration: 3000,
+      });
+      // Reset form
+      setFormData({
+        name: "",
+        location: "",
+        visits: [{ "": 1 }],
+        selectedLocation: null,
+      });
+    } catch (error) {
+      enqueueSnackbar("Failed to add food 😕", {
+        variant: "error",
+        autoHideDuration: 3000,
+      });
+      console.error("Error submitting form:", error);
+    }
   };
 
   const handleLocationSearch = async (location: string) => {
@@ -236,6 +257,7 @@ const FoodForm = () => {
                   <ListItem
                     key={index}
                     onClick={() => handleLocationSelect(location)}
+                    sx={{ cursor: "pointer" }}
                   >
                     <ListItemText primary={location.display_name} />
                   </ListItem>
@@ -245,7 +267,7 @@ const FoodForm = () => {
             <Typography variant="h6" gutterBottom>
               What are you craving?
             </Typography>
-            {Object.keys(formData.food[0]).map((foodKey, index) => (
+            {Object.keys(formData.visits[0]).map((foodKey, index) => (
               <div
                 key={index}
                 style={{ display: "flex", gap: "10px", alignItems: "center" }}
@@ -262,7 +284,7 @@ const FoodForm = () => {
                   variant="outlined"
                   label="Quantity"
                   type="number"
-                  value={formData.food[0][foodKey]}
+                  value={formData.visits[0][foodKey]}
                   onChange={(e) => handleFoodChange(e, index, "quantity")}
                   sx={{ width: "150px" }}
                   required
@@ -270,7 +292,7 @@ const FoodForm = () => {
                 <IconButton
                   onClick={() => handleDeleteFood(index)}
                   color="error"
-                  disabled={Object.keys(formData.food[0]).length <= 1}
+                  disabled={Object.keys(formData.visits[0]).length <= 1}
                 >
                   <Icon icon="mdi:delete" />
                 </IconButton>

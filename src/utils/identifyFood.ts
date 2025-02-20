@@ -78,7 +78,8 @@ export function identifyFood(query: string) {
     "Ramen Shop": "Tonkotsu ramen & gyoza",
     "Coffee": "coffee beans",
     "pork noodles": "soup noodles",
-    "mee": "noodles"
+    "mee": "noodles",
+    "bakers": "artisan bread",
   };
 
   const normalizedQuery = query.toLowerCase();

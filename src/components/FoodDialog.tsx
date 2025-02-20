@@ -9,7 +9,7 @@ import {
   TextField,
 } from "@mui/material";
 import { Icon } from "@iconify/react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 interface FoodDialogProps {
   open: boolean;
@@ -37,8 +37,18 @@ const FoodDialog = ({
   getWazeLink,
   onAddNewFood,
 }: FoodDialogProps) => {
+  const [localVisits, setLocalVisits] = useState<{ [key: string]: number }[]>(
+    []
+  );
   const [isAddingFood, setIsAddingFood] = useState(false);
   const [newFood, setNewFood] = useState<{ [key: string]: number }>({});
+
+  // Update useEffect to initialize localVisits when selectedFood changes
+  useEffect(() => {
+    if (selectedFood?.visits) {
+      setLocalVisits(selectedFood.visits);
+    }
+  }, [selectedFood]);
 
   const handleAddFood = () => {
     setIsAddingFood(true);
@@ -47,9 +57,19 @@ const FoodDialog = ({
 
   const handleNewFoodSubmit = async () => {
     if (Object.keys(newFood).length > 0) {
-      await onAddNewFood(selectedFood.id, newFood);
+      // Optimistically update the UI
+      setLocalVisits([...localVisits, newFood]);
       setIsAddingFood(false);
-      setNewFood({});
+
+      try {
+        // Attempt to update the backend
+        await onAddNewFood(selectedFood.id, newFood);
+        setNewFood({});
+      } catch (error) {
+        // If the backend update fails, revert the optimistic update
+        setLocalVisits(localVisits);
+        console.error("Failed to add new food:", error);
+      }
     }
   };
 
@@ -197,8 +217,8 @@ const FoodDialog = ({
             )}
             <Typography variant="h6" gutterBottom>
               <Box sx={{ mt: 2 }}>
-                {Array.isArray(selectedFood.food) ? (
-                  selectedFood.food.map((visit, index) => (
+                {Array.isArray(localVisits) && localVisits.length > 0 ? (
+                  localVisits.map((visit, index) => (
                     <Box
                       key={index}
                       sx={{
@@ -219,6 +239,7 @@ const FoodDialog = ({
                       >
                         Visit {index + 1}
                       </Typography>
+
                       {Object.entries(visit).map(([foodName, quantity]) => (
                         <Typography
                           key={foodName}
