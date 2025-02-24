@@ -1,27 +1,18 @@
 import { useEffect, useState } from "react";
-import {
-  Container,
-  Grid,
-  Card,
-  CardContent,
-  Typography,
-  CircularProgress,
-  CardMedia,
-} from "@mui/material";
 import useFirestoreCollection from "../../firebase/useFirestoreCollection";
 import { useUnsplash } from "../../utils/useUnsplash";
 import { identifyFood } from "../../utils/identifyFood";
-import LocationDialog from "../../components/LocationDialog";
 import { doc, getDoc, updateDoc } from "firebase/firestore";
 import { db } from "../../firebase/firebase";
 import { Images, Visit } from "../../utils/models";
+import { Clock, User, Plus } from "lucide-react";
+import LocationDialog from "../../components/LocationDialog";
 import {
   getBoundingBox,
   getMapCenter,
   getGoogleMapsLink,
   getWazeLink,
 } from "../../utils/mapUtils";
-import { getTimeAgo } from "../../utils/timeUtil";
 interface LocationListProps {
   initialSelectedLocation?: any;
   clearSelectedLocation?: () => void;
@@ -105,84 +96,113 @@ const LocationList: React.FC<LocationListProps> = ({
   };
 
   return (
-    <div
-      style={{
-        minHeight: "100vh",
-        display: "flex",
-        background: "linear-gradient(135deg, #74ebd5 0%, #ACB6E5 100%)",
-        fontFamily: "Arial, sans-serif",
-      }}
-    >
-      <Container maxWidth="lg" style={{ marginTop: "40px" }}>
-        <Typography variant="h4" gutterBottom mb={3}>
-          Location List
-        </Typography>
-        {locationLoading ? (
-          <CircularProgress />
-        ) : (
-          <Grid container spacing={3}>
-            {locations.map((food) => (
-              <Grid
-                item
-                xs={12}
-                sm={6}
-                md={4}
-                lg={3}
-                key={food.id}
-                pb={3}
-                pt={0}
-              >
-                <Card
-                  sx={{
-                    borderRadius: "15px",
-                    textAlign: "center",
-                    padding: "20px",
-                    transition: "transform 0.3s, box-shadow 0.3s",
-                    "&:hover": {
-                      transform: "scale(1.05)",
-                      boxShadow: "0 4px 20px rgba(0, 0, 0, 0.2)",
-                    },
-                    cursor: "pointer",
-                    height: "330px",
-                  }}
-                  onClick={() => handleClickOpen(food)}
-                >
-                  {images[food.id] && (
-                    <CardMedia
-                      component="img"
-                      height="140"
-                      image={images[food.id] || undefined}
-                      alt={food.location}
-                      sx={{ borderRadius: 3 }}
-                    />
-                  )}
-                  <CardContent>
-                    <Typography variant="h6" sx={{ mb: 3 }}>
-                      {food.location}
-                    </Typography>
-                    <Typography variant="body2">{food.name}</Typography>
-                    <Typography variant="body2">
-                      {getTimeAgo(food.visits[food.visits.length - 1].date)}
-                    </Typography>
-                  </CardContent>
-                </Card>
-              </Grid>
-            ))}
-          </Grid>
-        )}
-      </Container>
+    <div className="min-h-screen bg-gradient-to-br from-green-100 to-blue-100 py-8 px-4">
+      <div className="max-w-7xl mx-auto">
+        {/* Header */}
+        <div className="text-center mb-12">
+          <h1 className="text-4xl font-bold bg-gradient-to-r from-green-400 to-blue-500 bg-clip-text text-transparent mb-4">
+            Your Food Journey 🌟
+          </h1>
+          <p className="text-gray-600">
+            Tracking your favorite places and portions
+          </p>
+        </div>
 
-      <LocationDialog
-        open={open}
-        onClose={handleClose}
-        selectedFood={selectedLocation}
-        images={images}
-        getBoundingBox={getBoundingBox}
-        getMapCenter={getMapCenter}
-        getGoogleMapsLink={getGoogleMapsLink}
-        getWazeLink={getWazeLink}
-        onAddNewVisit={handleAddNewVisit}
-      />
+        {/* Location Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          {/* Add New Location Card */}
+          <div className="bg-white/50 backdrop-blur-sm rounded-3xl p-6 cursor-pointer group hover:transform hover:scale-105 transition-all duration-300 border-2 border-dashed border-gray-200 flex flex-col items-center justify-center min-h-[330px]">
+            <div className="text-gray-400 group-hover:text-green-500 transition-colors duration-300">
+              <Plus size={48} />
+            </div>
+            <p className="mt-4 text-gray-500 group-hover:text-green-600 font-medium">
+              Add New Location
+            </p>
+          </div>
+
+          <LocationDialog
+            open={open}
+            onClose={handleClose}
+            selectedFood={selectedLocation}
+            images={images}
+            getBoundingBox={getBoundingBox}
+            getMapCenter={getMapCenter}
+            getGoogleMapsLink={getGoogleMapsLink}
+            getWazeLink={getWazeLink}
+            onAddNewVisit={handleAddNewVisit}
+          />
+
+          {/* Location Cards */}
+          {locations.map((location) => (
+            <div
+              key={location.id}
+              className="bg-white rounded-3xl p-6 shadow-xl hover:transform hover:scale-105 transition-all duration-300 cursor-pointer"
+              onClick={() => handleClickOpen(location)}
+            >
+              {/* Location Image */}
+              <div className="h-48 rounded-2xl bg-gray-100 mb-4 overflow-hidden">
+                <img
+                  src={images[location.id] || "/api/placeholder/400/320"}
+                  alt={location.location}
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    e.currentTarget.src = "/api/placeholder/400/320";
+                  }}
+                />
+              </div>
+
+              {/* Location Details */}
+              <div className="space-y-3">
+                <h3 className="text-xl font-semibold text-gray-800">
+                  {location.location}
+                </h3>
+
+                <div className="flex items-center gap-2 text-gray-500">
+                  <User size={16} />
+                  <span className="text-sm">{location.name}</span>
+                </div>
+
+                <div className="flex items-center gap-2 text-gray-500">
+                  <Clock size={16} />
+                  <span className="text-sm">Last visited 2 days ago</span>
+                </div>
+
+                {/* Visit Summary */}
+                <div className="mt-4 p-3 bg-gray-50 rounded-xl">
+                  <div className="text-sm text-gray-600">
+                    Last order:
+                    {Object.entries(location.visits[0].food).map(
+                      ([item, quantity]: [string, string | number]) => (
+                        <span key={item} className="block mt-1 text-gray-700">
+                          {quantity}x {item}
+                        </span>
+                      )
+                    )}
+                  </div>
+                </div>
+
+                {/* Fullness Indicator */}
+                <div
+                  className={`mt-2 inline-flex items-center px-3 py-1 rounded-full text-sm
+                  ${
+                    location.visits[0].fullness === "perfect"
+                      ? "bg-green-100 text-green-600"
+                      : location.visits[0].fullness === "too much"
+                      ? "bg-red-100 text-red-600"
+                      : "bg-yellow-100 text-yellow-600"
+                  }`}
+                >
+                  {location.visits[0].fullness === "perfect"
+                    ? "😊 Just Right"
+                    : location.visits[0].fullness === "too much"
+                    ? "😅 Too Much"
+                    : "😋 Not Enough"}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
     </div>
   );
 };

@@ -101,7 +101,7 @@ const Header: React.FC<HeaderProps> = ({ setPage, setSelectedLocation }) => {
                   freeSolo
                   options={locations}
                   value={searchValue}
-                  onChange={(event: any, newValue: string | null) => {
+                  onChange={(_event: any, newValue: string | null) => {
                     if (newValue) {
                       handleLocationSelect(newValue);
                     }
