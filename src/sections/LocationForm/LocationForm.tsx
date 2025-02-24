@@ -10,13 +10,19 @@ import {
   ListItemText,
   CircularProgress,
   IconButton,
+  Box,
+  FormControl,
+  InputLabel,
+  MenuItem,
+  Select,
+  SelectChangeEvent,
 } from "@mui/material";
 import { Icon } from "@iconify/react";
 import debounce from "lodash.debounce";
 import Fuse from "fuse.js";
 import useFirestoreWrite from "../../firebase/useFirestoreWrite";
 import { useSnackbar } from "notistack";
-import { Location, LocationFormProp } from "../../utils/models";
+import { Fullness, Location, LocationFormProp } from "../../utils/models";
 
 const LocationForm = () => {
   const { enqueueSnackbar } = useSnackbar();
@@ -27,6 +33,7 @@ const LocationForm = () => {
       {
         food: { "": 1 },
         date: new Date(),
+        fullness: "perfect",
       },
     ],
     selectedLocation: null,
@@ -52,7 +59,7 @@ const LocationForm = () => {
     field: "name" | "quantity"
   ) => {
     const { value } = e.target;
-    const updatedFood = { ...formData?.visits[0].food };
+    const updatedFood = { ...formData.visits[0].food };
     const foodKeys = Object.keys(updatedFood);
     const foodKey = foodKeys[index];
 
@@ -72,8 +79,20 @@ const LocationForm = () => {
       ...formData,
       visits: [
         {
+          ...formData.visits[0],
           food: updatedFood,
-          date: formData?.visits[0].date,
+        },
+      ],
+    });
+  };
+
+  const handleFullnessChange = (e: SelectChangeEvent<Fullness>) => {
+    setFormData({
+      ...formData,
+      visits: [
+        {
+          ...formData.visits[0],
+          fullness: e.target.value as Fullness,
         },
       ],
     });
@@ -91,6 +110,7 @@ const LocationForm = () => {
             "": 1,
           },
           date: currentVisit.date,
+          fullness: currentVisit.fullness,
         },
       ],
     });
@@ -111,6 +131,7 @@ const LocationForm = () => {
         {
           food: currentFood,
           date: formData?.visits[0].date,
+          fullness: formData?.visits[0].fullness,
         },
       ],
     });
@@ -132,6 +153,7 @@ const LocationForm = () => {
           {
             food: { "": 1 },
             date: new Date(),
+            fullness: "perfect",
           },
         ],
         selectedLocation: null,
@@ -313,6 +335,20 @@ const LocationForm = () => {
                 </IconButton>
               </div>
             ))}
+            <Box sx={{ mt: 2, mb: 2 }}>
+              <FormControl fullWidth size="small">
+                <InputLabel>Fullness Level</InputLabel>
+                <Select
+                  value={formData.visits[0].fullness}
+                  label="Fullness Level"
+                  onChange={handleFullnessChange}
+                >
+                  <MenuItem value="not enough">Not Enough</MenuItem>
+                  <MenuItem value="perfect">Perfect</MenuItem>
+                  <MenuItem value="too much">Too Much</MenuItem>
+                </Select>
+              </FormControl>
+            </Box>
             <Button
               variant="outlined"
               color="primary"

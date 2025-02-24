@@ -7,11 +7,15 @@ import {
   Typography,
   Box,
   TextField,
+  FormControl,
+  InputLabel,
+  MenuItem,
+  Select,
 } from "@mui/material";
 import { Icon } from "@iconify/react";
 import { useEffect, useState } from "react";
 import { Timestamp } from "firebase/firestore";
-import { Visit } from "../utils/models";
+import { Fullness, Visit } from "../utils/models";
 
 interface LocationDialogProps {
   open: boolean;
@@ -41,6 +45,7 @@ const LocationDialog = ({
   const [newFood, setNewFood] = useState<Visit>({
     food: {},
     date: Timestamp.now(),
+    fullness: "perfect",
   });
 
   // Update useEffect to initialize localVisits when selectedFood changes
@@ -54,8 +59,9 @@ const LocationDialog = ({
   const handleAddFood = () => {
     setIsAddingFood(true);
     setNewFood({
-      food: {},
+      food: { "": 1 },
       date: Timestamp.now(),
+      fullness: "perfect",
     });
   };
   const handleNewFoodSubmit = async () => {
@@ -70,6 +76,7 @@ const LocationDialog = ({
         setNewFood({
           food: {},
           date: Timestamp.now(),
+          fullness: "perfect",
         });
       } catch (error) {
         // If the backend update fails, revert the optimistic update
@@ -195,6 +202,25 @@ const LocationDialog = ({
                     />
                   </Box>
                 ))}
+                <Box sx={{ mt: 2, mb: 2 }}>
+                  <FormControl fullWidth size="small">
+                    <InputLabel>Fullness Level</InputLabel>
+                    <Select
+                      value={newFood.fullness}
+                      label="Fullness Level"
+                      onChange={(e) =>
+                        setNewFood({
+                          ...newFood,
+                          fullness: e.target.value as Fullness,
+                        })
+                      }
+                    >
+                      <MenuItem value="not enough">Not Enough</MenuItem>
+                      <MenuItem value="perfect">Perfect</MenuItem>
+                      <MenuItem value="too much">Too Much</MenuItem>
+                    </Select>
+                  </FormControl>
+                </Box>
                 <Box
                   sx={{
                     mt: 2,
@@ -270,6 +296,20 @@ const LocationDialog = ({
                               minute: "2-digit",
                             })
                           : "No Date Found"}
+                      </Typography>
+                      <Typography
+                        variant="subtitle2"
+                        sx={{
+                          mb: 1,
+                          color:
+                            visit.fullness === "perfect"
+                              ? "success.main"
+                              : visit.fullness === "not enough"
+                              ? "warning.main"
+                              : "error.main",
+                        }}
+                      >
+                        Fullness: {visit.fullness}
                       </Typography>
 
                       {Object.entries(visit.food).map(

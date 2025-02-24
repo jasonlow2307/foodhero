@@ -1,5 +1,7 @@
 import { Timestamp } from "firebase/firestore";
 
+export type Fullness = "not enough" | "perfect" | "too much";
+
 export interface Location {
   place_id: number;
   display_name: string;
@@ -11,6 +13,7 @@ export interface Location {
 export interface Visit {
   food: { [key: string]: number };
   date: Date | Timestamp;
+  fullness: Fullness;
 }
 
 export interface LocationFormProp {

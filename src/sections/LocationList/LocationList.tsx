@@ -49,9 +49,18 @@ const LocationList = () => {
     }
   }, [locations]);
 
-  const handleClickOpen = (location: any) => {
+  const handleClickOpen = async (location: any) => {
     setSelectedLocation(location);
     setOpen(true);
+    // try {
+    //   const foodItems = location.visits.flatMap((visit: any) =>
+    //     Object.keys(visit.food)
+    //   );
+    //   const analysis = await analyzeLocation(location.location, foodItems);
+    //   console.log("Analysis", analysis);
+    // } catch (error) {
+    //   console.error("Failed to analyze location:", error);
+    // }
   };
 
   const handleClose = () => {

@@ -16,10 +16,14 @@
 
     /* Linting */
     "strict": false,
+    "noImplicitAny": false,
+    "strictNullChecks": false,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
-    "noUncheckedSideEffectImports": true
+    "noUncheckedSideEffectImports": true,
+
+    "jsx": "react-jsx"
   },
   "include": ["vite.config.ts", "src/**/*", "src/declarations.d.ts"]
 }
