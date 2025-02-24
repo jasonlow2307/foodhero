@@ -44,3 +44,19 @@ body {
 .signup-button:hover {
   background-color: rgb(0, 85, 204); /* Darker blue on hover */
 }
+
+/* Add these styles to your existing CSS */
+.search-dropdown {
+  position: absolute;
+  right: 0;
+  top: 100%;
+  background: white;
+  border-radius: 4px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  z-index: 1000;
+  margin-top: 8px;
+}
+
+.MuiAutocomplete-root .MuiInputBase-root {
+  padding: 8px;
+}

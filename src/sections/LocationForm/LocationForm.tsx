@@ -1,28 +1,11 @@
 import React, { useState, useCallback } from "react";
-import {
-  TextField,
-  Button,
-  Container,
-  Paper,
-  Typography,
-  List,
-  ListItem,
-  ListItemText,
-  CircularProgress,
-  IconButton,
-  Box,
-  FormControl,
-  InputLabel,
-  MenuItem,
-  Select,
-  SelectChangeEvent,
-} from "@mui/material";
-import { Icon } from "@iconify/react";
+import { SelectChangeEvent } from "@mui/material";
 import debounce from "lodash.debounce";
 import Fuse from "fuse.js";
 import useFirestoreWrite from "../../firebase/useFirestoreWrite";
 import { useSnackbar } from "notistack";
 import { Fullness, Location, LocationFormProp } from "../../utils/models";
+import { Search, Camera, Trash2, PlusCircle, Send } from "lucide-react";
 
 const LocationForm = () => {
   const { enqueueSnackbar } = useSnackbar();
@@ -224,145 +207,155 @@ const LocationForm = () => {
   };
 
   return (
-    <div
-      style={{
-        minHeight: "100vh",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        background: "linear-gradient(135deg, #89f7fe 0%, #66a6ff 100%)",
-        fontFamily: "Arial, sans-serif",
-      }}
-    >
-      <Container maxWidth="sm">
-        <Paper
-          elevation={3}
-          style={{
-            padding: "20px",
-            textAlign: "center",
-            borderRadius: "25px",
-          }}
-        >
-          <Typography variant="h5" gutterBottom marginBottom={3}>
-            Food
-          </Typography>
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-100 to-blue-100 p-4">
+      <div className="w-full max-w-xl bg-white rounded-3xl shadow-xl p-8">
+        {/* Header */}
+        <div className="text-center mb-8">
+          <h1 className="text-3xl font-bold bg-gradient-to-r from-green-400 to-blue-500 bg-clip-text text-transparent">
+            Food Waste Hero 🌱
+          </h1>
+          <p className="text-gray-600 mt-2">
+            Track your portions, save the planet!
+          </p>
+        </div>
 
-          <form
-            onSubmit={handleSubmit}
-            style={{ display: "flex", flexDirection: "column", gap: "15px" }}
-          >
-            <TextField
-              variant="outlined"
-              label="Your Name"
+        <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Name Input */}
+          <div className="relative">
+            <input
               name="name"
-              value={formData?.name}
+              type="text"
+              placeholder="Your Name"
+              className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-green-400 focus:outline-none transition-colors"
+              value={formData.name}
               onChange={handleChange}
-              fullWidth
-              required
             />
-            <TextField
-              variant="outlined"
-              label="Your Location"
+          </div>
+          {/* Location Input */}
+          <div className="relative">
+            <input
               name="location"
-              value={formData?.location}
+              type="text"
+              autoComplete="off"
+              placeholder="Restaurant Location"
+              className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-green-400 focus:outline-none transition-colors"
+              value={formData.location}
               onChange={handleChange}
-              fullWidth
-              required
-              InputProps={{
-                endAdornment: (
-                  <>
-                    <Icon
-                      icon="material-symbols:search-rounded"
-                      onClick={() => handleLocationSearch(formData?.location)}
-                      fontSize={30}
-                      fontWeight="bold"
-                      style={{ cursor: "pointer" }}
-                    />
-                    {loading && (
-                      <CircularProgress
-                        size={24}
-                        style={{ marginLeft: "10px" }}
-                      />
-                    )}
-                  </>
-                ),
-              }}
             />
-            {formData?.location && searchResults.length > 0 && (
-              <List style={{ maxHeight: "150px", overflowY: "auto" }}>
-                {searchResults.map((location, index) => (
-                  <ListItem
-                    key={index}
-                    onClick={() => handleLocationSelect(location)}
-                    sx={{ cursor: "pointer" }}
-                  >
-                    <ListItemText primary={location.display_name} />
-                  </ListItem>
-                ))}
-              </List>
-            )}
-            <Typography variant="h6" gutterBottom>
-              What are you craving?
-            </Typography>
-            {Object.keys(formData?.visits[0].food).map((foodKey, index) => (
-              <div
-                key={index}
-                style={{ display: "flex", gap: "10px", alignItems: "center" }}
-              >
-                <TextField
-                  variant="outlined"
-                  label="Food Name"
-                  value={foodKey}
-                  onChange={(e) => handleFoodChange(e, index, "name")}
-                  fullWidth
-                  required
-                />
-                <TextField
-                  variant="outlined"
-                  label="Quantity"
-                  type="number"
-                  value={formData?.visits[0][foodKey]}
-                  onChange={(e) => handleFoodChange(e, index, "quantity")}
-                  sx={{ width: "150px" }}
-                  required
-                />
-                <IconButton
-                  onClick={() => handleDeleteFood(index)}
-                  color="error"
-                  disabled={Object.keys(formData?.visits[0]).length <= 1}
-                >
-                  <Icon icon="mdi:delete" />
-                </IconButton>
+            <Search
+              className="absolute right-3 top-3 text-gray-400"
+              size={20}
+            />
+
+            {/* Add this section for search results */}
+            {searchResults.length > 0 && (
+              <div className="absolute z-10 w-full mt-1 bg-white rounded-xl shadow-lg border border-gray-200 max-h-60 overflow-y-auto">
+                {loading ? (
+                  <div className="p-4 text-center text-gray-500">
+                    Loading...
+                  </div>
+                ) : (
+                  searchResults.map((location) => (
+                    <div
+                      key={location.place_id}
+                      onClick={() => handleLocationSelect(location)}
+                      className="px-4 py-3 hover:bg-gray-50 cursor-pointer border-b last:border-b-0 transition-colors"
+                    >
+                      <div className="font-medium text-gray-700">
+                        {location.display_name.split(",")[0]}
+                      </div>
+                      <div className="text-sm text-gray-500 truncate">
+                        {location.display_name.split(",").slice(1).join(",")}
+                      </div>
+                    </div>
+                  ))
+                )}
               </div>
-            ))}
-            <Box sx={{ mt: 2, mb: 2 }}>
-              <FormControl fullWidth size="small">
-                <InputLabel>Fullness Level</InputLabel>
-                <Select
-                  value={formData.visits[0].fullness}
-                  label="Fullness Level"
-                  onChange={handleFullnessChange}
+            )}
+          </div>
+          {/* Food Items Section */}
+          <div className="space-y-4">
+            <h2 className="text-xl font-semibold text-gray-700 flex items-center gap-2">
+              <Camera className="text-green-400" size={24} />
+              What are you ordering?
+            </h2>
+
+            {Object.entries(formData.visits[0].food).map(
+              ([foodName, quantity], index) => (
+                <div key={index} className="flex gap-3">
+                  <input
+                    type="text"
+                    placeholder="Food name"
+                    value={foodName}
+                    onChange={(e) => handleFoodChange(e, index, "name")}
+                    className="flex-1 px-4 py-2 rounded-lg border-2 border-gray-200 focus:border-green-400 focus:outline-none"
+                  />
+                  <input
+                    type="number"
+                    placeholder="Qty"
+                    value={quantity}
+                    onChange={(e) => handleFoodChange(e, index, "quantity")}
+                    className="w-20 px-2 py-2 rounded-lg border-2 border-gray-200 focus:border-green-400 focus:outline-none"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => handleDeleteFood(index)}
+                    className="p-2 text-red-400 hover:bg-red-50 rounded-lg transition-colors hover:cursor-pointer"
+                    disabled={Object.keys(formData.visits[0].food).length <= 1}
+                  >
+                    <Trash2 size={20} />
+                  </button>
+                </div>
+              )
+            )}
+          </div>
+          {/* Fullness Level */}
+          <div className="space-y-2">
+            <label className="text-gray-700 font-medium">
+              How full are you?
+            </label>
+            <div className="grid grid-cols-3 gap-3">
+              {["not enough", "perfect", "too much"].map((level) => (
+                <button
+                  key={level}
+                  type="button"
+                  onClick={() =>
+                    handleFullnessChange({
+                      target: { value: level as Fullness, name: "fullness" },
+                    } as SelectChangeEvent<Fullness>)
+                  }
+                  className={`py-2 px-4 rounded-xl border-2 transition-all hover:cursor-pointer ${
+                    formData.visits[0].fullness === level
+                      ? "border-green-400 bg-green-50 text-green-600"
+                      : "border-gray-200 hover:border-green-200"
+                  }`}
                 >
-                  <MenuItem value="not enough">Not Enough</MenuItem>
-                  <MenuItem value="perfect">Perfect</MenuItem>
-                  <MenuItem value="too much">Too Much</MenuItem>
-                </Select>
-              </FormControl>
-            </Box>
-            <Button
-              variant="outlined"
-              color="primary"
-              onClick={handleAddFood}
-              style={{ marginTop: "10px" }}
-            >
-              Add Food Item
-            </Button>
-            <Button type="submit" variant="contained" color="primary" fullWidth>
-              Submit 🍽️
-            </Button>
-          </form>
-        </Paper>
-      </Container>
+                  {level === "not enough" && "😋 Still Hungry"}
+                  {level === "perfect" && "😊 Just Right"}
+                  {level === "too much" && "😅 Too Full"}
+                </button>
+              ))}
+            </div>
+          </div>
+          {/* Add Food Button */}
+          <button
+            type="button"
+            onClick={handleAddFood}
+            className="w-full py-3 rounded-xl border-2 border-dashed border-gray-300 text-gray-500 hover:border-green-400 hover:text-green-500 transition-colors flex items-center justify-center gap-2 hover:cursor-pointer"
+          >
+            <PlusCircle size={20} />
+            Add Another Item
+          </button>
+          {/* Submit Button */}
+          <button
+            type="submit"
+            className="w-full py-4 bg-gradient-to-r from-green-400 to-blue-500 text-white rounded-xl hover:opacity-90 transition-opacity flex items-center justify-center gap-2 font-medium hover:cursor-pointer"
+          >
+            <Send size={20} />
+            Save My Order
+          </button>
+        </form>
+      </div>
     </div>
   );
 };

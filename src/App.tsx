@@ -3,10 +3,11 @@ import Header from "./sections/Header/Header";
 import LocationForm from "./sections/LocationForm/LocationForm";
 import LocationList from "./sections/LocationList/LocationList";
 import { SnackbarProvider } from "notistack";
+import "./App.css";
 
 function App() {
-  const [page, setPage] = useState("list");
-  console.log(page);
+  const [page, setPage] = useState("add");
+  const [selectedLocation, setSelectedLocation] = useState(null);
 
   return (
     <SnackbarProvider
@@ -19,9 +20,14 @@ function App() {
         marginTop: "20px",
       }}
     >
-      <Header setPage={setPage} />
+      <Header setPage={setPage} setSelectedLocation={setSelectedLocation} />
       {page == "add" && <LocationForm />}
-      {page == "list" && <LocationList />}
+      {page == "list" && (
+        <LocationList
+          initialSelectedLocation={selectedLocation}
+          clearSelectedLocation={() => setSelectedLocation(null)}
+        />
+      )}
     </SnackbarProvider>
   );
 }

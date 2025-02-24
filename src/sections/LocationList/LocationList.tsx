@@ -22,8 +22,15 @@ import {
   getWazeLink,
 } from "../../utils/mapUtils";
 import { getTimeAgo } from "../../utils/timeUtil";
+interface LocationListProps {
+  initialSelectedLocation?: any;
+  clearSelectedLocation?: () => void;
+}
 
-const LocationList = () => {
+const LocationList: React.FC<LocationListProps> = ({
+  initialSelectedLocation,
+  clearSelectedLocation,
+}) => {
   const { data: locations, loading: locationLoading } =
     useFirestoreCollection("locations");
   const [images, setImages] = useState<Images>({});
@@ -48,6 +55,15 @@ const LocationList = () => {
       fetchImages();
     }
   }, [locations]);
+
+  // Add effect to handle initial selected location
+  useEffect(() => {
+    if (initialSelectedLocation) {
+      setSelectedLocation(initialSelectedLocation);
+      setOpen(true);
+      clearSelectedLocation?.();
+    }
+  }, [initialSelectedLocation, clearSelectedLocation]);
 
   const handleClickOpen = async (location: any) => {
     setSelectedLocation(location);
