@@ -42,6 +42,7 @@ const Header: React.FC<HeaderProps> = ({ setPage, setSelectedLocation }) => {
           <nav className="hidden md:flex space-x-6">
             <a
               href="#"
+              onClick={() => setPage("whatToEat")}
               className="text-gray-600 hover:text-green-500 transition-colors duration-200 font-medium"
             >
               What To Eat

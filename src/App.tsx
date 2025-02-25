@@ -4,6 +4,7 @@ import LocationForm from "./sections/LocationForm/LocationForm";
 import LocationList from "./sections/LocationList/LocationList";
 import { SnackbarProvider } from "notistack";
 import "./App.css";
+import WhatToEat from "./sections/WhatToEat/WhatToEat";
 
 function App() {
   const [page, setPage] = useState("add");
@@ -29,6 +30,7 @@ function App() {
           setPage={setPage}
         />
       )}
+      {page == "whatToEat" && <WhatToEat setPage={setPage} />}
     </SnackbarProvider>
   );
 }
