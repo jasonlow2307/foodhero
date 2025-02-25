@@ -202,34 +202,49 @@ const WhatToEat: React.FC<WhatToEatProps> = ({ setPage }) => {
   };
 
   const handleDrawCard = () => {
-    if (remainingCards.length > 0 && animationStage === "shuffled") {
-      const card = remainingCards[0];
-
-      // Animate drawing the card
+    if (remainingCards.length > 0) {
+      const nextCard = remainingCards[0];
       setAnimationStage("drawing");
+
+      // First, reset the drawn card position
+      setDrawnCard(null);
+
+      // Setup initial positions for animation
+      setCardPositions(
+        remainingCards.map((loc, index) => ({
+          ...loc,
+          x: 0,
+          y: 0,
+          rotation: (index - Math.floor(remainingCards.length / 2)) * 2,
+          scale: 1,
+          zIndex: remainingCards.length - index,
+          opacity: 1,
+        }))
+      );
 
       let progress = 0;
       const animateDraw = setInterval(() => {
-        progress += 3;
+        progress += 2; // Slower animation
         setAnimationProgress(progress);
 
-        // Update the drawn card position
+        // Animate the top card
         setCardPositions((prev) =>
-          prev.map((c, index) => {
+          prev.map((card, index) => {
             if (index === 0) {
-              // Top card animation
+              // Top card flies up and grows slightly
               return {
-                ...c,
-                y: -(progress * 2),
-                rotation: 0,
-                scale: 1 + (progress / 100) * 0.1,
-                opacity: 1,
+                ...card,
+                y: -(progress * 3), // Move up
+                x: Math.sin(progress / 10) * 20, // Slight horizontal swing
+                rotation: Math.sin(progress / 5) * 10, // Rotation animation
+                scale: 1 + (progress / 100) * 0.1, // Slight grow effect
+                opacity: 1 - (progress / 100) * 0.5, // Fade out effect
               };
             } else {
-              // Other cards subtle adjustment
+              // Other cards shift up slightly
               return {
-                ...c,
-                y: 0,
+                ...card,
+                y: -(progress / 10),
                 rotation: (index - 1 - Math.floor((prev.length - 1) / 2)) * 2,
                 scale: 1,
                 opacity: 1,
@@ -240,7 +255,7 @@ const WhatToEat: React.FC<WhatToEatProps> = ({ setPage }) => {
 
         if (progress >= 100) {
           clearInterval(animateDraw);
-          setDrawnCard(card);
+          setDrawnCard(nextCard);
           setRemainingCards(remainingCards.slice(1));
           setAnimationStage("drawn");
         }
@@ -416,7 +431,7 @@ const WhatToEat: React.FC<WhatToEatProps> = ({ setPage }) => {
                 animationStage === "shuffling" ||
                 animationStage === "drawing"
               }
-              className={`px-6 py-3 rounded-xl flex items-center gap-2 font-medium transition-all hover: cursor-pointer ${
+              className={`mb-8 px-6 py-3 rounded-xl flex items-center gap-2 font-medium transition-all hover: cursor-pointer ${
                 animationStage === "initial" ||
                 animationStage === "collecting" ||
                 animationStage === "shuffling" ||
@@ -562,8 +577,11 @@ const WhatToEat: React.FC<WhatToEatProps> = ({ setPage }) => {
           {drawnCard && (
             <div className="flex flex-col items-center">
               <div
-                className="bg-white rounded-3xl p-6 shadow-xl w-80 transform transition-all duration-500 hover:scale-105"
+                className="bg-white rounded-3xl p-6 shadow-xl w-80 transform transition-all duration-700"
                 onClick={() => handleLocationClick(drawnCard)}
+                style={{
+                  animation: "cardAppear 0.7s ease-out",
+                }}
               >
                 {/* Location Image */}
                 <div className="h-48 rounded-2xl bg-gray-100 mb-4 overflow-hidden">
@@ -622,21 +640,21 @@ const WhatToEat: React.FC<WhatToEatProps> = ({ setPage }) => {
                 </div>
               </div>
 
-              <div className="mt-8 flex gap-4">
+              <div className="mt-8 flex gap-4 mb-4">
                 <button
                   onClick={handleDrawCard}
                   disabled={remainingCards.length === 0}
                   className={`px-6 py-3 rounded-xl flex items-center gap-2 font-medium transition-all ${
                     remainingCards.length === 0
                       ? "bg-gray-200 text-gray-400 cursor-not-allowed"
-                      : "bg-gradient-to-r from-green-400 to-blue-500 text-white hover:opacity-90"
+                      : "bg-gradient-to-r from-green-400 to-blue-500 text-white hover:opacity-90 hover:cursor-pointer"
                   }`}
                 >
                   Draw Next Card
                 </button>
                 <button
                   onClick={handleReset}
-                  className="px-6 py-3 rounded-xl border-2 border-gray-300 text-gray-600 hover:border-red-300 hover:text-red-500 flex items-center gap-2 font-medium transition-all"
+                  className="px-6 py-3 rounded-xl border-2 border-gray-300 text-gray-600 hover:border-red-300 hover:text-red-500 flex items-center gap-2 font-medium transition-all  hover:cursor-pointer"
                 >
                   Start Over
                 </button>

@@ -7,7 +7,7 @@ import "./App.css";
 import WhatToEat from "./sections/WhatToEat/WhatToEat";
 
 function App() {
-  const [page, setPage] = useState("add");
+  const [page, setPage] = useState("whatToEat");
   const [selectedLocation, setSelectedLocation] = useState(null);
 
   return (
