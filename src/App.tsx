@@ -30,7 +30,7 @@ function App() {
           setPage={setPage}
         />
       )}
-      {page == "whatToEat" && <WhatToEat setPage={setPage} />}
+      {page == "whatToEat" && <WhatToEat />}
     </SnackbarProvider>
   );
 }

@@ -14,13 +14,8 @@ import {
 import { doc, getDoc, updateDoc } from "firebase/firestore";
 import { db } from "../../firebase/firebase";
 
-interface WhatToEatProps {
-  setPage: (page: string) => void;
-}
-
-const WhatToEat: React.FC<WhatToEatProps> = ({ setPage }) => {
-  const { data: locations, loading: locationLoading } =
-    useFirestoreCollection("locations");
+const WhatToEat: React.FC = () => {
+  const { data: locations } = useFirestoreCollection("locations");
   const [images, setImages] = useState<Images>({});
   const { fetchUnsplashImage } = useUnsplash();
   const [selectedLocation, setSelectedLocation] = useState<any>(null);
@@ -31,7 +26,7 @@ const WhatToEat: React.FC<WhatToEatProps> = ({ setPage }) => {
   const [animationProgress, setAnimationProgress] = useState(0); // 0-100 for transition animations
   const [drawnCard, setDrawnCard] = useState<any>(null);
   const [remainingCards, setRemainingCards] = useState<any[]>([]);
-  const [shuffledLocations, setShuffledLocations] = useState<any[]>([]);
+  const [_shuffledLocations, setShuffledLocations] = useState<any[]>([]);
   const [cardPositions, setCardPositions] = useState<any[]>([]); // To track card positions during animations
 
   useEffect(() => {
@@ -319,7 +314,7 @@ const WhatToEat: React.FC<WhatToEatProps> = ({ setPage }) => {
   };
 
   // Helper function to calculate card style based on animation stage
-  const getCardStyle = (card: any, index: number) => {
+  const getCardStyle = (_card: any, index: number) => {
     if (animationStage === "initial") {
       // Grid layout styles will be handled by grid container
       return {};
@@ -410,7 +405,7 @@ const WhatToEat: React.FC<WhatToEatProps> = ({ setPage }) => {
   }, [animationStage]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-100 to-blue-100 py-8 px-4">
+    <div className="min-h-screen bg-gradient-to-br from-green-100 to-blue-100 py-8 px-4 overflow-hidden">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="text-center mb-12">
@@ -461,7 +456,7 @@ const WhatToEat: React.FC<WhatToEatProps> = ({ setPage }) => {
           {/* Initial grid of all cards */}
           {animationStage === "initial" && (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 w-full">
-              {locations.map((location, index) => (
+              {locations.map((location, _index) => (
                 <div
                   key={location.id}
                   className="bg-white rounded-3xl p-6 shadow-xl hover:transform hover:scale-105 transition-all duration-300"
@@ -575,7 +570,7 @@ const WhatToEat: React.FC<WhatToEatProps> = ({ setPage }) => {
 
           {/* Drawn card */}
           {drawnCard && (
-            <div className="flex flex-col items-center">
+            <div className="flex flex-col items-center hover: cursor-pointer">
               <div
                 className="bg-white rounded-3xl p-6 shadow-xl w-80 transform transition-all duration-700"
                 onClick={() => handleLocationClick(drawnCard)}
