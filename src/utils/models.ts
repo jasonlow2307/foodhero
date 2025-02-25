@@ -8,6 +8,7 @@ export interface Location {
   boundingBox: number[];
   lon: number;
   lat: number;
+  distance?: number;
 }
 
 export interface Visit {

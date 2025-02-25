@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import { SelectChangeEvent } from "@mui/material";
 import debounce from "lodash.debounce";
 import Fuse from "fuse.js";
@@ -6,6 +6,12 @@ import useFirestoreWrite from "../../firebase/useFirestoreWrite";
 import { useSnackbar } from "notistack";
 import { Fullness, Location, LocationFormProp } from "../../utils/models";
 import { Search, Camera, Trash2, PlusCircle, Send } from "lucide-react";
+
+// Add these new interfaces
+interface Coordinates {
+  latitude: number;
+  longitude: number;
+}
 
 const LocationForm = () => {
   const { enqueueSnackbar } = useSnackbar();
@@ -25,15 +31,10 @@ const LocationForm = () => {
   const [loading, setLoading] = useState(false);
   const { writeData } = useFirestoreWrite();
 
-  // For handling changes in form fields
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData({ ...formData, [name]: value });
-
-    if (name === "location") {
-      debouncedHandleLocationSearch(value);
-    }
-  };
+  // Add new state for coordinates
+  const [userCoordinates, setUserCoordinates] = useState<Coordinates | null>(
+    null
+  );
 
   // Update the handleFoodChange function to handle empty keys better
   const handleFoodChange = (
@@ -150,6 +151,51 @@ const LocationForm = () => {
     }
   };
 
+  // Add useEffect for geolocation
+  useEffect(() => {
+    if ("geolocation" in navigator) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          setUserCoordinates({
+            latitude: position.coords.latitude,
+            longitude: position.coords.longitude,
+          });
+        },
+        (error) => {
+          console.error("Error getting location:", error);
+          enqueueSnackbar(
+            "Location access denied. Results won't be sorted by distance.",
+            {
+              variant: "warning",
+            }
+          );
+        }
+      );
+    }
+  }, []);
+
+  // Add distance calculation function
+  const calculateDistance = (
+    lat1: number,
+    lon1: number,
+    lat2: number,
+    lon2: number
+  ): number => {
+    const R = 6371; // Earth's radius in km
+    const dLat = ((lat2 - lat1) * Math.PI) / 180;
+    const dLon = ((lon2 - lon1) * Math.PI) / 180;
+    const a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos((lat1 * Math.PI) / 180) *
+        Math.cos((lat2 * Math.PI) / 180) *
+        Math.sin(dLon / 2) *
+        Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    console.log("DISTANCE", R * c);
+    return R * c;
+  };
+
+  // Modify the handleLocationSearch function
   const handleLocationSearch = async (location: string) => {
     if (!location) return;
     setLoading(true);
@@ -161,15 +207,45 @@ const LocationForm = () => {
       );
       const data = await response.json();
 
-      // Use fuse.js for fuzzy searching
-      const fuse = new Fuse(data, {
-        keys: ["display_name"],
-        threshold: 0.2, // Adjust the threshold for more or less fuzzy matching
-      });
-      const fuzzyResults = fuse.search(location).map((result) => result.item);
+      // Add distance to each location if user coordinates are available
+      const resultsWithDistance = data.map((loc: any) => ({
+        ...loc,
+        distance: userCoordinates
+          ? calculateDistance(
+              userCoordinates.latitude,
+              userCoordinates.longitude,
+              parseFloat(loc.lat),
+              parseFloat(loc.lon)
+            )
+          : null,
+      }));
 
-      setSearchResults(fuzzyResults as Location[]);
-      console.log(fuzzyResults);
+      // Sort by distance if available
+      const sortedResults = resultsWithDistance.sort((a: any, b: any) => {
+        // If either location has no distance, move it to the end
+        if (a.distance === null) return 1;
+        if (b.distance === null) return -1;
+        // Sort by ascending distance
+        return a.distance - b.distance;
+      });
+
+      console.log("SORTED RESULTS", sortedResults);
+
+      const fuzzyResults = sortedResults.filter((result) =>
+        result.display_name.toLowerCase().includes(location.toLowerCase())
+      );
+
+      // If no exact matches, then use Fuse.js for fuzzy search
+      if (fuzzyResults.length === 0) {
+        const fuse = new Fuse(sortedResults, {
+          keys: ["display_name"],
+          threshold: 0.2,
+        });
+        const fuseResults = fuse.search(location).map((result) => result.item);
+        setSearchResults(fuseResults as Location[]);
+      } else {
+        setSearchResults(fuzzyResults as Location[]);
+      }
     } catch (error) {
       console.error("Error fetching location data:", error);
     } finally {
@@ -179,8 +255,18 @@ const LocationForm = () => {
 
   const debouncedHandleLocationSearch = useCallback(
     debounce((location: string) => handleLocationSearch(location), 300),
-    []
+    [userCoordinates]
   );
+
+  // For handling changes in form fields
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData({ ...formData, [name]: value });
+
+    if (name === "location") {
+      debouncedHandleLocationSearch(value);
+    }
+  };
 
   const filterLocationAttributes = (location: any): Location => {
     return {
@@ -194,7 +280,6 @@ const LocationForm = () => {
 
   const handleLocationSelect = (location: any) => {
     const filteredLocation = filterLocationAttributes(location);
-    console.log(location.display_name);
     const displayName = location.display_name.includes(",")
       ? location.display_name.split(",")[0]
       : location.display_name.location;
@@ -246,7 +331,6 @@ const LocationForm = () => {
               className="absolute right-3 top-3 text-gray-400"
               size={20}
             />
-
             {/* Add this section for search results */}
             {searchResults.length > 0 && (
               <div className="absolute z-10 w-full mt-1 bg-white rounded-xl shadow-lg border border-gray-200 max-h-60 overflow-y-auto">
@@ -264,8 +348,17 @@ const LocationForm = () => {
                       <div className="font-medium text-gray-700">
                         {location.display_name.split(",")[0]}
                       </div>
-                      <div className="text-sm text-gray-500 truncate">
-                        {location.display_name.split(",").slice(1).join(",")}
+                      <div className="flex justify-between items-center">
+                        <div className="text-sm text-gray-500 truncate max-w-[80%]">
+                          {location.display_name.split(",").slice(1).join(",")}
+                        </div>
+                        {location.distance !== null && (
+                          <div className="text-xs text-green-600 font-medium">
+                            {location.distance < 1
+                              ? `${Math.round(location.distance * 1000)}m`
+                              : `${location.distance.toFixed(1)}km`}
+                          </div>
+                        )}
                       </div>
                     </div>
                   ))
