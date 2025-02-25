@@ -13,17 +13,19 @@ import {
   getGoogleMapsLink,
   getWazeLink,
 } from "../../utils/mapUtils";
+import { getTimeAgo } from "../../utils/timeUtil";
 interface LocationListProps {
   initialSelectedLocation?: any;
   clearSelectedLocation?: () => void;
+  setPage;
 }
 
 const LocationList: React.FC<LocationListProps> = ({
   initialSelectedLocation,
   clearSelectedLocation,
+  setPage,
 }) => {
-  const { data: locations, loading: locationLoading } =
-    useFirestoreCollection("locations");
+  const { data: locations } = useFirestoreCollection("locations");
   const [images, setImages] = useState<Images>({});
   const { fetchUnsplashImage } = useUnsplash();
   const [selectedLocation, setSelectedLocation] = useState<any>(null);
@@ -111,7 +113,10 @@ const LocationList: React.FC<LocationListProps> = ({
         {/* Location Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {/* Add New Location Card */}
-          <div className="bg-white/50 backdrop-blur-sm rounded-3xl p-6 cursor-pointer group hover:transform hover:scale-105 transition-all duration-300 border-2 border-dashed border-gray-200 flex flex-col items-center justify-center min-h-[330px]">
+          <div
+            className="bg-white/50 backdrop-blur-sm rounded-3xl p-6 cursor-pointer group hover:transform hover:scale-105 transition-all duration-300 border-2 border-dashed border-gray-200 flex flex-col items-center justify-center min-h-[330px]"
+            onClick={() => setPage("add")}
+          >
             <div className="text-gray-400 group-hover:text-green-500 transition-colors duration-300">
               <Plus size={48} />
             </div>
@@ -164,20 +169,25 @@ const LocationList: React.FC<LocationListProps> = ({
 
                 <div className="flex items-center gap-2 text-gray-500">
                   <Clock size={16} />
-                  <span className="text-sm">Last visited 2 days ago</span>
+                  <span className="text-sm">
+                    Last{" "}
+                    {getTimeAgo(
+                      location.visits[location.visits.length - 1].date
+                    )}
+                  </span>
                 </div>
 
                 {/* Visit Summary */}
                 <div className="mt-4 p-3 bg-gray-50 rounded-xl">
                   <div className="text-sm text-gray-600">
                     Last order:
-                    {Object.entries(location.visits[0].food).map(
-                      ([item, quantity]: [string, string | number]) => (
-                        <span key={item} className="block mt-1 text-gray-700">
-                          {quantity}x {item}
-                        </span>
-                      )
-                    )}
+                    {Object.entries(
+                      location.visits[location.visits.length - 1].food
+                    ).map(([item, quantity]: [string, string | number]) => (
+                      <span key={item} className="block mt-1 text-gray-700">
+                        {quantity}x {item}
+                      </span>
+                    ))}
                   </div>
                 </div>
 
@@ -185,16 +195,20 @@ const LocationList: React.FC<LocationListProps> = ({
                 <div
                   className={`mt-2 inline-flex items-center px-3 py-1 rounded-full text-sm
                   ${
-                    location.visits[0].fullness === "perfect"
+                    location.visits[location.visits.length - 1].fullness ===
+                    "perfect"
                       ? "bg-green-100 text-green-600"
-                      : location.visits[0].fullness === "too much"
+                      : location.visits[location.visits.length - 1].fullness ===
+                        "too much"
                       ? "bg-red-100 text-red-600"
                       : "bg-yellow-100 text-yellow-600"
                   }`}
                 >
-                  {location.visits[0].fullness === "perfect"
+                  {location.visits[location.visits.length - 1].fullness ===
+                  "perfect"
                     ? "😊 Just Right"
-                    : location.visits[0].fullness === "too much"
+                    : location.visits[location.visits.length - 1].fullness ===
+                      "too much"
                     ? "😅 Too Much"
                     : "😋 Not Enough"}
                 </div>

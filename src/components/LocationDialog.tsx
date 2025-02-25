@@ -1,8 +1,8 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Timestamp } from "firebase/firestore";
 import { Fullness, Visit } from "../utils/models";
 import { Icon } from "@iconify/react";
-import { X, Navigation, MapPin, Plus, Clock, Trash2 } from "lucide-react";
+import { X, Plus, Clock, Trash2 } from "lucide-react";
 
 interface LocationDialogProps {
   open: boolean;
@@ -14,6 +14,11 @@ interface LocationDialogProps {
   getGoogleMapsLink: (boundingBox: number[]) => string;
   getWazeLink: (boundingBox: number[]) => string;
   onAddNewVisit: (foodId: string, newFood: Visit) => Promise<void>;
+}
+
+interface FoodSuggestion {
+  name: string;
+  count: number;
 }
 
 const LocationDialog = ({
@@ -35,6 +40,77 @@ const LocationDialog = ({
     fullness: "perfect",
   });
 
+  const [suggestions, setSuggestions] = useState<FoodSuggestion[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [activeInput, setActiveInput] = useState<number | null>(null);
+
+  // Create memoized food suggestions from previous visits
+  const foodSuggestions = useMemo(() => {
+    if (!selectedFood?.visits) return [];
+
+    const foodCounts = new Map<string, number>();
+
+    selectedFood.visits.forEach((visit: Visit) => {
+      Object.keys(visit.food).forEach((foodName) => {
+        if (foodName.trim()) {
+          foodCounts.set(foodName, (foodCounts.get(foodName) || 0) + 1);
+        }
+      });
+    });
+
+    return Array.from(foodCounts.entries())
+      .map(([name, count]) => ({ name, count }))
+      .sort((a, b) => b.count - a.count);
+  }, [selectedFood?.visits]);
+
+  // Update the food input field to include suggestions
+  const renderFoodInputWithSuggestions = (name: string, index: number) => (
+    <div className="relative flex-1">
+      <input
+        type="text"
+        placeholder="Food name"
+        value={name}
+        onChange={(e) => handleFoodChange(name, e.target.value, "name")}
+        onFocus={() => {
+          setActiveInput(index);
+          setShowSuggestions(true);
+          setSuggestions(
+            foodSuggestions.filter((s) =>
+              s.name.toLowerCase().includes(name.toLowerCase())
+            )
+          );
+        }}
+        onBlur={() => {
+          // Delay hiding suggestions to allow clicks to register
+          setTimeout(() => {
+            setShowSuggestions(false);
+            setActiveInput(null);
+          }, 200);
+        }}
+        className="w-full px-4 py-2 rounded-xl border-2 border-gray-200 focus:border-green-400 focus:outline-none"
+      />
+      {showSuggestions && activeInput === index && suggestions.length > 0 && (
+        <div className="absolute z-10 w-full mt-1 bg-white rounded-xl shadow-lg border border-gray-200 max-h-48 overflow-y-auto">
+          {suggestions.map((suggestion) => (
+            <div
+              key={suggestion.name}
+              className="px-4 py-2 hover:bg-gray-50 cursor-pointer"
+              onClick={() => {
+                handleFoodChange(name, suggestion.name, "name");
+                setShowSuggestions(false);
+              }}
+            >
+              <div className="font-medium">{suggestion.name}</div>
+              <div className="text-xs text-gray-500">
+                Ordered {suggestion.count} time{suggestion.count > 1 ? "s" : ""}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+
   // Update useEffect to initialize localVisits when selectedFood changes
   useEffect(() => {
     if (selectedFood?.visits) {
@@ -43,14 +119,32 @@ const LocationDialog = ({
     }
   }, [selectedFood]);
 
-  const handleAddFood = () => {
-    setIsAddingFood(true);
-    setNewFood({
-      food: { "": 1 },
-      date: Timestamp.now(),
-      fullness: "perfect",
-    });
-  };
+  useEffect(() => {
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        onClose();
+      }
+    };
+
+    if (open) {
+      document.addEventListener("keydown", handleEscape);
+    }
+
+    return () => {
+      document.removeEventListener("keydown", handleEscape);
+    };
+  }, [open, onClose]);
+
+  // Add click outside handler
+  const handleBackdropClick = useCallback(
+    (event: React.MouseEvent) => {
+      if (event.target === event.currentTarget) {
+        onClose();
+      }
+    },
+    [onClose]
+  );
+
   const handleNewFoodSubmit = async () => {
     if (Object.keys(newFood.food).length > 0) {
       // Optimistically update the UI
@@ -101,10 +195,12 @@ const LocationDialog = ({
   };
 
   if (!open) return null;
-  console.log(getMapCenter(selectedFood.selectedLocation.boundingBox));
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+    <div
+      className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50"
+      onClick={handleBackdropClick}
+    >
       <div className="bg-white rounded-3xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
         {/* Header */}
         <div className="relative p-6 border-b border-gray-100">
@@ -196,15 +292,7 @@ const LocationDialog = ({
               {/* Food Input Fields */}
               {Object.entries(newFood.food).map(([name, quantity], index) => (
                 <div key={index} className="flex gap-3">
-                  <input
-                    type="text"
-                    placeholder="Food name"
-                    value={name}
-                    onChange={(e) =>
-                      handleFoodChange(name, e.target.value, "name")
-                    }
-                    className="flex-1 px-4 py-2 rounded-xl border-2 border-gray-200 focus:border-green-400 focus:outline-none"
-                  />
+                  {renderFoodInputWithSuggestions(name, index)}
                   <input
                     type="number"
                     placeholder="Qty"
@@ -285,20 +373,35 @@ const LocationDialog = ({
             <h3 className="text-lg font-semibold text-gray-700">
               Previous Visits
             </h3>
-            {localVisits.map((visit, index) => (
-              <div key={index} className="p-4 rounded-xl bg-gray-50 space-y-2">
-                <div className="flex items-center gap-2 text-gray-600">
-                  <Clock size={16} />
-                  <span>
-                    {(visit.date instanceof Timestamp
-                      ? new Date(visit.date.seconds * 1000)
-                      : visit.date
-                    ).toLocaleDateString()}
-                  </span>
-                </div>
-
+            {[...localVisits]
+              .sort((a, b) => {
+                const dateA =
+                  a.date instanceof Timestamp
+                    ? a.date.seconds
+                    : a.date.getTime() / 1000;
+                const dateB =
+                  b.date instanceof Timestamp
+                    ? b.date.seconds
+                    : b.date.getTime() / 1000;
+                return dateB - dateA; // descending order
+              })
+              .map((visit, index) => (
                 <div
-                  className={`inline-flex items-center px-3 py-1 rounded-full text-sm
+                  key={index}
+                  className="p-4 rounded-xl bg-gray-50 space-y-2"
+                >
+                  <div className="flex items-center gap-2 text-gray-600">
+                    <Clock size={16} />
+                    <span>
+                      {(visit.date instanceof Timestamp
+                        ? new Date(visit.date.seconds * 1000)
+                        : visit.date
+                      ).toLocaleDateString()}
+                    </span>
+                  </div>
+
+                  <div
+                    className={`inline-flex items-center px-3 py-1 rounded-full text-sm
                   ${
                     visit.fullness === "perfect"
                       ? "bg-green-100 text-green-600"
@@ -306,27 +409,27 @@ const LocationDialog = ({
                       ? "bg-red-100 text-red-600"
                       : "bg-yellow-100 text-yellow-600"
                   }`}
-                >
-                  {visit.fullness === "perfect"
-                    ? "😊 Just Right"
-                    : visit.fullness === "too much"
-                    ? "😅 Too Much"
-                    : "😋 Not Enough"}
-                </div>
+                  >
+                    {visit.fullness === "perfect"
+                      ? "😊 Just Right"
+                      : visit.fullness === "too much"
+                      ? "😅 Too Much"
+                      : "😋 Not Enough"}
+                  </div>
 
-                <div className="space-y-1">
-                  {Object.entries(visit.food).map(([foodName, quantity]) => (
-                    <div
-                      key={foodName}
-                      className="flex justify-between text-gray-600"
-                    >
-                      <span>{foodName}</span>
-                      <span>×{quantity}</span>
-                    </div>
-                  ))}
+                  <div className="space-y-1">
+                    {Object.entries(visit.food).map(([foodName, quantity]) => (
+                      <div
+                        key={foodName}
+                        className="flex justify-between text-gray-600"
+                      >
+                        <span>{foodName}</span>
+                        <span>×{quantity}</span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))}
           </div>
         </div>
       </div>

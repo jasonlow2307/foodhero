@@ -26,6 +26,7 @@ function App() {
         <LocationList
           initialSelectedLocation={selectedLocation}
           clearSelectedLocation={() => setSelectedLocation(null)}
+          setPage={setPage}
         />
       )}
     </SnackbarProvider>

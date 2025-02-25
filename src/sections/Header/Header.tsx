@@ -1,14 +1,8 @@
 // filepath: /C:/Users/jason/OneDrive - Sunway Education Group/Desktop/Projects/food-hero/src/sections/header.tsx
-import { Icon } from "@iconify/react";
 import React, { useState } from "react";
-import "./Header.css";
 import useFirestoreCollection from "../../firebase/useFirestoreCollection";
-import {
-  ClickAwayListener,
-  Paper,
-  Autocomplete,
-  TextField,
-} from "@mui/material";
+import { ClickAwayListener, Autocomplete, TextField } from "@mui/material";
+import { Plus, Search } from "lucide-react";
 
 interface HeaderProps {
   setPage: (page: string) => void;
@@ -40,87 +34,80 @@ const Header: React.FC<HeaderProps> = ({ setPage, setSelectedLocation }) => {
   };
 
   return (
-    <header className="header">
-      {" "}
-      {/* Use the CSS class */}
-      {/* Left Side - Logo & Navigation */}
-      <div style={{ display: "flex", alignItems: "center" }}>
-        <img
-          src="/logo.svg"
-          alt="FoodHero"
-          style={{ height: "80px", marginRight: "20px" }}
-        />
-        <nav>
-          <a href="#" className="nav-link">
-            {" "}
-            {/* Use the CSS class */}
-            What To Eat
-          </a>
-          <a href="#" className="nav-link" onClick={() => setPage("list")}>
-            {" "}
-            {/* Use the CSS class */}
-            List of Locations
-          </a>
-        </nav>
-      </div>
-      {/* Right Side - Authentication Buttons */}
-      <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
-        <a href="#" className="signup-button">
-          {" "}
-          {/* Use the CSS class */}
-          <Icon
-            icon="ic:baseline-plus"
-            style={{ fontSize: "30px", fontWeight: "bold" }}
-            onClick={() => setPage("add")}
-          />
-        </a>
-        <ClickAwayListener onClickAway={() => setIsSearchOpen(false)}>
-          <div style={{ position: "relative" }}>
+    <header className="bg-white shadow-md px-6 py-4">
+      <div className="max-w-7xl mx-auto flex justify-between items-center">
+        {/* Left Side - Logo & Navigation */}
+        <div className="flex items-center space-x-8">
+          <img src="/logo.svg" alt="FoodHero" className="h-16 w-auto" />
+          <nav className="hidden md:flex space-x-6">
             <a
               href="#"
-              className="signup-button"
-              onClick={() => setIsSearchOpen(!isSearchOpen)}
+              className="text-gray-600 hover:text-green-500 transition-colors duration-200 font-medium"
             >
-              <Icon
-                icon="material-symbols:search-rounded"
-                style={{ fontSize: "30px", fontWeight: "bold" }}
-              />
+              What To Eat
             </a>
-            {isSearchOpen && (
-              <Paper
-                sx={{
-                  position: "absolute",
-                  right: 0,
-                  top: "100%",
-                  width: "300px",
-                  mt: 1,
-                  zIndex: 1000,
-                }}
+            <a
+              href="#"
+              onClick={() => setPage("list")}
+              className="text-gray-600 hover:text-green-500 transition-colors duration-200 font-medium"
+            >
+              List of Locations
+            </a>
+          </nav>
+        </div>
+
+        {/* Right Side - Actions */}
+        <div className="flex items-center space-x-4">
+          {/* Add Location Button */}
+          <button
+            onClick={() => setPage("add")}
+            className="p-2 rounded-xl hover:bg-green-50 text-green-500 transition-colors duration-200 hover: cursor-pointer"
+          >
+            <Plus size={24} />
+          </button>
+
+          {/* Search */}
+          <ClickAwayListener onClickAway={() => setIsSearchOpen(false)}>
+            <div className="relative">
+              <button
+                onClick={() => setIsSearchOpen(!isSearchOpen)}
+                className="p-2 rounded-xl hover:bg-gray-50 text-gray-500 transition-colors duration-200 hover: cursor-pointer"
               >
-                <Autocomplete
-                  freeSolo
-                  options={locations}
-                  value={searchValue}
-                  onChange={(_event: any, newValue: string | null) => {
-                    if (newValue) {
-                      handleLocationSelect(newValue);
-                    }
-                  }}
-                  renderInput={(params) => (
-                    <TextField
-                      {...params}
-                      variant="outlined"
-                      size="small"
-                      placeholder="Search locations..."
-                      autoFocus
-                      sx={{ p: 1 }}
-                    />
-                  )}
-                />
-              </Paper>
-            )}
-          </div>
-        </ClickAwayListener>
+                <Search size={24} />
+              </button>
+
+              {isSearchOpen && (
+                <div className="absolute right-0 top-full mt-2 w-72 bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
+                  <Autocomplete
+                    freeSolo
+                    options={locations}
+                    value={searchValue}
+                    onChange={(_event: any, newValue: string | null) => {
+                      if (newValue) {
+                        handleLocationSelect(newValue);
+                      }
+                    }}
+                    renderInput={(params) => (
+                      <TextField
+                        {...params}
+                        variant="outlined"
+                        size="small"
+                        placeholder="Search locations..."
+                        autoFocus
+                        sx={{
+                          p: 1,
+                          "& .MuiOutlinedInput-root": {
+                            borderRadius: "0.75rem",
+                          },
+                        }}
+                      />
+                    )}
+                  />
+                </div>
+              )}
+            </div>
+          </ClickAwayListener>
+        </div>
       </div>
     </header>
   );
