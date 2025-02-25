@@ -208,18 +208,18 @@ const LocationForm = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-100 to-blue-100 p-4">
-      <div className="w-full max-w-xl bg-white rounded-3xl shadow-xl p-8">
+      <div className="w-full max-w-xl bg-white rounded-3xl shadow-xl p-4 md:p-8">
         {/* Header */}
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-green-400 to-blue-500 bg-clip-text text-transparent">
+        <div className="text-center mb-6 md:mb-8">
+          <h1 className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-green-400 to-blue-500 bg-clip-text text-transparent">
             Food Waste Hero 🌱
           </h1>
-          <p className="text-gray-600 mt-2">
+          <p className="text-sm md:text-base text-gray-600 mt-2">
             Track your portions, save the planet!
           </p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-4 md:space-y-6">
           {/* Name Input */}
           <div className="relative">
             <input
@@ -274,7 +274,7 @@ const LocationForm = () => {
             )}
           </div>
           {/* Food Items Section */}
-          <div className="space-y-4">
+          <div className="space-y-2">
             <h2 className="text-xl font-semibold text-gray-700 flex items-center gap-2">
               <Camera className="text-green-400" size={24} />
               What are you ordering?
@@ -282,28 +282,28 @@ const LocationForm = () => {
 
             {Object.entries(formData.visits[0].food).map(
               ([foodName, quantity], index) => (
-                <div key={index} className="flex gap-3">
+                <div key={index} className="flex items-center gap-2 min-w-0">
                   <input
                     type="text"
                     placeholder="Food name"
                     value={foodName}
                     onChange={(e) => handleFoodChange(e, index, "name")}
-                    className="flex-1 px-4 py-2 rounded-lg border-2 border-gray-200 focus:border-green-400 focus:outline-none"
+                    className="flex-1 min-w-0 px-3 py-2 text-sm md:text-base md:px-4 rounded-lg border-2 border-gray-200 focus:border-green-400 focus:outline-none"
                   />
                   <input
                     type="number"
                     placeholder="Qty"
                     value={quantity}
                     onChange={(e) => handleFoodChange(e, index, "quantity")}
-                    className="w-20 px-2 py-2 rounded-lg border-2 border-gray-200 focus:border-green-400 focus:outline-none"
+                    className="w-16 md:w-20 px-2 py-2 text-sm md:text-base rounded-lg border-2 border-gray-200 focus:border-green-400 focus:outline-none"
                   />
                   <button
                     type="button"
                     onClick={() => handleDeleteFood(index)}
-                    className="p-2 text-red-400 hover:bg-red-50 rounded-lg transition-colors hover:cursor-pointer"
+                    className="p-1.5 md:p-2 text-red-400 hover:bg-red-50 rounded-lg transition-colors hover:cursor-pointer flex-shrink-0"
                     disabled={Object.keys(formData.visits[0].food).length <= 1}
                   >
-                    <Trash2 size={20} />
+                    <Trash2 size={18} className="md:w-5 md:h-5" />
                   </button>
                 </div>
               )
@@ -314,7 +314,7 @@ const LocationForm = () => {
             <label className="text-gray-700 font-medium">
               How full are you?
             </label>
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-3">
               {["not enough", "perfect", "too much"].map((level) => (
                 <button
                   key={level}
@@ -349,7 +349,7 @@ const LocationForm = () => {
           {/* Submit Button */}
           <button
             type="submit"
-            className="w-full py-4 bg-gradient-to-r from-green-400 to-blue-500 text-white rounded-xl hover:opacity-90 transition-opacity flex items-center justify-center gap-2 font-medium hover:cursor-pointer"
+            className="w-full py-3 md:py-4 bg-gradient-to-r from-green-400 to-blue-500 text-white rounded-xl hover:opacity-90 transition-opacity flex items-center justify-center gap-2 font-medium hover:cursor-pointer"
           >
             <Send size={20} />
             Save My Order

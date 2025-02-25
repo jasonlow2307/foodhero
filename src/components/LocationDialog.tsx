@@ -198,38 +198,41 @@ const LocationDialog = ({
 
   return (
     <div
-      className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50"
+      className="fixed inset-0 bg-black/50 flex items-center justify-center p-2 md:p-4 z-50"
       onClick={handleBackdropClick}
     >
       <div className="bg-white rounded-3xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
         {/* Header */}
-        <div className="relative p-6 border-b border-gray-100">
+        <div className="relative p-4 md:p-6 border-b border-gray-100">
           <button
             onClick={onClose}
-            className="absolute right-6 top-6 text-gray-400 hover:text-gray-600 transition-colors hover:cursor-pointer"
+            className="absolute right-4 md:right-6 top-4 md:top-6 text-gray-400 hover:text-gray-600 transition-colors hover:cursor-pointer"
           >
             <X size={24} />
           </button>
-          <h2 className="text-2xl font-bold text-center bg-gradient-to-r from-green-400 to-blue-500 bg-clip-text text-transparent">
+          <h2 className="text-xl md:text-2xl font-bold text-center bg-gradient-to-r from-green-400 to-blue-500 bg-clip-text text-transparent">
             {selectedFood?.location}
           </h2>
         </div>
 
         {/* Content */}
-        <div className="p-6">
+        <div className="p-4 md:p-6">
           {/* Image */}
           {images[selectedFood?.id] && (
-            <div className="mb-6 rounded-2xl overflow-hidden">
+            <div className="mb-4 md:mb-6 rounded-2xl overflow-hidden">
               <img
                 src={images[selectedFood.id]}
                 alt={selectedFood.location}
-                className="w-full h-64 object-cover"
+                className="w-full h-48 md:h-64 object-cover"
               />
             </div>
           )}
 
           {/* Map */}
-          <div className="mb-6 rounded-2xl overflow-hidden h-64 bg-gray-100">
+          <h2 className="text-xl md:text-2xl font-bold text-center bg-gradient-to-r from-green-400 to-blue-500 bg-clip-text text-transparent mb-2">
+            Map
+          </h2>
+          <div className="mb-4 md:mb-6 rounded-2xl overflow-hidden h-48 md:h-64 bg-gray-100">
             <iframe
               width="100%"
               height="100%"
@@ -245,7 +248,7 @@ const LocationDialog = ({
           </div>
 
           {/* Navigation Links */}
-          <div className="flex justify-center gap-4 mb-6">
+          <div className="flex flex-wrap justify-center gap-2 md:gap-4 mb-4 md:mb-6">
             <a
               href={getGoogleMapsLink(
                 selectedFood.selectedLocation.boundingBox
@@ -324,7 +327,7 @@ const LocationDialog = ({
               ))}
 
               {/* Fullness Selection */}
-              <div className="grid grid-cols-3 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-3">
                 {["not enough", "perfect", "too much"].map((level) => (
                   <button
                     key={level}
@@ -345,7 +348,7 @@ const LocationDialog = ({
               </div>
 
               {/* Action Buttons */}
-              <div className="flex gap-3">
+              <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 sm: mt-10">
                 <button
                   onClick={handleAddFoodItem}
                   className="flex-1 py-2 rounded-xl border-2 border-gray-200 hover:border-green-400 transition-colors hover:cursor-pointer"

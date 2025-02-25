@@ -2,7 +2,7 @@
 import React, { useState } from "react";
 import useFirestoreCollection from "../../firebase/useFirestoreCollection";
 import { ClickAwayListener, Autocomplete, TextField } from "@mui/material";
-import { Plus, Search } from "lucide-react";
+import { Menu, Plus, Search } from "lucide-react";
 
 interface HeaderProps {
   setPage: (page: string) => void;
@@ -13,6 +13,8 @@ const Header: React.FC<HeaderProps> = ({ setPage, setSelectedLocation }) => {
   // Add inside Header component before return
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchValue, setSearchValue] = useState("");
+
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const { data: locationsData } = useFirestoreCollection("locations");
 
@@ -34,11 +36,11 @@ const Header: React.FC<HeaderProps> = ({ setPage, setSelectedLocation }) => {
   };
 
   return (
-    <header className="bg-white shadow-md px-6 py-4">
+    <header className="bg-white shadow-md px-4 md:px-6 py-3 md:py-4">
       <div className="max-w-7xl mx-auto flex justify-between items-center">
         {/* Left Side - Logo & Navigation */}
-        <div className="flex items-center space-x-8">
-          <img src="/logo.svg" alt="FoodHero" className="h-16 w-auto" />
+        <div className="flex items-center space-x-4 md:space-x-8">
+          <img src="/logo.svg" alt="FoodHero" className="h-10 md:h-16 w-auto" />
           <nav className="hidden md:flex space-x-6">
             <a
               href="#"
@@ -58,7 +60,15 @@ const Header: React.FC<HeaderProps> = ({ setPage, setSelectedLocation }) => {
         </div>
 
         {/* Right Side - Actions */}
-        <div className="flex items-center space-x-4">
+        <div className="flex items-center space-x-2 md:space-x-4">
+          {/* Add mobile menu button */}
+          <button
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            className="md:hidden p-2 rounded-xl hover:bg-gray-50 text-gray-500 transition-colors"
+          >
+            <Menu size={24} />
+          </button>
+
           {/* Add Location Button */}
           <button
             onClick={() => setPage("add")}
@@ -110,6 +120,33 @@ const Header: React.FC<HeaderProps> = ({ setPage, setSelectedLocation }) => {
           </ClickAwayListener>
         </div>
       </div>
+
+      {mobileMenuOpen && (
+        <div className="md:hidden py-3 border-t border-gray-100">
+          <nav className="flex flex-col space-y-3 px-4">
+            <a
+              href="#"
+              onClick={() => {
+                setPage("whatToEat");
+                setMobileMenuOpen(false);
+              }}
+              className="text-gray-600 py-2 hover:text-green-500 transition-colors duration-200 font-medium"
+            >
+              What To Eat
+            </a>
+            <a
+              href="#"
+              onClick={() => {
+                setPage("list");
+                setMobileMenuOpen(false);
+              }}
+              className="text-gray-600 py-2 hover:text-green-500 transition-colors duration-200 font-medium"
+            >
+              List of Locations
+            </a>
+          </nav>
+        </div>
+      )}
     </header>
   );
 };

@@ -111,7 +111,7 @@ const LocationList: React.FC<LocationListProps> = ({
         </div>
 
         {/* Location Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
           {/* Add New Location Card */}
           <div
             className="bg-white/50 backdrop-blur-sm rounded-3xl p-6 cursor-pointer group hover:transform hover:scale-105 transition-all duration-300 border-2 border-dashed border-gray-200 flex flex-col items-center justify-center min-h-[330px]"
@@ -141,11 +141,11 @@ const LocationList: React.FC<LocationListProps> = ({
           {locations.map((location) => (
             <div
               key={location.id}
-              className="bg-white rounded-3xl p-6 shadow-xl hover:transform hover:scale-105 transition-all duration-300 cursor-pointer"
+              className="bg-white rounded-3xl p-4 md:p-6 shadow-xl hover:transform hover:scale-105 transition-all duration-300 cursor-pointer"
               onClick={() => handleClickOpen(location)}
             >
               {/* Location Image */}
-              <div className="h-48 rounded-2xl bg-gray-100 mb-4 overflow-hidden">
+              <div className="h-36 sm:h-48 rounded-2xl bg-gray-100 mb-3 md:mb-4 overflow-hidden">
                 <img
                   src={images[location.id] || "/api/placeholder/400/320"}
                   alt={location.location}
@@ -157,8 +157,8 @@ const LocationList: React.FC<LocationListProps> = ({
               </div>
 
               {/* Location Details */}
-              <div className="space-y-3">
-                <h3 className="text-xl font-semibold text-gray-800">
+              <div className="space-y-2 md:space-y-3">
+                <h3 className="text-lg md:text-xl font-semibold text-gray-800">
                   {location.location}
                 </h3>
 
