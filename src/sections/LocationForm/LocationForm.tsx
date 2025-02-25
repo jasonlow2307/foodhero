@@ -231,15 +231,29 @@ const LocationForm = () => {
 
       console.log("SORTED RESULTS", sortedResults);
 
-      const fuzzyResults = sortedResults.filter((result) =>
-        result.display_name.toLowerCase().includes(location.toLowerCase())
-      );
+      // Replace the fuzzy search section with this
+      const fuzzyResults = sortedResults.filter((result) => {
+        // Split location names into words
+        const searchWords = location.toLowerCase().split(/[\s,]+/);
+        const locationWords = result.display_name.toLowerCase().split(/[\s,]+/);
 
-      // If no exact matches, then use Fuse.js for fuzzy search
+        // Check if any search word matches any part of the location name
+        return searchWords.some((searchWord) =>
+          locationWords.some(
+            (locationWord) =>
+              locationWord.includes(searchWord) ||
+              searchWord.includes(locationWord)
+          )
+        );
+      });
+
+      // If no matches found, use Fuse.js with more flexible options
       if (fuzzyResults.length === 0) {
         const fuse = new Fuse(sortedResults, {
           keys: ["display_name"],
-          threshold: 0.2,
+          threshold: 0.4, // More lenient matching
+          distance: 100, // Allow matches to be further apart
+          minMatchCharLength: 2, // Require at least 2 characters to match
         });
         const fuseResults = fuse.search(location).map((result) => result.item);
         setSearchResults(fuseResults as Location[]);
