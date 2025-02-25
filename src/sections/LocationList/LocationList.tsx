@@ -30,6 +30,18 @@ const LocationList: React.FC<LocationListProps> = ({
   const { fetchUnsplashImage } = useUnsplash();
   const [selectedLocation, setSelectedLocation] = useState<any>(null);
   const [open, setOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+
+  // Add useEffect for mobile detection
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 640);
+    };
+
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   useEffect(() => {
     const fetchImages = async () => {
@@ -145,7 +157,7 @@ const LocationList: React.FC<LocationListProps> = ({
               onClick={() => handleClickOpen(location)}
             >
               {/* Location Image */}
-              <div className="h-36 sm:h-48 rounded-2xl bg-gray-100 mb-3 md:mb-4 overflow-hidden">
+              <div className="h-36 sm:h-48 rounded-2xl bg-gray-100 mb-3 sm:mb-4 overflow-hidden">
                 <img
                   src={images[location.id] || "/api/placeholder/400/320"}
                   alt={location.location}
@@ -157,19 +169,19 @@ const LocationList: React.FC<LocationListProps> = ({
               </div>
 
               {/* Location Details */}
-              <div className="space-y-2 md:space-y-3">
-                <h3 className="text-lg md:text-xl font-semibold text-gray-800">
+              <div className="space-y-2 sm:space-y-3">
+                <h3 className="text-lg sm:text-xl font-semibold text-gray-800">
                   {location.location}
                 </h3>
 
                 <div className="flex items-center gap-2 text-gray-500">
-                  <User size={16} />
-                  <span className="text-sm">{location.name}</span>
+                  <User size={isMobile ? 14 : 16} />
+                  <span className="text-xs sm:text-sm">{location.name}</span>
                 </div>
 
                 <div className="flex items-center gap-2 text-gray-500">
-                  <Clock size={16} />
-                  <span className="text-sm">
+                  <Clock size={isMobile ? 14 : 16} />
+                  <span className="text-xs sm:text-sm">
                     Last{" "}
                     {getTimeAgo(
                       location.visits[location.visits.length - 1].date
@@ -178,13 +190,16 @@ const LocationList: React.FC<LocationListProps> = ({
                 </div>
 
                 {/* Visit Summary */}
-                <div className="mt-4 p-3 bg-gray-50 rounded-xl">
-                  <div className="text-sm text-gray-600">
+                <div className="mt-2 sm:mt-4 p-2 sm:p-3 bg-gray-50 rounded-xl">
+                  <div className="text-xs sm:text-sm text-gray-600">
                     Last order:
                     {Object.entries(
                       location.visits[location.visits.length - 1].food
                     ).map(([item, quantity]: [string, string | number]) => (
-                      <span key={item} className="block mt-1 text-gray-700">
+                      <span
+                        key={item}
+                        className="block mt-1 text-xs sm:text-sm text-gray-700"
+                      >
                         {quantity}x {item}
                       </span>
                     ))}
@@ -193,16 +208,16 @@ const LocationList: React.FC<LocationListProps> = ({
 
                 {/* Fullness Indicator */}
                 <div
-                  className={`mt-2 inline-flex items-center px-3 py-1 rounded-full text-sm
-                  ${
-                    location.visits[location.visits.length - 1].fullness ===
-                    "perfect"
-                      ? "bg-green-100 text-green-600"
-                      : location.visits[location.visits.length - 1].fullness ===
-                        "too much"
-                      ? "bg-red-100 text-red-600"
-                      : "bg-yellow-100 text-yellow-600"
-                  }`}
+                  className={`mt-2 inline-flex items-center px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm
+                    ${
+                      location.visits[location.visits.length - 1].fullness ===
+                      "perfect"
+                        ? "bg-green-100 text-green-600"
+                        : location.visits[location.visits.length - 1]
+                            .fullness === "too much"
+                        ? "bg-red-100 text-red-600"
+                        : "bg-yellow-100 text-yellow-600"
+                    }`}
                 >
                   {location.visits[location.visits.length - 1].fullness ===
                   "perfect"
