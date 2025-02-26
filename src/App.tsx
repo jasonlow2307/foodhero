@@ -7,6 +7,7 @@ import "./App.css";
 import WhatToEat from "./sections/WhatToEat/WhatToEat";
 import { ScreenSizeProvider } from "./utils/responsiveUtils";
 import HomePage from "./sections/HomePage/HomePage";
+import Footer from "./sections/Footer/Footer";
 
 function App() {
   const [page, setPage] = useState(() => {
@@ -73,6 +74,7 @@ function App() {
       )}
       {page == "whatToEat" && <WhatToEat />} */}
         <main>{renderPage()}</main>
+        <Footer />
       </SnackbarProvider>
     </ScreenSizeProvider>
   );

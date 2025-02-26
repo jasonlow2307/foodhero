@@ -183,7 +183,7 @@ const LocationList: React.FC<LocationListProps> = ({
       <div className="relative w-24 h-24 mb-8">
         {/* Circular spinner */}
         <div className="absolute inset-0 rounded-full border-t-4 border-green-400 animate-spin"></div>
-        <div className="absolute inset-0 rounded-full border-r-4 border-transparent border-t-4 border-blue-500 animate-spin-slow"></div>
+        <div className="absolute inset-0 rounded-full border-r-4 border-t-4 border-blue-500 animate-spin-slow"></div>
 
         {/* Food icon in the middle */}
         <div className="absolute inset-0 flex items-center justify-center text-3xl">
