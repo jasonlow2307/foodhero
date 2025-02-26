@@ -191,7 +191,6 @@ const LocationForm = () => {
         Math.sin(dLon / 2) *
         Math.sin(dLon / 2);
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-    console.log("DISTANCE", R * c);
     return R * c;
   };
 
@@ -228,8 +227,6 @@ const LocationForm = () => {
         // Sort by ascending distance
         return a.distance - b.distance;
       });
-
-      console.log("SORTED RESULTS", sortedResults);
 
       // Replace the fuzzy search section with this
       const fuzzyResults = sortedResults.filter((result) => {
@@ -346,7 +343,7 @@ const LocationForm = () => {
               size={20}
             />
             {/* Add this section for search results */}
-            {searchResults.length > 0 && (
+            {searchResults.length > 0 && formData.location && (
               <div className="absolute z-10 w-full mt-1 bg-white rounded-xl shadow-lg border border-gray-200 max-h-60 overflow-y-auto">
                 {loading ? (
                   <div className="p-4 text-center text-gray-500">
