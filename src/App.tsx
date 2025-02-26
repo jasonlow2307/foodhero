@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Header from "./sections/Header/Header";
 import LocationForm from "./sections/LocationForm/LocationForm";
 import LocationList from "./sections/LocationList/LocationList";
@@ -8,8 +8,22 @@ import WhatToEat from "./sections/WhatToEat/WhatToEat";
 import { ScreenSizeProvider } from "./utils/responsiveUtils";
 
 function App() {
-  const [page, setPage] = useState("add");
+  const [page, setPage] = useState(() => {
+    const savedPage = localStorage.getItem("currentPage");
+    return savedPage || "whatToEat";
+  });
   const [selectedLocation, setSelectedLocation] = useState(null);
+
+  // Save page to localStorage when it changes
+  useEffect(() => {
+    localStorage.setItem("currentPage", page);
+  }, [page]);
+
+  // Custom page setter that also updates localStorage
+  const handleSetPage = (newPage: string) => {
+    setPage(newPage);
+    localStorage.setItem("currentPage", newPage);
+  };
 
   const renderPage = () => {
     switch (page) {
@@ -18,7 +32,7 @@ function App() {
           <LocationList
             initialSelectedLocation={selectedLocation}
             clearSelectedLocation={() => setSelectedLocation(null)}
-            setPage={setPage}
+            setPage={handleSetPage}
           />
         );
       case "add":
@@ -26,7 +40,7 @@ function App() {
       case "whatToEat":
         return <WhatToEat />; // Assuming you have this component
       default:
-        return <LocationList setPage={setPage} />;
+        return <LocationList setPage={handleSetPage} />;
     }
   };
 
@@ -42,7 +56,10 @@ function App() {
           marginTop: "20px",
         }}
       >
-        <Header setPage={setPage} setSelectedLocation={setSelectedLocation} />
+        <Header
+          setPage={handleSetPage}
+          setSelectedLocation={setSelectedLocation}
+        />
         {/* {page == "add" && <LocationForm />}
       {page == "list" && (
         <LocationList

@@ -6,8 +6,8 @@ import useFirestoreWrite from "../../firebase/useFirestoreWrite";
 import { useSnackbar } from "notistack";
 import { Fullness, Location, LocationFormProp } from "../../utils/models";
 import { Search, Camera, Trash2, PlusCircle, Send } from "lucide-react";
+import useFirestoreCollection from "../../firebase/useFirestoreCollection";
 
-// Add these new interfaces
 interface Coordinates {
   latitude: number;
   longitude: number;
@@ -30,6 +30,7 @@ const LocationForm = () => {
   const [searchResults, setSearchResults] = useState<Location[]>([]);
   const [loading, setLoading] = useState(false);
   const { writeData } = useFirestoreWrite();
+  const { data: locationsData } = useFirestoreCollection("locations");
 
   // Add new state for coordinates
   const [userCoordinates, setUserCoordinates] = useState<Coordinates | null>(
@@ -121,10 +122,21 @@ const LocationForm = () => {
     });
   };
 
+  function getNextIndex() {
+    let maxIndex = -9999;
+    locationsData.map((location) => {
+      if (location.index > maxIndex) {
+        maxIndex = location.index;
+      }
+    });
+    return maxIndex + 1;
+  }
+
   const handleSubmit = async (e: React.ChangeEvent<HTMLFormElement>) => {
     e.preventDefault();
     try {
-      await writeData("locations", formData);
+      const formDataWithIndex = { ...formData, index: getNextIndex() };
+      await writeData("locations", formDataWithIndex);
       enqueueSnackbar("Location added successfully! 🎉", {
         variant: "success",
         autoHideDuration: 3000,
