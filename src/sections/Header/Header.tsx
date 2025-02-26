@@ -40,7 +40,12 @@ const Header: React.FC<HeaderProps> = ({ setPage, setSelectedLocation }) => {
       <div className="max-w-7xl mx-auto flex justify-between items-center">
         {/* Left Side - Logo & Navigation */}
         <div className="flex items-center space-x-4 md:space-x-8">
-          <img src="/logo.svg" alt="FoodHero" className="h-10 md:h-16 w-auto" />
+          <img
+            src="/logo.svg"
+            onClick={() => setPage("home")}
+            alt="FoodHero"
+            className="h-10 md:h-16 w-auto hover: cursor-pointer"
+          />
           <nav className="hidden md:flex space-x-6">
             <a
               href="#"

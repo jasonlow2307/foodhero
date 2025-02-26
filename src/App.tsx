@@ -6,6 +6,7 @@ import { SnackbarProvider } from "notistack";
 import "./App.css";
 import WhatToEat from "./sections/WhatToEat/WhatToEat";
 import { ScreenSizeProvider } from "./utils/responsiveUtils";
+import HomePage from "./sections/HomePage/HomePage";
 
 function App() {
   const [page, setPage] = useState(() => {
@@ -38,7 +39,9 @@ function App() {
       case "add":
         return <LocationForm />;
       case "whatToEat":
-        return <WhatToEat />; // Assuming you have this component
+        return <WhatToEat />;
+      case "home":
+        return <HomePage setPage={handleSetPage} />;
       default:
         return <LocationList setPage={handleSetPage} />;
     }
