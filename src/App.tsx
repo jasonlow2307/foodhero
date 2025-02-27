@@ -8,11 +8,12 @@ import WhatToEat from "./sections/WhatToEat/WhatToEat";
 import { ScreenSizeProvider } from "./utils/responsiveUtils";
 import HomePage from "./sections/HomePage/HomePage";
 import Footer from "./sections/Footer/Footer";
+import AuthPage from "./sections/AuthPage/AuthPage";
 
 function App() {
   const [page, setPage] = useState(() => {
     const savedPage = localStorage.getItem("currentPage");
-    return savedPage || "whatToEat";
+    return savedPage || "auth";
   });
   const [selectedLocation, setSelectedLocation] = useState(null);
 
@@ -29,6 +30,8 @@ function App() {
 
   const renderPage = () => {
     switch (page) {
+      case "auth":
+        return <AuthPage setPage={setPage} />;
       case "list":
         return (
           <LocationList
