@@ -97,10 +97,7 @@ const AuthPage: React.FC<AuthPageProps> = ({ setPage }) => {
 
   // Make sure this useEffect works properly
   useEffect(() => {
-    console.log("AuthPage: currentUser changed:", currentUser?.email);
-
     if (currentUser) {
-      console.log("User detected, navigating to home");
       setPage("home");
     }
   }, [currentUser, setPage]);

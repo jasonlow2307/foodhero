@@ -27,8 +27,6 @@ const Header: React.FC<HeaderProps> = ({ setPage, setSelectedLocation }) => {
 
   const locations = locationsData?.map((doc) => doc.location) || [];
 
-  console.log(currentUser);
-
   const handleLogout = async () => {
     try {
       await logout();
@@ -114,7 +112,7 @@ const Header: React.FC<HeaderProps> = ({ setPage, setSelectedLocation }) => {
               </button>
 
               {isSearchOpen && (
-                <div className="absolute right-0 top-full mt-2 w-72 bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
+                <div className="absolute right-0 top-full mt-2 w-72 bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden z-50">
                   <Autocomplete
                     freeSolo
                     options={locations}

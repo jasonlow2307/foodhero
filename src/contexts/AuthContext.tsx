@@ -48,7 +48,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   const logout = async () => {
     try {
       await signOut(auth);
-      console.log("User signed out successfully");
       // Force clear localStorage for extra security
       localStorage.removeItem("currentPage");
       return Promise.resolve();
@@ -60,18 +59,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
   // This effect runs once when the component mounts
   useEffect(() => {
-    console.log("Setting up auth state listener");
-
     // Check for existing user immediately
     const currentAuthUser = auth.currentUser;
-    console.log(
-      "Initial auth check:",
-      currentAuthUser?.email || "No initial user"
-    );
 
     // Set up the observer for auth state changes
     const unsubscribe = onAuthStateChanged(auth, (user) => {
-      console.log("Auth state changed:", user?.email || "No user");
       setCurrentUser(user);
       setLoading(false);
 
@@ -85,7 +77,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
     // Cleanup function
     return () => {
-      console.log("Cleaning up auth state listener");
       unsubscribe();
     };
   }, []);
