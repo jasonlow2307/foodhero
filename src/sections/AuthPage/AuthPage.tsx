@@ -4,6 +4,8 @@ import {
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   updateProfile,
+  GoogleAuthProvider,
+  signInWithPopup,
 } from "firebase/auth";
 import { auth } from "../../firebase/firebase";
 import { useAuth } from "../../contexts/AuthContext";
@@ -92,6 +94,52 @@ const AuthPage: React.FC<AuthPageProps> = ({ setPage }) => {
       setPage("home");
     } catch (err) {
       // Error handling remains the same
+    }
+  };
+
+  const handleGoogleSignIn = async () => {
+    setLoading(true);
+    setError("");
+
+    try {
+      const provider = new GoogleAuthProvider();
+
+      // Add additional scopes if needed
+      // provider.addScope('https://www.googleapis.com/auth/contacts.readonly');
+
+      // Sign in with popup
+      const result = await signInWithPopup(auth, provider);
+
+      // Success! Google Auth will auto-update Firebase Auth state
+      console.log("Google sign-in successful");
+      enqueueSnackbar("Successfully signed in with Google!", {
+        variant: "success",
+      });
+
+      localStorage.setItem("currentPage", "home");
+
+      // No need to manually set page, your useEffect will handle it:
+      // if (currentUser) setPage("home")
+    } catch (err) {
+      if (err instanceof Error) {
+        // Clean up Google error messages
+        let errorMessage = err.message;
+        if (errorMessage.includes("auth/")) {
+          errorMessage = errorMessage
+            .replace("Firebase: ", "")
+            .replace(/\(auth.*\)/, "")
+            .trim();
+        }
+
+        setError(errorMessage);
+        enqueueSnackbar(errorMessage, { variant: "error" });
+      } else {
+        setError("An unknown error occurred");
+        enqueueSnackbar("An unknown error occurred", { variant: "error" });
+      }
+      console.error("Google authentication error:", err);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -216,6 +264,8 @@ const AuthPage: React.FC<AuthPageProps> = ({ setPage }) => {
           </div>
           <div className="flex justify-center gap-4">
             <button
+              onClick={handleGoogleSignIn}
+              disabled={loading}
               className="bg-white border border-gray-200 p-3 rounded-full hover:bg-gray-50 transition-colors hover: cursor-pointer"
               aria-label="Google Login"
             >
