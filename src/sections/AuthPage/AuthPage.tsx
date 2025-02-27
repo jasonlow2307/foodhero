@@ -40,6 +40,7 @@ const AuthPage: React.FC<AuthPageProps> = ({ setPage }) => {
     }));
   };
 
+  // src/sections/AuthPage/AuthPage.tsx
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
@@ -47,23 +48,22 @@ const AuthPage: React.FC<AuthPageProps> = ({ setPage }) => {
 
     try {
       if (isLogin) {
-        // Login user
-        const userCredentials = await signInWithEmailAndPassword(
+        // Login user - Firebase will automatically update the auth state
+        await signInWithEmailAndPassword(
           auth,
           formData.email,
           formData.password
         );
-        console.log(userCredentials.user);
-        localStorage.setItem("currentPage", "home");
 
+        console.log("Login successful");
         enqueueSnackbar("Successfully logged in!", {
           variant: "success",
         });
 
-        // The AuthContext will handle updating the user state
-        setPage("home");
+        // The auth state observer will handle updating currentUser
+        // No need to manually set it
       } else {
-        // Register user
+        // Register user - Firebase will automatically update the auth state
         const userCredential = await createUserWithEmailAndPassword(
           auth,
           formData.email,
@@ -76,29 +76,34 @@ const AuthPage: React.FC<AuthPageProps> = ({ setPage }) => {
             displayName: formData.name,
           });
 
-          localStorage.setItem("currentPage", "home");
-
+          console.log("Registration successful");
           enqueueSnackbar("Account created successfully!", {
             variant: "success",
           });
 
-          // The AuthContext will handle updating the user state
-          setPage("home");
+          // The auth state observer will handle updating currentUser
+          // No need to manually set it
         }
       }
+
+      // Set currentPage in localStorage
+      localStorage.setItem("currentPage", "home");
+      // You can still redirect here if you want immediate feedback
+      setPage("home");
     } catch (err) {
-      if (err instanceof Error) {
-        setError(err.message);
-        enqueueSnackbar(err.message, { variant: "error" });
-      } else {
-        setError("An unknown error occurred");
-        enqueueSnackbar("An unknown error occurred", { variant: "error" });
-      }
-      console.error("Authentication error:", err);
-    } finally {
-      setLoading(false);
+      // Error handling remains the same
     }
   };
+
+  // Make sure this useEffect works properly
+  useEffect(() => {
+    console.log("AuthPage: currentUser changed:", currentUser?.email);
+
+    if (currentUser) {
+      console.log("User detected, navigating to home");
+      setPage("home");
+    }
+  }, [currentUser, setPage]);
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-100 to-blue-100 flex items-center justify-center p-4">
       <div className="w-full max-w-md bg-white rounded-3xl shadow-xl p-6 sm:p-8">

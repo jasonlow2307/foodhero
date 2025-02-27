@@ -1,43 +1,53 @@
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
+import { SnackbarProvider } from "notistack";
+import "./App.css";
 import Header from "./sections/Header/Header";
 import LocationForm from "./sections/LocationForm/LocationForm";
 import LocationList from "./sections/LocationList/LocationList";
-import { SnackbarProvider } from "notistack";
-import "./App.css";
 import WhatToEat from "./sections/WhatToEat/WhatToEat";
 import { ScreenSizeProvider } from "./utils/responsiveUtils";
 import HomePage from "./sections/HomePage/HomePage";
 import Footer from "./sections/Footer/Footer";
 import AuthPage from "./sections/AuthPage/AuthPage";
+import { AuthProvider, useAuth } from "./contexts/AuthContext";
 
-function App() {
+// Separate component for content that needs auth
+const AppContent = () => {
+  const { currentUser, loading } = useAuth();
   const [page, setPage] = useState(() => {
     const savedPage = localStorage.getItem("currentPage");
     return savedPage || "auth";
   });
   const [selectedLocation, setSelectedLocation] = useState(null);
 
+  useEffect(() => {
+    if (!currentUser && page !== "auth") {
+      setPage("auth");
+    } else if (currentUser && page === "auth") {
+      setPage("home");
+    }
+  }, [currentUser, page]);
+
   // Save page to localStorage when it changes
   useEffect(() => {
     localStorage.setItem("currentPage", page);
   }, [page]);
 
-  // Custom page setter that also updates localStorage
-  const handleSetPage = (newPage: string) => {
-    setPage(newPage);
-    localStorage.setItem("currentPage", newPage);
-  };
+  // Handle the page content based on auth status
+  const renderContent = () => {
+    // Always show auth page if not logged in
+    if (!currentUser) {
+      return <AuthPage setPage={setPage} />;
+    }
 
-  const renderPage = () => {
+    // Only show these pages if logged in
     switch (page) {
-      case "auth":
-        return <AuthPage setPage={setPage} />;
       case "list":
         return (
           <LocationList
             initialSelectedLocation={selectedLocation}
             clearSelectedLocation={() => setSelectedLocation(null)}
-            setPage={handleSetPage}
+            setPage={setPage}
           />
         );
       case "add":
@@ -45,9 +55,8 @@ function App() {
       case "whatToEat":
         return <WhatToEat />;
       case "home":
-        return <HomePage setPage={handleSetPage} />;
       default:
-        return <LocationList setPage={handleSetPage} />;
+        return <HomePage setPage={setPage} />;
     }
   };
 
@@ -63,23 +72,23 @@ function App() {
           marginTop: "20px",
         }}
       >
-        <Header
-          setPage={handleSetPage}
-          setSelectedLocation={setSelectedLocation}
-        />
-        {/* {page == "add" && <LocationForm />}
-      {page == "list" && (
-        <LocationList
-          initialSelectedLocation={selectedLocation}
-          clearSelectedLocation={() => setSelectedLocation(null)}
-          setPage={setPage}
-        />
-      )}
-      {page == "whatToEat" && <WhatToEat />} */}
-        <main>{renderPage()}</main>
+        {/* Only show header if user is logged in */}
+        {currentUser && (
+          <Header setPage={setPage} setSelectedLocation={setSelectedLocation} />
+        )}
+        <main>{renderContent()}</main>
         <Footer />
       </SnackbarProvider>
     </ScreenSizeProvider>
+  );
+};
+
+// Main App component
+function App() {
+  return (
+    <AuthProvider>
+      <AppContent />
+    </AuthProvider>
   );
 }
 
