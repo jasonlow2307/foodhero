@@ -34,11 +34,11 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { useAuth } from "../../contexts/AuthContext";
+import { useNavigate } from "react-router-dom";
 
 interface LocationListProps {
   initialSelectedLocation?: any;
   clearSelectedLocation?: () => void;
-  setPage: (page: string) => void;
 }
 
 // SortableLocationCard component that wraps LocationCard with drag functionality
@@ -90,8 +90,8 @@ type SortOption = "custom" | "mostRecent" | "leastRecent" | "mostVisited";
 const LocationList: React.FC<LocationListProps> = ({
   initialSelectedLocation,
   clearSelectedLocation,
-  setPage,
 }) => {
+  const navigate = useNavigate();
   const { data: locationsData, loading: locationLoading } =
     useFirestoreCollection("locations");
   const [locations, setLocations] = useState<any[]>([]);
@@ -355,7 +355,7 @@ const LocationList: React.FC<LocationListProps> = ({
             locations to start tracking your food journey!
           </p>
           <button
-            onClick={() => setPage("add")}
+            onClick={() => navigate("/add")}
             className="px-6 py-3 bg-gradient-to-r from-green-400 to-blue-500 text-white rounded-xl font-medium hover:opacity-90 transition-opacity hover: cursor-pointer"
           >
             Add New Location
@@ -472,7 +472,7 @@ const LocationList: React.FC<LocationListProps> = ({
                 {/* Add New Location Card */}
                 <div
                   className="bg-white/50 backdrop-blur-sm rounded-3xl p-6 cursor-pointer group hover:transform hover:scale-105 transition-all duration-300 border-2 border-dashed border-gray-200 flex flex-col items-center justify-center min-h-[330px]"
-                  onClick={() => setPage("add")}
+                  onClick={() => navigate("add")}
                 >
                   <div className="text-gray-400 group-hover:text-green-500 transition-colors duration-300">
                     <Plus size={48} />

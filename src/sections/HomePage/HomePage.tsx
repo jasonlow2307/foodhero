@@ -15,8 +15,10 @@ import {
   ChevronDown,
 } from "lucide-react";
 import { Images } from "../../utils/models";
+import { useNavigate } from "react-router-dom";
 
-const HomePage = ({ setPage }) => {
+const HomePage = () => {
+  const navigate = useNavigate();
   const { data: locations, loading } = useFirestoreCollection("locations");
   const [images, setImages] = useState<Images>({});
   const { fetchUnsplashImage } = useUnsplash();
@@ -257,13 +259,13 @@ const HomePage = ({ setPage }) => {
             </p>
             <div className="flex flex-col xs:flex-row gap-3 sm:gap-4 justify-center">
               <button
-                onClick={() => setPage("list")}
+                onClick={() => navigate("/list")}
                 className="px-6 sm:px-8 py-3 sm:py-4 rounded-xl bg-white text-green-600 font-bold text-base sm:text-lg hover:bg-opacity-90 transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-1 hover:cursor-pointer"
               >
                 View Your Places
               </button>
               <button
-                onClick={() => setPage("add")}
+                onClick={() => navigate("/add")}
                 className="px-6 sm:px-8 py-3 sm:py-4 rounded-xl bg-gradient-to-r from-green-500 to-blue-500 text-white font-bold text-base sm:text-lg hover:opacity-90 transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-1 hover:cursor-pointer"
               >
                 Add New Visit
@@ -354,7 +356,7 @@ const HomePage = ({ setPage }) => {
               Recent Places
             </h2>
             <button
-              onClick={() => setPage("list")}
+              onClick={() => navigate("/list")}
               className="flex items-center gap-2 px-4 sm:px-6 py-2 sm:py-3 rounded-xl bg-gradient-to-r from-green-400 to-blue-400 text-white font-medium hover:opacity-90 transition-all hover:cursor-pointer"
             >
               View All <ArrowRight size={16} className="sm:w-5 sm:h-5" />
@@ -394,7 +396,7 @@ const HomePage = ({ setPage }) => {
                     borderBottomLeftRadius: "1.5rem", // Explicitly set bottom-left border radius
                     borderBottomRightRadius: "1.5rem", // Explicitly set bottom-right border radius
                   }}
-                  onClick={() => setPage("list")}
+                  onClick={() => navigate("/list")}
                 >
                   <div className="h-36 sm:h-48 rounded-2xl bg-gray-100 mb-3 sm:mb-4 overflow-hidden">
                     <img
@@ -518,13 +520,13 @@ const HomePage = ({ setPage }) => {
           </p>
           <div className="flex flex-col xs:flex-row gap-3 sm:gap-4 justify-center">
             <button
-              onClick={() => setPage("whatToEat")}
+              onClick={() => navigate("/whatToEat")}
               className="px-6 sm:px-8 py-3 sm:py-4 rounded-xl bg-white text-green-600 font-bold text-base sm:text-lg hover:bg-opacity-90 transition-all shadow-lg hover:cursor-pointer"
             >
               What To Eat Today?
             </button>
             <button
-              onClick={() => setPage("add")}
+              onClick={() => navigate("/add")}
               className="px-6 sm:px-8 py-3 sm:py-4 rounded-xl bg-white/20 text-white border-2 border-white font-bold text-base sm:text-lg hover:bg-white/30 transition-all shadow-lg hover:cursor-pointer"
             >
               Add New Location

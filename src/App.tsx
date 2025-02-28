@@ -1,5 +1,12 @@
-import React, { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { SnackbarProvider } from "notistack";
+import {
+  BrowserRouter,
+  Routes,
+  Route,
+  Navigate,
+  useNavigate,
+} from "react-router-dom";
 import "./App.css";
 import Header from "./sections/Header/Header";
 import LocationForm from "./sections/LocationForm/LocationForm";
@@ -11,54 +18,32 @@ import Footer from "./sections/Footer/Footer";
 import AuthPage from "./sections/AuthPage/AuthPage";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 
+// Protected Route component to handle auth redirects
+const ProtectedRoute = ({ children }) => {
+  const { currentUser, loading } = useAuth();
+
+  if (loading) {
+    return <div>Loading...</div>;
+  }
+
+  if (!currentUser) {
+    return <Navigate to="/auth" replace />;
+  }
+
+  return children;
+};
+
 // Separate component for content that needs auth
 const AppContent = () => {
-  const { currentUser, loading } = useAuth();
-  const [page, setPage] = useState(() => {
-    const savedPage = localStorage.getItem("currentPage");
-    return savedPage || "auth";
-  });
-  const [selectedLocation, setSelectedLocation] = useState(null);
+  const { currentUser } = useAuth();
+  const navigate = useNavigate();
 
+  // Redirect based on auth status
   useEffect(() => {
-    if (!currentUser && page !== "auth") {
-      setPage("auth");
-    } else if (currentUser && page === "auth") {
-      setPage("home");
-    }
-  }, [currentUser, page]);
-
-  // Save page to localStorage when it changes
-  useEffect(() => {
-    localStorage.setItem("currentPage", page);
-  }, [page]);
-
-  // Handle the page content based on auth status
-  const renderContent = () => {
-    // Always show auth page if not logged in
     if (!currentUser) {
-      return <AuthPage setPage={setPage} />;
+      navigate("/auth", { replace: true });
     }
-
-    // Only show these pages if logged in
-    switch (page) {
-      case "list":
-        return (
-          <LocationList
-            initialSelectedLocation={selectedLocation}
-            clearSelectedLocation={() => setSelectedLocation(null)}
-            setPage={setPage}
-          />
-        );
-      case "add":
-        return <LocationForm />;
-      case "whatToEat":
-        return <WhatToEat setPage={setPage} />;
-      case "home":
-      default:
-        return <HomePage setPage={setPage} />;
-    }
-  };
+  }, [currentUser, navigate]);
 
   return (
     <ScreenSizeProvider>
@@ -73,10 +58,52 @@ const AppContent = () => {
         }}
       >
         {/* Only show header if user is logged in */}
-        {currentUser && (
-          <Header setPage={setPage} setSelectedLocation={setSelectedLocation} />
-        )}
-        <main>{renderContent()}</main>
+        {currentUser && <Header />}
+
+        <main>
+          <Routes>
+            <Route path="/auth" element={<AuthPage />} />
+
+            <Route
+              path="/"
+              element={
+                <ProtectedRoute>
+                  <HomePage />
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/list"
+              element={
+                <ProtectedRoute>
+                  <LocationList />
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/add"
+              element={
+                <ProtectedRoute>
+                  <LocationForm />
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/what-to-eat"
+              element={
+                <ProtectedRoute>
+                  <WhatToEat />
+                </ProtectedRoute>
+              }
+            />
+
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </main>
+
         <Footer />
       </SnackbarProvider>
     </ScreenSizeProvider>
@@ -87,7 +114,9 @@ const AppContent = () => {
 function App() {
   return (
     <AuthProvider>
-      <AppContent />
+      <BrowserRouter>
+        <AppContent />
+      </BrowserRouter>
     </AuthProvider>
   );
 }

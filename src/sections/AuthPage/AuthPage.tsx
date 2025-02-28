@@ -11,12 +11,10 @@ import { auth, db } from "../../firebase/firebase";
 import { useAuth } from "../../contexts/AuthContext";
 import { enqueueSnackbar } from "notistack";
 import { getDoc, doc, setDoc, serverTimestamp } from "firebase/firestore";
+import { useNavigate } from "react-router-dom";
 
-interface AuthPageProps {
-  setPage: (page: string) => void;
-}
-
-const AuthPage: React.FC<AuthPageProps> = ({ setPage }) => {
+const AuthPage = () => {
+  const navigate = useNavigate();
   const [isLogin, setIsLogin] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
@@ -31,7 +29,7 @@ const AuthPage: React.FC<AuthPageProps> = ({ setPage }) => {
   // Redirect if already logged in
   useEffect(() => {
     if (currentUser) {
-      setPage("home");
+      navigate("/home");
     }
   }, [currentUser]);
 
@@ -121,7 +119,7 @@ const AuthPage: React.FC<AuthPageProps> = ({ setPage }) => {
       // Set currentPage in localStorage
       localStorage.setItem("currentPage", "home");
       // You can still redirect here if you want immediate feedback
-      setPage("home");
+      navigate("/home");
     } catch (err) {
       if (err instanceof Error) {
         // Clean up Firebase error messages
@@ -184,7 +182,7 @@ const AuthPage: React.FC<AuthPageProps> = ({ setPage }) => {
       }
 
       // No need to manually set page, your useEffect will handle it:
-      // if (currentUser) setPage("home")
+      // if (currentUser) navigate("/home")
     } catch (err) {
       if (err instanceof Error) {
         // Clean up Google error messages
@@ -211,9 +209,9 @@ const AuthPage: React.FC<AuthPageProps> = ({ setPage }) => {
   // Make sure this useEffect works properly
   useEffect(() => {
     if (currentUser) {
-      setPage("home");
+      navigate("/home");
     }
-  }, [currentUser, setPage]);
+  }, [currentUser, navigate]);
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-100 to-blue-100 flex items-center justify-center p-4">
       <div className="w-full max-w-md bg-white rounded-3xl shadow-xl p-6 sm:p-8">

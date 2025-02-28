@@ -14,8 +14,10 @@ import {
 import { doc, getDoc, updateDoc } from "firebase/firestore";
 import { db } from "../../firebase/firebase";
 import { useAuth } from "../../contexts/AuthContext";
+import { useNavigate } from "react-router-dom";
 
-const WhatToEat = ({ setPage }) => {
+const WhatToEat = () => {
+  const navigate = useNavigate();
   const { currentUser } = useAuth();
   // Replace the current locations fetching with filtered data
   const { data: allLocations, loading } = useFirestoreCollection("locations");
@@ -474,7 +476,7 @@ const WhatToEat = ({ setPage }) => {
             locations to start tracking your food journey!
           </p>
           <button
-            onClick={() => setPage("add")}
+            onClick={() => navigate("/add")}
             className="px-6 py-3 bg-gradient-to-r from-green-400 to-blue-500 text-white rounded-xl font-medium hover:opacity-90 transition-opacity hover: cursor-pointer"
           >
             Add New Location

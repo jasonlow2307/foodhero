@@ -1,215 +1,187 @@
-// filepath: /C:/Users/jason/OneDrive - Sunway Education Group/Desktop/Projects/food-hero/src/sections/header.tsx
 import React, { useState } from "react";
-import useFirestoreCollection from "../../firebase/useFirestoreCollection";
-import { ClickAwayListener, Autocomplete, TextField } from "@mui/material";
-import { LogOut, Menu, Plus, Search, User } from "lucide-react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Home, Map, PlusCircle, Utensils, LogOut, Menu, X } from "lucide-react";
+import { auth } from "../../firebase/firebase";
+import { signOut } from "firebase/auth";
 import { enqueueSnackbar } from "notistack";
-import { useAuth } from "../../contexts/AuthContext";
 
-interface HeaderProps {
-  setPage: (page: string) => void;
-  setSelectedLocation: (locationName: string) => void;
-}
+const Header = () => {
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const navigate = useNavigate();
+  const location = useLocation();
 
-const Header: React.FC<HeaderProps> = ({ setPage, setSelectedLocation }) => {
-  const { currentUser, logout } = useAuth();
-
-  // Add inside Header component before return
-  const [isSearchOpen, setIsSearchOpen] = useState(false);
-  const [searchValue, setSearchValue] = useState("");
-
-  // Add state for user menu
-  const [userMenuOpen, setUserMenuOpen] = useState(false);
-
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-
-  const { data: locationsData } = useFirestoreCollection("locations");
-
-  const locations = locationsData?.map((doc) => doc.location) || [];
-
-  const handleLogout = async () => {
+  const handleSignOut = async () => {
     try {
-      await logout();
-      localStorage.setItem("currentPage", "auth");
-      setPage("auth");
-      enqueueSnackbar?.("Successfully logged out", { variant: "success" });
+      await signOut(auth);
+      enqueueSnackbar("Signed out successfully", { variant: "success" });
+      navigate("/auth");
     } catch (error) {
-      console.error("Failed to log out", error);
-      enqueueSnackbar?.("Failed to log out", { variant: "error" });
+      console.error("Error signing out:", error);
+      enqueueSnackbar("Error signing out", { variant: "error" });
     }
   };
 
-  // Add this function inside the Header component
-  const handleLocationSelect = (locationName: string) => {
-    const locationDoc = locationsData.find(
-      (doc) => doc.location === locationName
-    );
-
-    if (locationDoc) {
-      setPage("list");
-      setSelectedLocation?.(locationDoc);
-    }
-
-    setSearchValue("");
-    setIsSearchOpen(false);
+  const isActive = (path) => {
+    return location.pathname === path;
   };
 
   return (
-    <header className="bg-white shadow-md px-4 md:px-6 py-3 md:py-4">
-      <div className="max-w-7xl mx-auto flex justify-between items-center">
-        {/* Left Side - Logo & Navigation */}
-        <div className="flex items-center space-x-4 md:space-x-8">
-          <img
-            src="/logo.svg"
-            onClick={() => setPage("home")}
-            alt="FoodHero"
-            className="h-10 md:h-16 w-auto hover: cursor-pointer"
-          />
-          <nav className="hidden md:flex space-x-6">
-            <a
-              href="#"
-              onClick={() => setPage("whatToEat")}
-              className="text-gray-600 hover:text-green-500 transition-colors duration-200 font-medium"
+    <header className="bg-white shadow-md sticky top-0 z-50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex justify-between h-16">
+          <div className="flex">
+            <div className="flex-shrink-0 flex items-center">
+              <Link to="/" className="flex items-center">
+                <span className="text-2xl mr-2">🍽️</span>
+                <span className="font-bold bg-gradient-to-r from-green-500 to-blue-500 bg-clip-text text-transparent">
+                  Food Hero
+                </span>
+              </Link>
+            </div>
+          </div>
+
+          {/* Desktop navigation */}
+          <div className="hidden md:flex md:items-center md:space-x-4">
+            <Link
+              to="/"
+              className={`px-3 py-2 rounded-md text-sm font-medium flex items-center transition-colors ${
+                isActive("/")
+                  ? "bg-gradient-to-r from-green-50 to-blue-50 text-blue-700"
+                  : "text-gray-600 hover:bg-gray-50"
+              }`}
             >
+              <Home className="mr-1" size={18} />
+              Home
+            </Link>
+
+            <Link
+              to="/list"
+              className={`px-3 py-2 rounded-md text-sm font-medium flex items-center transition-colors ${
+                isActive("/list")
+                  ? "bg-gradient-to-r from-green-50 to-blue-50 text-blue-700"
+                  : "text-gray-600 hover:bg-gray-50"
+              }`}
+            >
+              <Map className="mr-1" size={18} />
+              My Places
+            </Link>
+
+            <Link
+              to="/add"
+              className={`px-3 py-2 rounded-md text-sm font-medium flex items-center transition-colors ${
+                isActive("/add")
+                  ? "bg-gradient-to-r from-green-50 to-blue-50 text-blue-700"
+                  : "text-gray-600 hover:bg-gray-50"
+              }`}
+            >
+              <PlusCircle className="mr-1" size={18} />
+              Add Place
+            </Link>
+
+            <Link
+              to="/what-to-eat"
+              className={`px-3 py-2 rounded-md text-sm font-medium flex items-center transition-colors ${
+                isActive("/what-to-eat")
+                  ? "bg-gradient-to-r from-green-50 to-blue-50 text-blue-700"
+                  : "text-gray-600 hover:bg-gray-50"
+              }`}
+            >
+              <Utensils className="mr-1" size={18} />
               What To Eat
-            </a>
-            <a
-              href="#"
-              onClick={() => setPage("list")}
-              className="text-gray-600 hover:text-green-500 transition-colors duration-200 font-medium"
+            </Link>
+
+            <button
+              onClick={handleSignOut}
+              className="px-3 py-2 rounded-md text-sm font-medium flex items-center text-red-600 hover:bg-red-50 transition-colors"
             >
-              List of Locations
-            </a>
-          </nav>
-        </div>
+              <LogOut className="mr-1" size={18} />
+              Sign Out
+            </button>
+          </div>
 
-        {/* Right Side - Actions */}
-        <div className="flex items-center space-x-2 md:space-x-4">
-          {/* Add mobile menu button */}
-          <button
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="md:hidden p-2 rounded-xl hover:bg-gray-50 text-gray-500 transition-colors"
-          >
-            <Menu size={24} />
-          </button>
-
-          {/* Add Location Button */}
-          <button
-            onClick={() => setPage("add")}
-            className="p-2 rounded-xl hover:bg-green-50 text-green-500 transition-colors duration-200 hover: cursor-pointer"
-          >
-            <Plus size={24} />
-          </button>
-
-          {/* Search */}
-          <ClickAwayListener onClickAway={() => setIsSearchOpen(false)}>
-            <div className="relative">
-              <button
-                onClick={() => setIsSearchOpen(!isSearchOpen)}
-                className="p-2 rounded-xl hover:bg-gray-50 text-gray-500 transition-colors duration-200 hover: cursor-pointer"
-              >
-                <Search size={24} />
-              </button>
-
-              {isSearchOpen && (
-                <div className="absolute right-0 top-full mt-2 w-72 bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden z-50">
-                  <Autocomplete
-                    freeSolo
-                    options={locations}
-                    value={searchValue}
-                    onChange={(_event: any, newValue: string | null) => {
-                      if (newValue) {
-                        handleLocationSelect(newValue);
-                      }
-                    }}
-                    renderInput={(params) => (
-                      <TextField
-                        {...params}
-                        variant="outlined"
-                        size="small"
-                        placeholder="Search locations..."
-                        autoFocus
-                        sx={{
-                          p: 1,
-                          "& .MuiOutlinedInput-root": {
-                            borderRadius: "0.75rem",
-                          },
-                        }}
-                      />
-                    )}
-                  />
-                </div>
+          {/* Mobile menu button */}
+          <div className="flex items-center md:hidden">
+            <button
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+              className="inline-flex items-center justify-center p-2 rounded-md text-gray-600 hover:text-gray-900 hover:bg-gray-100 focus:outline-none focus:bg-gray-100 focus:text-gray-900 transition-colors"
+            >
+              {isMenuOpen ? (
+                <X className="block h-6 w-6" />
+              ) : (
+                <Menu className="block h-6 w-6" />
               )}
-            </div>
-          </ClickAwayListener>
-
-          <ClickAwayListener onClickAway={() => setUserMenuOpen(false)}>
-            <div className="relative">
-              <button
-                onClick={() => setUserMenuOpen(!userMenuOpen)}
-                className="p-2 rounded-xl hover:bg-gray-50 text-gray-500 transition-colors duration-200 hover: cursor-pointer"
-              >
-                <User size={24} />
-              </button>
-
-              {userMenuOpen && (
-                <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden z-50">
-                  <div className="p-3 border-b border-gray-100">
-                    <p className="text-sm font-medium text-gray-800">
-                      {currentUser?.displayName || currentUser?.email}
-                    </p>
-                    <p className="text-xs text-gray-500 truncate">
-                      {currentUser?.email}
-                    </p>
-                  </div>
-                  <div className="p-2">
-                    <button
-                      onClick={handleLogout}
-                      className="w-full text-left px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded-lg flex items-center gap-2 transition-colors hover: cursor-pointer"
-                    >
-                      <LogOut size={16} /> Sign Out
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
-          </ClickAwayListener>
+            </button>
+          </div>
         </div>
       </div>
 
-      {mobileMenuOpen && (
-        <div className="md:hidden py-3 border-t border-gray-100">
-          <nav className="flex flex-col space-y-3 px-4">
-            <a
-              href="#"
-              onClick={() => {
-                setPage("whatToEat");
-                setMobileMenuOpen(false);
-              }}
-              className="text-gray-600 py-2 hover:text-green-500 transition-colors duration-200 font-medium"
+      {/* Mobile menu, show/hide based on menu state */}
+      {isMenuOpen && (
+        <div className="md:hidden">
+          <div className="pt-2 pb-3 space-y-1 shadow-inner bg-gray-50">
+            <Link
+              to="/"
+              className={`px-3 py-2 rounded-md text-base font-medium flex items-center ${
+                isActive("/")
+                  ? "bg-gradient-to-r from-green-50 to-blue-50 text-blue-700"
+                  : "text-gray-600 hover:bg-gray-100"
+              }`}
+              onClick={() => setIsMenuOpen(false)}
             >
+              <Home className="mr-2" size={18} />
+              Home
+            </Link>
+
+            <Link
+              to="/list"
+              className={`px-3 py-2 rounded-md text-base font-medium flex items-center ${
+                isActive("/list")
+                  ? "bg-gradient-to-r from-green-50 to-blue-50 text-blue-700"
+                  : "text-gray-600 hover:bg-gray-100"
+              }`}
+              onClick={() => setIsMenuOpen(false)}
+            >
+              <Map className="mr-2" size={18} />
+              My Places
+            </Link>
+
+            <Link
+              to="/add"
+              className={`px-3 py-2 rounded-md text-base font-medium flex items-center ${
+                isActive("/add")
+                  ? "bg-gradient-to-r from-green-50 to-blue-50 text-blue-700"
+                  : "text-gray-600 hover:bg-gray-100"
+              }`}
+              onClick={() => setIsMenuOpen(false)}
+            >
+              <PlusCircle className="mr-2" size={18} />
+              Add Place
+            </Link>
+
+            <Link
+              to="/what-to-eat"
+              className={`px-3 py-2 rounded-md text-base font-medium flex items-center ${
+                isActive("/what-to-eat")
+                  ? "bg-gradient-to-r from-green-50 to-blue-50 text-blue-700"
+                  : "text-gray-600 hover:bg-gray-100"
+              }`}
+              onClick={() => setIsMenuOpen(false)}
+            >
+              <Utensils className="mr-2" size={18} />
               What To Eat
-            </a>
-            <a
-              href="#"
-              onClick={() => {
-                setPage("list");
-                setMobileMenuOpen(false);
-              }}
-              className="text-gray-600 py-2 hover:text-green-500 transition-colors duration-200 font-medium"
-            >
-              List of Locations
-            </a>
+            </Link>
+
             <button
               onClick={() => {
-                handleLogout();
-                setMobileMenuOpen(false);
+                handleSignOut();
+                setIsMenuOpen(false);
               }}
-              className="text-left text-red-600 py-2 hover:text-red-700 transition-colors duration-200 font-medium flex items-center gap-2"
+              className="w-full text-left px-3 py-2 rounded-md text-base font-medium flex items-center text-red-600 hover:bg-red-50 hover: curosr-pointer"
             >
-              <LogOut size={18} /> Sign Out
+              <LogOut className="mr-2" size={18} />
+              Sign Out
             </button>
-          </nav>
+          </div>
         </div>
       )}
     </header>
