@@ -50,7 +50,24 @@ interface LocationListProps {
   clearSelectedLocation?: () => void;
 }
 
+const slideUpAnimation = `
+  @keyframes slideUp {
+    0% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+    100% { transform: translateY(0); }
+  }
+`;
+
+const slideDownAnimation = `
+  @keyframes slideDown {
+    0% { transform: translateY(0); }
+    50% { transform: translateY(10px); }
+    100% { transform: translateY(0); }
+  }
+`;
+
 // SortableLocationCard component that wraps LocationCard with drag functionality
+// Update the SortableLocationCard component to merge custom styles with transform styles
 const SortableLocationCard = ({
   location,
   image,
@@ -58,6 +75,8 @@ const SortableLocationCard = ({
   onClick,
   id,
   isDraggingDisabled,
+  className = "",
+  style = {}, // Add style prop with default empty object
 }) => {
   const {
     attributes,
@@ -71,13 +90,19 @@ const SortableLocationCard = ({
     disabled: isDraggingDisabled,
   });
 
-  const style = {
+  // Combine the DnD styles with any custom styles
+  const mergedStyle = {
     transform: CSS.Transform.toString(transform),
-    transition,
+    transition: transition,
+    ...style, // Merge with custom style
   };
 
   return (
-    <div ref={setNodeRef} style={style} className="relative">
+    <div
+      ref={setNodeRef}
+      style={mergedStyle}
+      className={`relative ${className}`}
+    >
       <LocationCard
         location={location}
         image={image}
@@ -92,7 +117,6 @@ const SortableLocationCard = ({
     </div>
   );
 };
-
 // Sort options enum
 type SortOption = "custom" | "mostRecent" | "leastRecent" | "mostVisited";
 
@@ -136,6 +160,22 @@ const LocationList: React.FC<LocationListProps> = ({
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
+  // Add this useEffect near your other effects
+  useEffect(() => {
+    // Clear animation flags after animation completes
+    const timer = setTimeout(() => {
+      setLocations((locs) =>
+        locs.map((loc) => ({
+          ...loc,
+          animateUp: false,
+          animateDown: false,
+        }))
+      );
+    }, 300); // Match this to your animation duration
+
+    return () => clearTimeout(timer);
+  }, [locations]);
+
   // Mobile reorder mode handlers
   const enableMobileReorderMode = () => {
     if (isMobile && sortOption === "custom") {
@@ -167,8 +207,14 @@ const LocationList: React.FC<LocationListProps> = ({
           newArray[index - 1],
           newArray[index],
         ];
-        // Re-assign indices
-        return newArray.map((item, i) => ({ ...item, index: i }));
+        // Re-assign indices and add animation flags
+        return newArray.map((item, i) => ({
+          ...item,
+          index: i,
+          animateUp: i === index - 1,
+          animateDown: i === index,
+          animationKey: Date.now(), // Add a unique key for animation tracking
+        }));
       });
     }
   };
@@ -181,8 +227,14 @@ const LocationList: React.FC<LocationListProps> = ({
           newArray[index + 1],
           newArray[index],
         ];
-        // Re-assign indices
-        return newArray.map((item, i) => ({ ...item, index: i }));
+        // Re-assign indices and add animation flags
+        return newArray.map((item, i) => ({
+          ...item,
+          index: i,
+          animateUp: i === index + 1,
+          animateDown: i === index,
+          animationKey: Date.now(), // Add a unique key for animation tracking
+        }));
       });
     }
   };
@@ -428,6 +480,10 @@ const LocationList: React.FC<LocationListProps> = ({
 
   return (
     <>
+      <style>
+        {slideUpAnimation}
+        {slideDownAnimation}
+      </style>
       {locationLoading ? (
         <LoadingAnimation />
       ) : (
@@ -634,6 +690,7 @@ const LocationList: React.FC<LocationListProps> = ({
                         </div>
                       )}
                       <SortableLocationCard
+                        key={`${location.id}-${location.animationKey || ""}`}
                         id={location.id}
                         location={location}
                         image={images[location.id]}
@@ -645,6 +702,14 @@ const LocationList: React.FC<LocationListProps> = ({
                           sortOption !== "custom" ||
                           (isMobile && isMobileReorderMode)
                         }
+                        className="transition-transform duration-300"
+                        style={{
+                          animation: location.animateUp
+                            ? "slideUp 0.3s ease-in-out"
+                            : location.animateDown
+                            ? "slideDown 0.3s ease-in-out"
+                            : "",
+                        }}
                       />
                     </div>
                   ))}
