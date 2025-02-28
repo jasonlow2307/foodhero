@@ -11,7 +11,7 @@ function Footer() {
               Track your portions, save the planet!
             </p>
           </div>
-          <div className="flex gap-6 sm:gap-8">
+          {/* <div className="flex gap-6 sm:gap-8">
             <a
               href="#"
               className="text-sm sm:text-base text-gray-400 hover:text-white transition-colors"
@@ -30,7 +30,7 @@ function Footer() {
             >
               Contact
             </a>
-          </div>
+          </div> */}
         </div>
         <div className="mt-6 sm:mt-8 pt-6 sm:pt-8 border-t border-gray-800 text-center text-gray-500 text-sm">
           <p>

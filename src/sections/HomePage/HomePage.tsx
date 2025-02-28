@@ -190,7 +190,7 @@ const HomePage = ({ setPage }) => {
       <div
         className="relative h-[100vh] sm:h-[90vh] flex items-center justify-center overflow-hidden"
         style={{
-          background: heroImage
+          backgroundImage: heroImage
             ? `linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.8)), url(${heroImage})`
             : "linear-gradient(to right, #22c55e, #0ea5e9)",
           backgroundSize: "cover",
@@ -362,7 +362,10 @@ const HomePage = ({ setPage }) => {
           </div>
 
           {/* Horizontal scrolling on mobile, grid on larger screens */}
-          <div className="flex overflow-x-auto pb-6 sm:pb-0 sm:grid sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 hide-scrollbar snap-x snap-mandatory">
+          <div
+            className="flex overflow-x-auto pb-20 sm:pb-0 sm:grid sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 hide-scrollbar snap-x snap-mandatory"
+            style={{ paddingBottom: 20 }}
+          >
             {locations
               .sort((a, b) => {
                 // Get latest visit date
@@ -384,7 +387,13 @@ const HomePage = ({ setPage }) => {
               .map((location) => (
                 <div
                   key={location.id}
-                  className="flex-shrink-0 w-[280px] sm:w-auto snap-start sm:snap-align-none bg-white rounded-3xl p-4 sm:p-5 shadow-xl border border-gray-100 hover:transform hover:scale-105 transition-all duration-300 cursor-pointer mr-4 sm:mr-0"
+                  className="flex-shrink-0 w-[280px] sm:w-auto snap-start sm:snap-align-none bg-white rounded-3xl p-4 sm:p-5 shadow-lg border border-gray-100 hover:transform hover:scale-105 transition-all duration-300 cursor-pointer mr-4 sm:mr-0"
+                  style={{
+                    boxShadow:
+                      "0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.05)",
+                    borderBottomLeftRadius: "1.5rem", // Explicitly set bottom-left border radius
+                    borderBottomRightRadius: "1.5rem", // Explicitly set bottom-right border radius
+                  }}
                   onClick={() => setPage("list")}
                 >
                   <div className="h-36 sm:h-48 rounded-2xl bg-gray-100 mb-3 sm:mb-4 overflow-hidden">
@@ -409,15 +418,15 @@ const HomePage = ({ setPage }) => {
                   </div>
                   <div
                     className={`inline-flex items-center px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm
-                  ${
-                    location.visits[location.visits.length - 1].fullness ===
-                    "perfect"
-                      ? "bg-green-100 text-green-600"
-                      : location.visits[location.visits.length - 1].fullness ===
-                        "too much"
-                      ? "bg-red-100 text-red-600"
-                      : "bg-yellow-100 text-yellow-600"
-                  }`}
+                ${
+                  location.visits[location.visits.length - 1].fullness ===
+                  "perfect"
+                    ? "bg-green-100 text-green-600"
+                    : location.visits[location.visits.length - 1].fullness ===
+                      "too much"
+                    ? "bg-red-100 text-red-600"
+                    : "bg-yellow-100 text-yellow-600"
+                }`}
                   >
                     {location.visits[location.visits.length - 1].fullness ===
                     "perfect"
