@@ -28,20 +28,36 @@ const LocationCard = forwardRef<HTMLDivElement, LocationCardProps>(
   ) => {
     const lastVisit = location.visits[location.visits.length - 1];
 
+    const handleMouseEnter = (e) => {
+      if (!isDragging) {
+        e.currentTarget.style.transform = "scale(1.05)";
+        e.currentTarget.style.boxShadow =
+          "rgba(22, 163, 74, 0.35) -8px -8px 32px 8px, rgba(2, 132, 199, 0.35) 8px 8px 32px 8px";
+        // Using green-600 and blue-600 with higher opacity (0.35)
+      }
+    };
+
+    const handleMouseLeave = (e) => {
+      if (!isDragging) {
+        e.currentTarget.style.transform = "scale(1)";
+        e.currentTarget.style.boxShadow =
+          "0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.05)";
+      }
+    };
     return (
       <div
-        ref={ref}
-        className={`bg-white rounded-3xl p-4 md:p-6 shadow-xl transition-all duration-300 cursor-pointer
-        ${
-          isDragging
-            ? "shadow-2xl ring-2 ring-blue-400 opacity-90 scale-105"
-            : "hover:transform hover:scale-105"
-        }
-        ${isDragging ? "z-50" : "z-10"}`}
-        onClick={(e) => {
-          // Only trigger onClick if we're not dragging
-          if (!isDragging) onClick();
+        className={`bg-white rounded-3xl p-5 sm:p-6 shadow-lg cursor-pointer transition-all duration-300 ${
+          isDragging ? "opacity-60" : ""
+        }`}
+        style={{
+          boxShadow:
+            "0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.05)",
+          transform: "scale(1)",
+          transition: "transform 0.3s ease, box-shadow 0.4s ease",
         }}
+        onClick={onClick}
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
       >
         {/* Location Image */}
         <div className="relative h-36 sm:h-48 rounded-2xl bg-gray-100 mb-3 sm:mb-4 overflow-hidden">

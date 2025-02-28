@@ -366,7 +366,7 @@ const HomePage = () => {
           {/* Horizontal scrolling on mobile, grid on larger screens */}
           <div
             className="flex overflow-x-auto pb-20 sm:pb-0 sm:grid sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 hide-scrollbar snap-x snap-mandatory"
-            style={{ paddingBottom: 20 }}
+            style={{ padding: 20 }}
           >
             {locations
               .sort((a, b) => {
@@ -389,12 +389,24 @@ const HomePage = () => {
               .map((location) => (
                 <div
                   key={location.id}
-                  className="flex-shrink-0 w-[280px] sm:w-auto snap-start sm:snap-align-none bg-white rounded-3xl p-4 sm:p-5 shadow-lg border border-gray-100 hover:transform hover:scale-105 transition-all duration-300 cursor-pointer mr-4 sm:mr-0"
+                  className="flex-shrink-0 w-[280px] sm:w-auto snap-start sm:snap-align-none bg-white rounded-3xl p-4 sm:p-5 border border-gray-100 transition-all duration-300 cursor-pointer mr-4 sm:mr-0"
                   style={{
                     boxShadow:
                       "0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.05)",
-                    borderBottomLeftRadius: "1.5rem", // Explicitly set bottom-left border radius
-                    borderBottomRightRadius: "1.5rem", // Explicitly set bottom-right border radius
+                    borderBottomLeftRadius: "1.5rem",
+                    borderBottomRightRadius: "1.5rem",
+                    transition: "transform 0.3s ease, box-shadow 0.4s ease",
+                    transform: "scale(1)",
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.transform = "scale(1.05)";
+                    e.currentTarget.style.boxShadow =
+                      "rgba(34, 197, 94, 0.2) -6px -6px 42px 8px, rgba(14, 165, 233, 0.2) 6px 6px 42px 8px";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.transform = "scale(1)";
+                    e.currentTarget.style.boxShadow =
+                      "0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.05)";
                   }}
                   onClick={() => navigate("/list")}
                 >
@@ -537,81 +549,90 @@ const HomePage = () => {
 
       {/* Add styles for animations and mobile optimization */}
       <style>{`
-        @keyframes fadeIn {
-          from {
-            opacity: 0;
-            transform: translateY(20px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
 
-        @keyframes float {
-          0% {
-            transform: translateY(0px);
-          }
-          50% {
-            transform: translateY(-10px);
-          }
-          100% {
-            transform: translateY(0px);
-          }
-        }
+  @keyframes float {
+    0% {
+      transform: translateY(0px);
+    }
+    50% {
+      transform: translateY(-10px);
+    }
+    100% {
+      transform: translateY(0px);
+    }
+  }
 
-        @keyframes spin-slow {
-          to {
-            transform: rotate(360deg);
-          }
-        }
+  @keyframes spin-slow {
+    to {
+      transform: rotate(360deg);
+    }
+  }
 
-        .animate-spin-slow {
-          animation: spin-slow 3s linear infinite;
-        }
+  .animate-spin-slow {
+    animation: spin-slow 3s linear infinite;
+  }
 
-        .animate-float {
-          animation: float 3s ease-in-out infinite;
-        }
+  .animate-float {
+    animation: float 3s ease-in-out infinite;
+  }
 
-        /* Hide scrollbar but maintain functionality */
-        .hide-scrollbar {
-          -ms-overflow-style: none; /* IE and Edge */
-          scrollbar-width: none; /* Firefox */
-        }
+  /* Hide scrollbar but maintain functionality */
+  .hide-scrollbar {
+    -ms-overflow-style: none; /* IE and Edge */
+    scrollbar-width: none; /* Firefox */
+  }
 
-        .hide-scrollbar::-webkit-scrollbar {
-          display: none; /* Chrome, Safari, Opera */
-        }
+  .hide-scrollbar::-webkit-scrollbar {
+    display: none; /* Chrome, Safari, Opera */
+  }
 
-        /* Extra small screens */
-        @media (min-width: 475px) {
-          .xs\\:flex-row {
-            flex-direction: row;
-          }
-          .xs\\:items-center {
-            align-items: center;
-          }
-          .xs\\:text-3xl {
-            font-size: 1.875rem;
-            line-height: 2.25rem;
-          }
-          .xs\\:text-4xl {
-            font-size: 2.25rem;
-            line-height: 2.5rem;
-          }
-          .xs\\:text-xl {
-            font-size: 1.25rem;
-            line-height: 1.75rem;
-          }
-          .xs\\:block {
-            display: block;
-          }
-          .xs\\:gap-0 {
-            gap: 0;
-          }
-        }
-      `}</style>
+  /* Custom gradient shadow effect on hover */
+  .hover-gradient-shadow {
+    transition: box-shadow 0.4s ease-in-out, transform 0.3s ease;
+  }
+  
+  .hover-gradient-shadow:hover {
+    box-shadow: rgba(34, 197, 94, 0.2) -6px -6px 42px 8px, rgba(14, 165, 233, 0.2) 6px 6px 42px 8px;
+  }
+
+  /* Extra small screens */
+  @media (min-width: 475px) {
+    .xs\\:flex-row {
+      flex-direction: row;
+    }
+    .xs\\:items-center {
+      align-items: center;
+    }
+    .xs\\:text-3xl {
+      font-size: 1.875rem;
+      line-height: 2.25rem;
+    }
+    .xs\\:text-4xl {
+      font-size: 2.25rem;
+      line-height: 2.5rem;
+    }
+    .xs\\:text-xl {
+      font-size: 1.25rem;
+      line-height: 1.75rem;
+    }
+    .xs\\:block {
+      display: block;
+    }
+    .xs\\:gap-0 {
+      gap: 0;
+    }
+  }
+`}</style>
     </div>
   );
 };
