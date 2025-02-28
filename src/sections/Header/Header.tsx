@@ -32,7 +32,11 @@ const Header = () => {
           <div className="flex">
             <div className="flex-shrink-0 flex items-center">
               <Link to="/" className="flex items-center">
-                <span className="text-2xl mr-2">🍽️</span>
+                <img
+                  src="/logo.svg"
+                  alt="Food Hero"
+                  className="h-10 mr-3 w-auto"
+                />
                 <span className="font-bold bg-gradient-to-r from-green-500 to-blue-500 bg-clip-text text-transparent">
                   Food Hero
                 </span>

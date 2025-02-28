@@ -5,7 +5,16 @@ import { identifyFood } from "../../utils/identifyFood";
 import { doc, getDoc, updateDoc } from "firebase/firestore";
 import { db } from "../../firebase/firebase";
 import { Images, Visit } from "../../utils/models";
-import { Clock, User, Plus, ArrowUpDown, Filter } from "lucide-react";
+import {
+  Clock,
+  User,
+  Plus,
+  ArrowUpDown,
+  Filter,
+  Check,
+  Move,
+  X,
+} from "lucide-react";
 import LocationDialog from "../../components/LocationDialog";
 import {
   getBoundingBox,
@@ -105,6 +114,7 @@ const LocationList: React.FC<LocationListProps> = ({
   const { currentUser } = useAuth();
   const [sortOption, setSortOption] = useState<SortOption>("custom");
   const [showSortOptions, setShowSortOptions] = useState(false);
+  const [isMobileReorderMode, setIsMobileReorderMode] = useState(false);
 
   // Configure DnD sensors
   const sensors = useSensors(
@@ -125,6 +135,57 @@ const LocationList: React.FC<LocationListProps> = ({
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
+
+  // Mobile reorder mode handlers
+  const enableMobileReorderMode = () => {
+    if (isMobile && sortOption === "custom") {
+      setIsMobileReorderMode(true);
+    }
+  };
+
+  const saveMobileReorder = () => {
+    setIsMobileReorderMode(false);
+    setHasOrderChanged(true);
+  };
+
+  const cancelMobileReorder = () => {
+    // Reload original order from Firestore data
+    if (locationsData.length > 0) {
+      const filteredLocations = locationsData.filter(
+        (location) => location.userId === currentUser.uid
+      );
+      setLocations(getSortedLocations(filteredLocations));
+    }
+    setIsMobileReorderMode(false);
+  };
+
+  const moveLocationUp = (index) => {
+    if (index > 0) {
+      setLocations((items) => {
+        const newArray = [...items];
+        [newArray[index], newArray[index - 1]] = [
+          newArray[index - 1],
+          newArray[index],
+        ];
+        // Re-assign indices
+        return newArray.map((item, i) => ({ ...item, index: i }));
+      });
+    }
+  };
+
+  const moveLocationDown = (index) => {
+    if (index < locations.length - 1) {
+      setLocations((items) => {
+        const newArray = [...items];
+        [newArray[index], newArray[index + 1]] = [
+          newArray[index + 1],
+          newArray[index],
+        ];
+        // Re-assign indices
+        return newArray.map((item, i) => ({ ...item, index: i }));
+      });
+    }
+  };
 
   // Helper function to get the most recent visit date from a location
   const getMostRecentVisitDate = (location) => {
@@ -461,6 +522,49 @@ const LocationList: React.FC<LocationListProps> = ({
               </div>
             </div>
 
+            {/* Mobile Reorder Controls - Only show for mobile + custom sort */}
+            {isMobile &&
+              sortOption === "custom" &&
+              locations.length > 1 &&
+              !isMobileReorderMode && (
+                <div className="mb-4 flex justify-center">
+                  <button
+                    onClick={enableMobileReorderMode}
+                    className="flex items-center gap-2 px-4 py-2 bg-white/80 backdrop-blur-sm rounded-full shadow-sm hover:shadow-md transition-all duration-200 border border-blue-200"
+                  >
+                    <Move size={16} className="text-blue-600" />
+                    <span className="font-medium text-blue-700">
+                      Reorder Places
+                    </span>
+                  </button>
+                </div>
+              )}
+
+            {/* Mobile Reorder Mode Controls */}
+            {isMobileReorderMode && (
+              <div className="mb-6">
+                <div className="flex justify-center gap-3 mb-4">
+                  <button
+                    onClick={saveMobileReorder}
+                    className="flex items-center gap-2 px-4 py-2 bg-green-500 text-white rounded-full shadow-md"
+                  >
+                    <Check size={16} />
+                    <span>Save Order</span>
+                  </button>
+                  <button
+                    onClick={cancelMobileReorder}
+                    className="flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-full shadow-md"
+                  >
+                    <X size={16} />
+                    <span>Cancel</span>
+                  </button>
+                </div>
+                <p className="text-center text-sm text-blue-600 font-medium">
+                  Reorder Mode: Tap the arrows to reposition items
+                </p>
+              </div>
+            )}
+
             {/* Location Grid */}
             <DndContext
               sensors={sensors}
@@ -470,17 +574,19 @@ const LocationList: React.FC<LocationListProps> = ({
             >
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
                 {/* Add New Location Card */}
-                <div
-                  className="bg-white/50 backdrop-blur-sm rounded-3xl p-6 cursor-pointer group hover:transform hover:scale-105 transition-all duration-300 border-2 border-dashed border-gray-200 flex flex-col items-center justify-center min-h-[330px]"
-                  onClick={() => navigate("add")}
-                >
-                  <div className="text-gray-400 group-hover:text-green-500 transition-colors duration-300">
-                    <Plus size={48} />
+                {!isMobile && (
+                  <div
+                    className="bg-white/50 backdrop-blur-sm rounded-3xl p-6 cursor-pointer group hover:transform hover:scale-105 transition-all duration-300 border-2 border-dashed border-gray-200 flex flex-col items-center justify-center min-h-[330px]"
+                    onClick={() => navigate("add")}
+                  >
+                    <div className="text-gray-400 group-hover:text-green-500 transition-colors duration-300">
+                      <Plus size={48} />
+                    </div>
+                    <p className="mt-4 text-gray-500 group-hover:text-green-600 font-medium">
+                      Add New Location
+                    </p>
                   </div>
-                  <p className="mt-4 text-gray-500 group-hover:text-green-600 font-medium">
-                    Add New Location
-                  </p>
-                </div>
+                )}
 
                 <LocationDialog
                   open={open}
@@ -499,16 +605,48 @@ const LocationList: React.FC<LocationListProps> = ({
                   items={locations.map((loc) => loc.id)}
                   strategy={rectSortingStrategy}
                 >
-                  {locations.map((location) => (
-                    <SortableLocationCard
-                      key={location.id}
-                      id={location.id}
-                      location={location}
-                      image={images[location.id]}
-                      isMobile={isMobile}
-                      onClick={() => handleClickOpen(location)}
-                      isDraggingDisabled={sortOption !== "custom"}
-                    />
+                  {locations.map((location, index) => (
+                    <div key={location.id} className="relative">
+                      {isMobileReorderMode && (
+                        <div className="absolute -top-2 inset-x-0 flex justify-center z-10 gap-2">
+                          <button
+                            onClick={() => moveLocationUp(index)}
+                            disabled={index === 0}
+                            className={`w-8 h-8 rounded-full shadow-md flex items-center justify-center ${
+                              index === 0
+                                ? "bg-gray-200 text-gray-400"
+                                : "bg-blue-500 text-white"
+                            }`}
+                          >
+                            ↑
+                          </button>
+                          <button
+                            onClick={() => moveLocationDown(index)}
+                            disabled={index === locations.length - 1}
+                            className={`w-8 h-8 rounded-full shadow-md flex items-center justify-center ${
+                              index === locations.length - 1
+                                ? "bg-gray-200 text-gray-400"
+                                : "bg-blue-500 text-white"
+                            }`}
+                          >
+                            ↓
+                          </button>
+                        </div>
+                      )}
+                      <SortableLocationCard
+                        id={location.id}
+                        location={location}
+                        image={images[location.id]}
+                        isMobile={isMobile}
+                        onClick={() =>
+                          !isMobileReorderMode && handleClickOpen(location)
+                        }
+                        isDraggingDisabled={
+                          sortOption !== "custom" ||
+                          (isMobile && isMobileReorderMode)
+                        }
+                      />
+                    </div>
                   ))}
                 </SortableContext>
               </div>
@@ -527,12 +665,18 @@ const LocationList: React.FC<LocationListProps> = ({
               </DragOverlay>
             </DndContext>
 
-            {/* Drag hint for custom sort */}
-            {sortOption === "custom" && locations.length > 1 && (
-              <div className="text-center mt-6 text-sm text-gray-500 animate-pulse">
-                <p>Drag cards to reorder your food places</p>
-              </div>
-            )}
+            {/* Drag hint for custom sort - modified to account for mobile */}
+            {sortOption === "custom" &&
+              locations.length > 1 &&
+              !isMobileReorderMode && (
+                <div className="text-center mt-6 text-sm text-gray-500 animate-pulse">
+                  <p>
+                    {isMobile
+                      ? "Tap 'Reorder Places' to arrange your food places"
+                      : "Drag cards to reorder your food places"}
+                  </p>
+                </div>
+              )}
           </div>
         </div>
       )}
