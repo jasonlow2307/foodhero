@@ -5,7 +5,7 @@ import { identifyFood } from "../../utils/identifyFood";
 import { doc, getDoc, updateDoc } from "firebase/firestore";
 import { db } from "../../firebase/firebase";
 import { Images, Visit } from "../../utils/models";
-import { Clock, User, Plus } from "lucide-react";
+import { Clock, User, Plus, ArrowUpDown, Filter } from "lucide-react";
 import LocationDialog from "../../components/LocationDialog";
 import {
   getBoundingBox,
@@ -42,7 +42,14 @@ interface LocationListProps {
 }
 
 // SortableLocationCard component that wraps LocationCard with drag functionality
-const SortableLocationCard = ({ location, image, isMobile, onClick, id }) => {
+const SortableLocationCard = ({
+  location,
+  image,
+  isMobile,
+  onClick,
+  id,
+  isDraggingDisabled,
+}) => {
   const {
     attributes,
     listeners,
@@ -50,7 +57,10 @@ const SortableLocationCard = ({ location, image, isMobile, onClick, id }) => {
     transform,
     transition,
     isDragging,
-  } = useSortable({ id });
+  } = useSortable({
+    id,
+    disabled: isDraggingDisabled,
+  });
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -64,13 +74,18 @@ const SortableLocationCard = ({ location, image, isMobile, onClick, id }) => {
         image={image}
         isMobile={isMobile}
         onClick={onClick}
-        draggable={true}
+        draggable={!isDraggingDisabled}
         isDragging={isDragging}
-        dragHandleProps={{ ...attributes, ...listeners }}
+        dragHandleProps={
+          isDraggingDisabled ? {} : { ...attributes, ...listeners }
+        }
       />
     </div>
   );
 };
+
+// Sort options enum
+type SortOption = "custom" | "mostRecent" | "leastRecent" | "mostVisited";
 
 const LocationList: React.FC<LocationListProps> = ({
   initialSelectedLocation,
@@ -88,6 +103,8 @@ const LocationList: React.FC<LocationListProps> = ({
   const [activeId, setActiveId] = useState<string | null>(null);
   const [hasOrderChanged, setHasOrderChanged] = useState(false);
   const { currentUser } = useAuth();
+  const [sortOption, setSortOption] = useState<SortOption>("custom");
+  const [showSortOptions, setShowSortOptions] = useState(false);
 
   // Configure DnD sensors
   const sensors = useSensors(
@@ -109,26 +126,80 @@ const LocationList: React.FC<LocationListProps> = ({
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  // Initialize locations from Firestore data
-  useEffect(() => {
-    if (locationsData.length > 0) {
-      // Sort by index if it exists, otherwise keep original order
-      const sortedLocations = [...locationsData]
-        .filter((location) => location.userId == currentUser.uid)
-        .sort((a, b) => {
-          // If index is defined for both locations, sort by index
+  // Helper function to get the most recent visit date from a location
+  const getMostRecentVisitDate = (location) => {
+    if (!location.visits || location.visits.length === 0) return new Date(0);
+
+    // Process dates properly, handling Firebase Timestamp format
+    const dates = Array.isArray(location.visits)
+      ? location.visits.map((visit) => {
+          // Check if date is a Firebase Timestamp (has seconds and nanoseconds)
+          if (visit.date && visit.date.seconds) {
+            return new Date(visit.date.seconds * 1000);
+          }
+          // Otherwise try to parse as regular date
+          return new Date(visit.date);
+        })
+      : [
+          location.visits.date && location.visits.date.seconds
+            ? new Date(location.visits.date.seconds * 1000)
+            : new Date(location.visits.date),
+        ];
+
+    // Remove invalid dates (in case parsing failed)
+    const validDates = dates.filter((date) => !isNaN(date.getTime()));
+
+    // If no valid dates, return epoch
+    if (validDates.length === 0) return new Date(0);
+
+    return new Date(Math.max(...validDates.map((date) => date.getTime())));
+  };
+
+  // Helper function to get the visit count
+  const getVisitCount = (location) => {
+    if (!location.visits) return 0;
+    return Array.isArray(location.visits) ? location.visits.length : 1;
+  };
+
+  // Apply sorting based on selected option
+  const getSortedLocations = (locs) => {
+    switch (sortOption) {
+      case "mostRecent":
+        return [...locs].sort(
+          (a, b) =>
+            getMostRecentVisitDate(b).getTime() -
+            getMostRecentVisitDate(a).getTime()
+        );
+      case "leastRecent":
+        return [...locs].sort(
+          (a, b) =>
+            getMostRecentVisitDate(a).getTime() -
+            getMostRecentVisitDate(b).getTime()
+        );
+      case "mostVisited":
+        return [...locs].sort((a, b) => getVisitCount(b) - getVisitCount(a));
+      case "custom":
+      default:
+        return [...locs].sort((a, b) => {
           if (a.index !== undefined && b.index !== undefined) {
             return a.index - b.index;
           }
-          // If only one has index, prioritize the one with index
           if (a.index !== undefined) return -1;
           if (b.index !== undefined) return 1;
-          // Otherwise, keep original order
           return 0;
         });
-      setLocations(sortedLocations);
     }
-  }, [locationsData]);
+  };
+
+  // Initialize locations from Firestore data
+  useEffect(() => {
+    if (locationsData.length > 0) {
+      const filteredLocations = locationsData.filter(
+        (location) => location.userId === currentUser.uid
+      );
+      setLocations(getSortedLocations(filteredLocations));
+    }
+  }, [locationsData, sortOption]);
 
   useEffect(() => {
     const fetchImages = async () => {
@@ -258,10 +329,17 @@ const LocationList: React.FC<LocationListProps> = ({
 
     setActiveId(null);
   };
+
   // Find the active location
   const activeLocation = activeId
     ? locations.find((loc) => loc.id === activeId)
     : null;
+
+  // Handle sort option change
+  const handleSortChange = (option: SortOption) => {
+    setSortOption(option);
+    setShowSortOptions(false);
+  };
 
   // Add an empty state if no locations are available
   if (locations.length === 0 && !locationLoading) {
@@ -295,7 +373,7 @@ const LocationList: React.FC<LocationListProps> = ({
         <div className="min-h-screen bg-gradient-to-br from-green-100 to-blue-100 py-8 px-4">
           <div className="max-w-7xl mx-auto">
             {/* Header */}
-            <div className="text-center mb-12">
+            <div className="text-center mb-6">
               <h1 className="text-4xl font-bold bg-gradient-to-r from-green-400 to-blue-500 bg-clip-text text-transparent mb-4">
                 Your Food Journey 🌟
               </h1>
@@ -307,6 +385,80 @@ const LocationList: React.FC<LocationListProps> = ({
                   Order updated! ✓
                 </p>
               )}
+            </div>
+
+            {/* Sort Controls */}
+            <div className="mb-8 flex justify-center">
+              <div className="relative">
+                <button
+                  onClick={() => setShowSortOptions(!showSortOptions)}
+                  className="flex items-center gap-2 px-4 py-2 bg-white/70 backdrop-blur-sm rounded-full shadow-sm hover:shadow-md transition-all duration-200 border border-gray-200"
+                >
+                  <Filter size={16} className="text-gray-600" />
+                  <span className="font-medium text-gray-700">
+                    Sort by: {sortOption === "custom" && "Custom Order"}
+                    {sortOption === "mostRecent" && "Most Recent Visit"}
+                    {sortOption === "leastRecent" && "Least Recent Visit"}
+                    {sortOption === "mostVisited" && "Most Visited"}
+                  </span>
+                  <ArrowUpDown size={16} className="text-gray-600" />
+                </button>
+
+                {showSortOptions && (
+                  <div className="absolute z-10 mt-2 w-56 rounded-xl bg-white shadow-lg border border-gray-100 overflow-hidden">
+                    <div className="py-1">
+                      <button
+                        onClick={() => handleSortChange("custom")}
+                        className={`w-full text-left px-4 py-2 text-sm ${
+                          sortOption === "custom"
+                            ? "bg-gradient-to-r from-green-50 to-blue-50 text-blue-700 font-medium"
+                            : "text-gray-700 hover:bg-gray-50"
+                        }`}
+                      >
+                        Custom Order {sortOption === "custom" && "✓"}
+                        {sortOption === "custom" && (
+                          <span className="block text-xs text-gray-500 mt-1">
+                            Drag to reorder
+                          </span>
+                        )}
+                      </button>
+
+                      <button
+                        onClick={() => handleSortChange("mostRecent")}
+                        className={`w-full text-left px-4 py-2 text-sm ${
+                          sortOption === "mostRecent"
+                            ? "bg-gradient-to-r from-green-50 to-blue-50 text-blue-700 font-medium"
+                            : "text-gray-700 hover:bg-gray-50"
+                        }`}
+                      >
+                        Most Recent Visit {sortOption === "mostRecent" && "✓"}
+                      </button>
+
+                      <button
+                        onClick={() => handleSortChange("leastRecent")}
+                        className={`w-full text-left px-4 py-2 text-sm ${
+                          sortOption === "leastRecent"
+                            ? "bg-gradient-to-r from-green-50 to-blue-50 text-blue-700 font-medium"
+                            : "text-gray-700 hover:bg-gray-50"
+                        }`}
+                      >
+                        Least Recent Visit {sortOption === "leastRecent" && "✓"}
+                      </button>
+
+                      <button
+                        onClick={() => handleSortChange("mostVisited")}
+                        className={`w-full text-left px-4 py-2 text-sm ${
+                          sortOption === "mostVisited"
+                            ? "bg-gradient-to-r from-green-50 to-blue-50 text-blue-700 font-medium"
+                            : "text-gray-700 hover:bg-gray-50"
+                        }`}
+                      >
+                        Most Visited {sortOption === "mostVisited" && "✓"}
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
 
             {/* Location Grid */}
@@ -355,6 +507,7 @@ const LocationList: React.FC<LocationListProps> = ({
                       image={images[location.id]}
                       isMobile={isMobile}
                       onClick={() => handleClickOpen(location)}
+                      isDraggingDisabled={sortOption !== "custom"}
                     />
                   ))}
                 </SortableContext>
@@ -373,6 +526,13 @@ const LocationList: React.FC<LocationListProps> = ({
                 ) : null}
               </DragOverlay>
             </DndContext>
+
+            {/* Drag hint for custom sort */}
+            {sortOption === "custom" && locations.length > 1 && (
+              <div className="text-center mt-6 text-sm text-gray-500 animate-pulse">
+                <p>Drag cards to reorder your food places</p>
+              </div>
+            )}
           </div>
         </div>
       )}

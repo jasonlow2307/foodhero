@@ -2,18 +2,45 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-
-    // This rule allows anyone with your Firestore database reference to view, edit,
-    // and delete all data in your Firestore database. It is useful for getting
-    // started, but it is configured to expire after 30 days because it
-    // leaves your app open to attackers. At that time, all client
-    // requests to your Firestore database will be denied.
-    //
-    // Make sure to write security rules for your app before that time, or else
-    // all client requests to your Firestore database will be denied until you Update
-    // your rules
+    // Base rule - reject all by default
     match /{document=**} {
-      allow read, write: if request.time < timestamp.date(2025, 3, 22);
+      allow read, write: if false;
+    }
+    
+    // User profiles - users can only read/write their own data
+    match /users/{userId} {
+      allow read: if request.auth != null && (request.auth.uid == userId || isAdmin());
+      allow create: if request.auth != null && request.auth.uid == userId;
+      allow update: if request.auth != null && request.auth.uid == userId 
+                    && request.resource.data.keys().hasOnly(resource.data.keys());
+      allow delete: if request.auth != null && request.auth.uid == userId;
+    }
+    
+    // Locations - users can read all locations but only write their own
+    match /locations/{locationId} {
+      // Allow users to read any location
+      allow read: if request.auth != null;
+      
+      // Users can only create locations they own
+      allow create: if request.auth != null && 
+                     request.resource.data.userId == request.auth.uid;
+      
+      // Users can only update or delete their own locations
+      allow update, delete: if request.auth != null && 
+                            resource.data.userId == request.auth.uid;
+    }
+    
+    // Shared images collection - cached Unsplash images can be read by any authenticated user
+    // and written by any authenticated user (as they're shared resources)
+    match /images/{imageId} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null;
+    }
+    
+    // Helper function to check if user is admin
+    function isAdmin() {
+      return request.auth != null && 
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true;
     }
   }
 }
