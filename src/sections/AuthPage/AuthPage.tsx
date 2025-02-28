@@ -7,9 +7,10 @@ import {
   GoogleAuthProvider,
   signInWithPopup,
 } from "firebase/auth";
-import { auth } from "../../firebase/firebase";
+import { auth, db } from "../../firebase/firebase";
 import { useAuth } from "../../contexts/AuthContext";
 import { enqueueSnackbar } from "notistack";
+import { getDoc, doc, setDoc, serverTimestamp } from "firebase/firestore";
 
 interface AuthPageProps {
   setPage: (page: string) => void;
@@ -51,7 +52,7 @@ const AuthPage: React.FC<AuthPageProps> = ({ setPage }) => {
     try {
       if (isLogin) {
         // Login user - Firebase will automatically update the auth state
-        await signInWithEmailAndPassword(
+        const userCredential = await signInWithEmailAndPassword(
           auth,
           formData.email,
           formData.password
@@ -62,10 +63,31 @@ const AuthPage: React.FC<AuthPageProps> = ({ setPage }) => {
           variant: "success",
         });
 
-        // The auth state observer will handle updating currentUser
-        // No need to manually set it
+        // Check if user document exists, if not create it
+        const user = userCredential.user;
+        const userDoc = await getDoc(doc(db, "users", user.uid));
+
+        if (!userDoc.exists()) {
+          // Create user document for returning users without a document
+          await setDoc(doc(db, "users", user.uid), {
+            name: user.displayName || formData.email.split("@")[0],
+            email: user.email,
+            photoURL: user.photoURL,
+            createdAt: serverTimestamp(),
+            authProvider: "email",
+            lastLogin: serverTimestamp(),
+          });
+        } else {
+          // Update last login time
+          await setDoc(
+            doc(db, "users", user.uid),
+            {
+              lastLogin: serverTimestamp(),
+            },
+            { merge: true }
+          );
+        }
       } else {
-        // Register user - Firebase will automatically update the auth state
         const userCredential = await createUserWithEmailAndPassword(
           auth,
           formData.email,
@@ -74,17 +96,25 @@ const AuthPage: React.FC<AuthPageProps> = ({ setPage }) => {
 
         const user = userCredential.user;
         if (user) {
+          // Update the user profile with name
           await updateProfile(user, {
             displayName: formData.name,
+          });
+
+          // Create user document in Firestore
+          await setDoc(doc(db, "users", user.uid), {
+            name: formData.name,
+            email: formData.email,
+            photoURL: user.photoURL,
+            createdAt: serverTimestamp(),
+            authProvider: "email",
+            lastLogin: serverTimestamp(),
           });
 
           console.log("Registration successful");
           enqueueSnackbar("Account created successfully!", {
             variant: "success",
           });
-
-          // The auth state observer will handle updating currentUser
-          // No need to manually set it
         }
       }
 
@@ -93,7 +123,25 @@ const AuthPage: React.FC<AuthPageProps> = ({ setPage }) => {
       // You can still redirect here if you want immediate feedback
       setPage("home");
     } catch (err) {
-      // Error handling remains the same
+      if (err instanceof Error) {
+        // Clean up Firebase error messages
+        let errorMessage = err.message;
+        if (errorMessage.includes("auth/")) {
+          errorMessage = errorMessage
+            .replace("Firebase: ", "")
+            .replace(/\(auth.*\)/, "")
+            .trim();
+        }
+
+        setError(errorMessage);
+        enqueueSnackbar(errorMessage, { variant: "error" });
+      } else {
+        setError("An unknown error occurred");
+        enqueueSnackbar("An unknown error occurred", { variant: "error" });
+      }
+      console.error("Authentication error:", err);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -117,6 +165,23 @@ const AuthPage: React.FC<AuthPageProps> = ({ setPage }) => {
       });
 
       localStorage.setItem("currentPage", "home");
+
+      // Get Google user info
+      const user = result.user;
+
+      // Store additional user data in Firestore if needed
+      const userDoc = await getDoc(doc(db, "users", user.uid));
+
+      if (!userDoc.exists()) {
+        // First-time Google sign-in, create user document
+        await setDoc(doc(db, "users", user.uid), {
+          name: user.displayName,
+          email: user.email,
+          photoURL: user.photoURL,
+          createdAt: serverTimestamp(),
+          authProvider: "google",
+        });
+      }
 
       // No need to manually set page, your useEffect will handle it:
       // if (currentUser) setPage("home")
