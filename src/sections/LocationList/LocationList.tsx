@@ -33,6 +33,7 @@ import {
   useSortable,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
+import { useAuth } from "../../contexts/AuthContext";
 
 interface LocationListProps {
   initialSelectedLocation?: any;
@@ -86,6 +87,7 @@ const LocationList: React.FC<LocationListProps> = ({
   const [isMobile, setIsMobile] = useState(false);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [hasOrderChanged, setHasOrderChanged] = useState(false);
+  const { currentUser } = useAuth();
 
   // Configure DnD sensors
   const sensors = useSensors(
@@ -111,17 +113,19 @@ const LocationList: React.FC<LocationListProps> = ({
   useEffect(() => {
     if (locationsData.length > 0) {
       // Sort by index if it exists, otherwise keep original order
-      const sortedLocations = [...locationsData].sort((a, b) => {
-        // If index is defined for both locations, sort by index
-        if (a.index !== undefined && b.index !== undefined) {
-          return a.index - b.index;
-        }
-        // If only one has index, prioritize the one with index
-        if (a.index !== undefined) return -1;
-        if (b.index !== undefined) return 1;
-        // Otherwise, keep original order
-        return 0;
-      });
+      const sortedLocations = [...locationsData]
+        .filter((location) => location.userId == currentUser.uid)
+        .sort((a, b) => {
+          // If index is defined for both locations, sort by index
+          if (a.index !== undefined && b.index !== undefined) {
+            return a.index - b.index;
+          }
+          // If only one has index, prioritize the one with index
+          if (a.index !== undefined) return -1;
+          if (b.index !== undefined) return 1;
+          // Otherwise, keep original order
+          return 0;
+        });
       setLocations(sortedLocations);
     }
   }, [locationsData]);
@@ -258,6 +262,30 @@ const LocationList: React.FC<LocationListProps> = ({
   const activeLocation = activeId
     ? locations.find((loc) => loc.id === activeId)
     : null;
+
+  // Add an empty state if no locations are available
+  if (locations.length === 0 && !locationLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-green-100 to-blue-100 py-8 flex flex-col items-center justify-center px-4">
+        <div className="text-center max-w-md">
+          <div className="text-6xl mb-4">🍽️</div>
+          <h2 className="text-2xl font-bold text-gray-800 mb-4">
+            No Food Places Yet
+          </h2>
+          <p className="text-gray-600 mb-6">
+            You haven't added any food places to your collection. Add some
+            locations to start tracking your food journey!
+          </p>
+          <button
+            onClick={() => setPage("add")}
+            className="px-6 py-3 bg-gradient-to-r from-green-400 to-blue-500 text-white rounded-xl font-medium hover:opacity-90 transition-opacity hover: cursor-pointer"
+          >
+            Add New Location
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <>

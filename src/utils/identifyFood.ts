@@ -21,6 +21,7 @@ export function identifyFood(query: string) {
     "Seoul Garden": "Korean BBQ & hotpot",
     "Sukiya": "Gyudon (beef bowl)",
     "Tony Roma's": "BBQ ribs",
+    "Tea Live": "Bubble tea",
 
     // Coffee & Tea
     "Dome Café": "Coffee beans & breakfast platters",
@@ -31,7 +32,7 @@ export function identifyFood(query: string) {
     "Lavender": "Artisan bread & pastries",
 
     // Bubble Tea & Juices
-    "Tealive": "Brown sugar pearl milk tea",
+    "Tealive": "Bubble tea",
     "Gong Cha": "Earl Grey milk tea",
     "Chatime": "Matcha pearl milk tea",
     "Juice Works": "Mango smoothie",

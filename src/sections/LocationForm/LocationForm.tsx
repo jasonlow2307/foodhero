@@ -7,6 +7,7 @@ import { useSnackbar } from "notistack";
 import { Fullness, Location, LocationFormProp } from "../../utils/models";
 import { Search, Camera, Trash2, PlusCircle, Send } from "lucide-react";
 import useFirestoreCollection from "../../firebase/useFirestoreCollection";
+import { useAuth } from "../../contexts/AuthContext";
 
 interface Coordinates {
   latitude: number;
@@ -15,8 +16,11 @@ interface Coordinates {
 
 const LocationForm = () => {
   const { enqueueSnackbar } = useSnackbar();
+  const { currentUser } = useAuth();
   const [formData, setFormData] = useState<LocationFormProp>({
+    index: -1,
     name: "",
+    userId: "",
     location: "",
     visits: [
       {
@@ -124,18 +128,25 @@ const LocationForm = () => {
 
   function getNextIndex() {
     let maxIndex = -9999;
-    locationsData.map((location) => {
-      if (location.index > maxIndex) {
-        maxIndex = location.index;
-      }
-    });
+    locationsData
+      .filter((location) => location.user == currentUser.uid)
+      .map((location) => {
+        if (location.index > maxIndex) {
+          maxIndex = location.index;
+        }
+      });
     return maxIndex + 1;
   }
 
   const handleSubmit = async (e: React.ChangeEvent<HTMLFormElement>) => {
     e.preventDefault();
     try {
-      const formDataWithIndex = { ...formData, index: getNextIndex() };
+      const formDataWithIndex: LocationFormProp = {
+        ...formData,
+        index: getNextIndex(),
+        name: currentUser.displayName,
+        userId: currentUser.uid,
+      };
       await writeData("locations", formDataWithIndex);
       enqueueSnackbar("Location added successfully! 🎉", {
         variant: "success",
@@ -143,7 +154,9 @@ const LocationForm = () => {
       });
       // Reset form
       setFormData({
+        index: -1,
         name: "",
+        userId: "",
         location: "",
         visits: [
           {
@@ -329,7 +342,7 @@ const LocationForm = () => {
 
         <form onSubmit={handleSubmit} className="space-y-4 md:space-y-6">
           {/* Name Input */}
-          <div className="relative">
+          {/* <div className="relative">
             <input
               name="name"
               type="text"
@@ -338,7 +351,7 @@ const LocationForm = () => {
               value={formData.name}
               onChange={handleChange}
             />
-          </div>
+          </div> */}
           {/* Location Input */}
           <div className="relative">
             <input
@@ -425,6 +438,15 @@ const LocationForm = () => {
               )
             )}
           </div>
+          {/* Add Food Button */}
+          <button
+            type="button"
+            onClick={handleAddFood}
+            className="w-full py-3 rounded-xl border-2 border-dashed border-gray-300 text-gray-500 hover:border-green-400 hover:text-green-500 transition-colors flex items-center justify-center gap-2 hover:cursor-pointer"
+          >
+            <PlusCircle size={20} />
+            Add Another Item
+          </button>
           {/* Fullness Level */}
           <div className="space-y-2">
             <label className="text-gray-700 font-medium">
@@ -453,15 +475,7 @@ const LocationForm = () => {
               ))}
             </div>
           </div>
-          {/* Add Food Button */}
-          <button
-            type="button"
-            onClick={handleAddFood}
-            className="w-full py-3 rounded-xl border-2 border-dashed border-gray-300 text-gray-500 hover:border-green-400 hover:text-green-500 transition-colors flex items-center justify-center gap-2 hover:cursor-pointer"
-          >
-            <PlusCircle size={20} />
-            Add Another Item
-          </button>
+
           {/* Submit Button */}
           <button
             type="submit"

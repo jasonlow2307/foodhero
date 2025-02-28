@@ -18,7 +18,9 @@ export interface Visit {
 }
 
 export interface LocationFormProp {
+  index: number;
   name: string;
+  userId: string;
   location: string;
   visits: Visit[];
   selectedLocation: Location | null;

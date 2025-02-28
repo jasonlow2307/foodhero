@@ -53,7 +53,7 @@ const AppContent = () => {
       case "add":
         return <LocationForm />;
       case "whatToEat":
-        return <WhatToEat />;
+        return <WhatToEat setPage={setPage} />;
       case "home":
       default:
         return <HomePage setPage={setPage} />;

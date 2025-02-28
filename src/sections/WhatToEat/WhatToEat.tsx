@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import useFirestoreCollection from "../../firebase/useFirestoreCollection";
 import { useUnsplash } from "../../utils/useUnsplash";
 import { identifyFood } from "../../utils/identifyFood";
@@ -13,9 +13,21 @@ import {
 } from "../../utils/mapUtils";
 import { doc, getDoc, updateDoc } from "firebase/firestore";
 import { db } from "../../firebase/firebase";
+import { useAuth } from "../../contexts/AuthContext";
 
-const WhatToEat: React.FC = () => {
-  const { data: locations } = useFirestoreCollection("locations");
+const WhatToEat = ({ setPage }) => {
+  const { currentUser } = useAuth();
+  // Replace the current locations fetching with filtered data
+  const { data: allLocations, loading } = useFirestoreCollection("locations");
+
+  const locations = useMemo(() => {
+    if (!allLocations || !currentUser) return [];
+
+    return allLocations.filter(
+      (location) => location.userId === currentUser.uid
+    );
+  }, [allLocations, currentUser]);
+
   const [images, setImages] = useState<Images>({});
   const { fetchUnsplashImage } = useUnsplash();
   const [selectedLocation, setSelectedLocation] = useState<any>(null);
@@ -435,6 +447,42 @@ const WhatToEat: React.FC = () => {
   };
 
   const cardDimensions = getCardDimensions();
+
+  // Add a loading state
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-green-100 to-blue-100 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 border-t-4 border-green-500 border-solid rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading your food options...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Add an empty state if no locations are available
+  if (locations.length === 0 && !loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-green-100 to-blue-100 py-8 flex flex-col items-center justify-center px-4">
+        <div className="text-center max-w-md">
+          <div className="text-6xl mb-4">🍽️</div>
+          <h2 className="text-2xl font-bold text-gray-800 mb-4">
+            No Food Places Yet
+          </h2>
+          <p className="text-gray-600 mb-6">
+            You haven't added any food places to your collection. Add some
+            locations to start tracking your food journey!
+          </p>
+          <button
+            onClick={() => setPage("add")}
+            className="px-6 py-3 bg-gradient-to-r from-green-400 to-blue-500 text-white rounded-xl font-medium hover:opacity-90 transition-opacity hover: cursor-pointer"
+          >
+            Add New Location
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-100 to-blue-100 py-4 sm:py-8 px-2 sm:px-4 overflow-hidden">
