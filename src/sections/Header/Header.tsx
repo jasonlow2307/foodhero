@@ -124,7 +124,7 @@ const Header = () => {
         <div className="pt-2 pb-3 space-y-1 shadow-inner bg-gray-50">
           <Link
             to="/"
-            className={`block px-3 py-2 rounded-md text-base font-medium flex items-center ${
+            className={`px-3 py-2 rounded-md text-base font-medium flex items-center ${
               isActive("/")
                 ? "bg-gradient-to-r from-green-50 to-blue-50 text-blue-700"
                 : "text-gray-600 hover:bg-gray-100"
@@ -137,7 +137,7 @@ const Header = () => {
 
           <Link
             to="/list"
-            className={`block px-3 py-2 rounded-md text-base font-medium flex items-center ${
+            className={`px-3 py-2 rounded-md text-base font-medium flex items-center ${
               isActive("/list")
                 ? "bg-gradient-to-r from-green-50 to-blue-50 text-blue-700"
                 : "text-gray-600 hover:bg-gray-100"
@@ -150,7 +150,7 @@ const Header = () => {
 
           <Link
             to="/add"
-            className={`block px-3 py-2 rounded-md text-base font-medium flex items-center ${
+            className={`px-3 py-2 rounded-md text-base font-medium flex items-center ${
               isActive("/add")
                 ? "bg-gradient-to-r from-green-50 to-blue-50 text-blue-700"
                 : "text-gray-600 hover:bg-gray-100"
@@ -163,7 +163,7 @@ const Header = () => {
 
           <Link
             to="/what-to-eat"
-            className={`block px-3 py-2 rounded-md text-base font-medium flex items-center ${
+            className={`px-3 py-2 rounded-md text-base font-medium flex items-center ${
               isActive("/what-to-eat")
                 ? "bg-gradient-to-r from-green-50 to-blue-50 text-blue-700"
                 : "text-gray-600 hover:bg-gray-100"
@@ -179,7 +179,7 @@ const Header = () => {
               handleSignOut();
               setIsMenuOpen(false);
             }}
-            className="w-full text-left block px-3 py-2 rounded-md text-base font-medium flex items-center text-red-600 hover:bg-red-50 cursor-pointer"
+            className="w-full text-left px-3 py-2 rounded-md text-base font-medium flex items-center text-red-600 hover:bg-red-50 cursor-pointer"
           >
             <LogOut className="mr-2" size={18} />
             Sign Out
@@ -190,7 +190,7 @@ const Header = () => {
       {/* Optional: Add overlay when menu is open */}
       {isMenuOpen && (
         <div
-          className="fixed inset-0 bg-black bg-opacity-25 md:hidden z-30"
+          className="fixed inset-0 bg-black opacity-80 md:hidden z-30"
           onClick={() => setIsMenuOpen(false)}
         ></div>
       )}
