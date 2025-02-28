@@ -315,6 +315,7 @@ const LocationForm = () => {
   };
 
   const handleLocationSelect = (location: any) => {
+    console.log("LOCATION", location);
     const filteredLocation = filterLocationAttributes(location);
     const displayName = location.display_name.includes(",")
       ? location.display_name.split(",")[0]

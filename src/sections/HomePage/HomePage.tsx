@@ -93,18 +93,21 @@ const HomePage = () => {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  // Fetch hero image
+  // Fetch hero image - Modified to wait for Firestore cache
   useEffect(() => {
     const fetchHeroImage = async () => {
       try {
-        const image = await fetchUnsplashImage("healthy food plate");
-        setHeroImage(image);
+        // Only fetch if we're not already loading
+        if (!loading) {
+          const image = await fetchUnsplashImage("healthy food plate");
+          setHeroImage(image);
+        }
       } catch (error) {
         console.error("Error fetching hero image:", error);
       }
     };
     fetchHeroImage();
-  }, []);
+  }, [fetchUnsplashImage, loading]); // Add loading as a dependency
 
   // Calculate stats
   useEffect(() => {
@@ -192,7 +195,7 @@ const HomePage = () => {
       <div
         className="relative h-[100vh] sm:h-[90vh] flex items-center justify-center overflow-hidden"
         style={{
-          backgroundImage: heroImage
+          backgroundImage: fetchUnsplashImage("healthy food plate")
             ? `linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.8)), url(${heroImage})`
             : "linear-gradient(to right, #22c55e, #0ea5e9)",
           backgroundSize: "cover",
