@@ -27,7 +27,7 @@ const Header = () => {
 
   return (
     <header className="bg-white shadow-md sticky top-0 z-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="bg-white max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-50">
         <div className="flex justify-between h-16">
           <div className="flex">
             <div className="flex-shrink-0 flex items-center">
@@ -115,74 +115,84 @@ const Header = () => {
         </div>
       </div>
 
-      {/* Mobile menu, show/hide based on menu state */}
-      {isMenuOpen && (
-        <div className="md:hidden">
-          <div className="pt-2 pb-3 space-y-1 shadow-inner bg-gray-50">
-            <Link
-              to="/"
-              className={`px-3 py-2 rounded-md text-base font-medium flex items-center ${
-                isActive("/")
-                  ? "bg-gradient-to-r from-green-50 to-blue-50 text-blue-700"
-                  : "text-gray-600 hover:bg-gray-100"
-              }`}
-              onClick={() => setIsMenuOpen(false)}
-            >
-              <Home className="mr-2" size={18} />
-              Home
-            </Link>
+      {/* Mobile menu with slide animation */}
+      <div
+        className={`md:hidden fixed top-16 left-0 w-full transform transition-transform duration-300 ease-in-out ${
+          isMenuOpen ? "translate-x-0" : "-translate-x-full"
+        } bg-white shadow-lg z-40`}
+      >
+        <div className="pt-2 pb-3 space-y-1 shadow-inner bg-gray-50">
+          <Link
+            to="/"
+            className={`block px-3 py-2 rounded-md text-base font-medium flex items-center ${
+              isActive("/")
+                ? "bg-gradient-to-r from-green-50 to-blue-50 text-blue-700"
+                : "text-gray-600 hover:bg-gray-100"
+            }`}
+            onClick={() => setIsMenuOpen(false)}
+          >
+            <Home className="mr-2" size={18} />
+            Home
+          </Link>
 
-            <Link
-              to="/list"
-              className={`px-3 py-2 rounded-md text-base font-medium flex items-center ${
-                isActive("/list")
-                  ? "bg-gradient-to-r from-green-50 to-blue-50 text-blue-700"
-                  : "text-gray-600 hover:bg-gray-100"
-              }`}
-              onClick={() => setIsMenuOpen(false)}
-            >
-              <Map className="mr-2" size={18} />
-              My Places
-            </Link>
+          <Link
+            to="/list"
+            className={`block px-3 py-2 rounded-md text-base font-medium flex items-center ${
+              isActive("/list")
+                ? "bg-gradient-to-r from-green-50 to-blue-50 text-blue-700"
+                : "text-gray-600 hover:bg-gray-100"
+            }`}
+            onClick={() => setIsMenuOpen(false)}
+          >
+            <Map className="mr-2" size={18} />
+            My Places
+          </Link>
 
-            <Link
-              to="/add"
-              className={`px-3 py-2 rounded-md text-base font-medium flex items-center ${
-                isActive("/add")
-                  ? "bg-gradient-to-r from-green-50 to-blue-50 text-blue-700"
-                  : "text-gray-600 hover:bg-gray-100"
-              }`}
-              onClick={() => setIsMenuOpen(false)}
-            >
-              <PlusCircle className="mr-2" size={18} />
-              Add Place
-            </Link>
+          <Link
+            to="/add"
+            className={`block px-3 py-2 rounded-md text-base font-medium flex items-center ${
+              isActive("/add")
+                ? "bg-gradient-to-r from-green-50 to-blue-50 text-blue-700"
+                : "text-gray-600 hover:bg-gray-100"
+            }`}
+            onClick={() => setIsMenuOpen(false)}
+          >
+            <PlusCircle className="mr-2" size={18} />
+            Add Place
+          </Link>
 
-            <Link
-              to="/what-to-eat"
-              className={`px-3 py-2 rounded-md text-base font-medium flex items-center ${
-                isActive("/what-to-eat")
-                  ? "bg-gradient-to-r from-green-50 to-blue-50 text-blue-700"
-                  : "text-gray-600 hover:bg-gray-100"
-              }`}
-              onClick={() => setIsMenuOpen(false)}
-            >
-              <Utensils className="mr-2" size={18} />
-              What To Eat
-            </Link>
+          <Link
+            to="/what-to-eat"
+            className={`block px-3 py-2 rounded-md text-base font-medium flex items-center ${
+              isActive("/what-to-eat")
+                ? "bg-gradient-to-r from-green-50 to-blue-50 text-blue-700"
+                : "text-gray-600 hover:bg-gray-100"
+            }`}
+            onClick={() => setIsMenuOpen(false)}
+          >
+            <Utensils className="mr-2" size={18} />
+            What To Eat
+          </Link>
 
-            <button
-              onClick={() => {
-                handleSignOut();
-                setIsMenuOpen(false);
-              }}
-              className="w-full text-left px-3 py-2 rounded-md text-base font-medium flex items-center text-red-600 hover:bg-red-50 hover: curosr-pointer"
-            >
-              <LogOut className="mr-2" size={18} />
-              Sign Out
-            </button>
-          </div>
+          <button
+            onClick={() => {
+              handleSignOut();
+              setIsMenuOpen(false);
+            }}
+            className="w-full text-left block px-3 py-2 rounded-md text-base font-medium flex items-center text-red-600 hover:bg-red-50 cursor-pointer"
+          >
+            <LogOut className="mr-2" size={18} />
+            Sign Out
+          </button>
         </div>
+      </div>
+
+      {/* Optional: Add overlay when menu is open */}
+      {isMenuOpen && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-25 md:hidden z-30"
+          onClick={() => setIsMenuOpen(false)}
+        ></div>
       )}
     </header>
   );
