@@ -391,7 +391,7 @@ const LocationForm = () => {
               onChange={handleChange}
             />
             <Search
-              className={`absolute right-3 top-3 ${
+              className={`absolute right-3 top-3.5 ${
                 darkMode ? "text-gray-300" : "text-gray-400"
               }`}
               size={20}

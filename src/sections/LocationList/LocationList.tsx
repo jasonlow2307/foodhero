@@ -704,7 +704,7 @@ const LocationList: React.FC<LocationListProps> = ({
               <div className="relative">
                 <button
                   onClick={() => setShowSortOptions(!showSortOptions)}
-                  className={`flex items-center gap-2 px-4 py-2 ${
+                  className={`flex items-center hover: cursor-pointer gap-2 px-4 py-2 ${
                     darkMode ? "bg-gray-800/70" : "bg-white/70"
                   } backdrop-blur-sm rounded-full shadow-sm hover:shadow-md transition-all duration-200 border ${
                     darkMode ? "border-gray-700" : "border-gray-200"
@@ -745,7 +745,7 @@ const LocationList: React.FC<LocationListProps> = ({
                     <div className="py-1">
                       <button
                         onClick={() => handleSortChange("mostRecent")}
-                        className={`w-full text-left px-4 py-2 text-sm ${
+                        className={`hover: cursor-pointer w-full text-left px-4 py-2 text-sm ${
                           sortOption === "mostRecent"
                             ? darkMode
                               ? "bg-gradient-to-r from-green-900/70 to-blue-900/70 text-blue-400 font-medium"
@@ -760,7 +760,7 @@ const LocationList: React.FC<LocationListProps> = ({
 
                       <button
                         onClick={() => handleSortChange("leastRecent")}
-                        className={`w-full text-left px-4 py-2 text-sm ${
+                        className={`hover: cursor-pointer w-full text-left px-4 py-2 text-sm ${
                           sortOption === "leastRecent"
                             ? darkMode
                               ? "bg-gradient-to-r from-green-900/70 to-blue-900/70 text-blue-400 font-medium"
@@ -775,7 +775,7 @@ const LocationList: React.FC<LocationListProps> = ({
 
                       <button
                         onClick={() => handleSortChange("custom")}
-                        className={`w-full text-left px-4 py-2 text-sm ${
+                        className={`hover: cursor-pointer w-full text-left px-4 py-2 text-sm ${
                           sortOption === "custom"
                             ? darkMode
                               ? "bg-gradient-to-r from-green-900/70 to-blue-900/70 text-blue-400 font-medium"
@@ -790,7 +790,7 @@ const LocationList: React.FC<LocationListProps> = ({
 
                       <button
                         onClick={() => handleSortChange("mostVisited")}
-                        className={`w-full text-left px-4 py-2 text-sm ${
+                        className={`hover: cursor-pointer w-full text-left px-4 py-2 text-sm ${
                           sortOption === "mostVisited"
                             ? darkMode
                               ? "bg-gradient-to-r from-green-900/70 to-blue-900/70 text-blue-400 font-medium"
