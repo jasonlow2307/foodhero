@@ -1,14 +1,57 @@
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { Home, Map, PlusCircle, Utensils, LogOut, Menu, X } from "lucide-react";
+import {
+  Home,
+  Map,
+  PlusCircle,
+  Utensils,
+  LogOut,
+  Menu,
+  X,
+  User,
+  ChevronDown,
+} from "lucide-react";
 import { auth } from "../../firebase/firebase";
 import { signOut } from "firebase/auth";
 import { enqueueSnackbar } from "notistack";
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isUserDropdownOpen, setIsUserDropdownOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
+  const desktopDropdownRef = useRef<HTMLDivElement>(null);
+  const mobileDropdownRef = useRef<HTMLDivElement>(null);
+  const mobileButtonWrapperRef = useRef<HTMLDivElement>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  const mobileButtonRef = useRef<HTMLButtonElement>(null);
+
+  // Get current user
+  const user = auth.currentUser;
+  const userName = user?.displayName || "User";
+  const userEmail = user?.email || "";
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (!isUserDropdownOpen) return;
+
+      // Check if click is on any button or dropdown
+      const isButtonClick =
+        buttonRef.current?.contains(event.target as Node) ||
+        mobileButtonRef.current?.contains(event.target as Node);
+
+      const isDropdownClick =
+        desktopDropdownRef.current?.contains(event.target as Node) ||
+        mobileDropdownRef.current?.contains(event.target as Node);
+
+      if (!isButtonClick && !isDropdownClick) {
+        setIsUserDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [isUserDropdownOpen]);
 
   const handleSignOut = async () => {
     try {
@@ -94,17 +137,103 @@ const Header = () => {
               What To Eat
             </Link>
 
-            <button
-              onClick={handleSignOut}
-              className="px-3 py-2 rounded-md text-sm font-medium flex items-center text-red-600 hover:bg-red-50 transition-colors"
-            >
-              <LogOut className="mr-1" size={18} />
-              Sign Out
-            </button>
+            {/* User profile dropdown */}
+            <div className="relative ml-3">
+              <button
+                ref={buttonRef}
+                onClick={() => setIsUserDropdownOpen(!isUserDropdownOpen)}
+                className="flex items-center gap-2 bg-white px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors focus:outline-none hover: cursor-pointer"
+              >
+                <div className="w-8 h-8 rounded-full bg-gradient-to-r from-green-500 to-blue-500 flex items-center justify-center text-white">
+                  <User size={16} />
+                </div>
+                <span className="hidden lg:block">{userName}</span>
+                <ChevronDown
+                  size={14}
+                  className={`transition-transform duration-300 ${
+                    isUserDropdownOpen ? "rotate-180" : ""
+                  }`}
+                />
+              </button>
+
+              {/* Dropdown menu */}
+              <div
+                ref={desktopDropdownRef}
+                className={`absolute right-0 mt-2 w-56 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 transition-all duration-300 ease-in-out transform origin-top-right ${
+                  isUserDropdownOpen
+                    ? "opacity-100 scale-100"
+                    : "opacity-0 scale-95 pointer-events-none"
+                }`}
+              >
+                <div className="py-1">
+                  <div className="px-4 py-3">
+                    <p className="text-sm font-medium text-gray-900 truncate">
+                      {userName}
+                    </p>
+                    <p className="text-xs text-gray-500 truncate">
+                      {userEmail}
+                    </p>
+                  </div>
+                  <hr className="my-1" />
+                  <button
+                    onClick={handleSignOut}
+                    className="w-full text-left block px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors flex items-center hover: cursor-pointer"
+                  >
+                    <LogOut className="mr-2" size={16} />
+                    Sign Out
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
 
           {/* Mobile menu button */}
           <div className="flex items-center md:hidden">
+            {/* Mobile user profile button */}
+            <div className="mr-2" ref={mobileButtonWrapperRef}>
+              <button
+                ref={mobileButtonRef}
+                onClick={() => setIsUserDropdownOpen(!isUserDropdownOpen)}
+                className="flex items-center justify-center bg-white p-2 rounded-md text-gray-600 hover:text-gray-900 hover:bg-gray-100 focus:outline-none"
+              >
+                <div className="w-8 h-8 rounded-full bg-gradient-to-r from-green-500 to-blue-500 flex items-center justify-center text-white">
+                  <User size={16} />
+                </div>
+              </button>
+
+              {/* Mobile dropdown menu */}
+              <div
+                ref={mobileDropdownRef}
+                className={`absolute right-0 mt-2 mr-4 w-56 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-50 transition-all duration-300 ease-in-out transform origin-top-right ${
+                  isUserDropdownOpen
+                    ? "opacity-100 scale-100"
+                    : "opacity-0 scale-95 pointer-events-none"
+                }`}
+              >
+                <div className="py-1">
+                  <div className="px-4 py-3">
+                    <p className="text-sm font-medium text-gray-900 truncate">
+                      {userName}
+                    </p>
+                    <p className="text-xs text-gray-500 truncate">
+                      {userEmail}
+                    </p>
+                  </div>
+                  <hr className="my-1" />
+                  <button
+                    onClick={() => {
+                      handleSignOut();
+                      setIsUserDropdownOpen(false);
+                    }}
+                    className="w-full text-left block px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors flex items-center"
+                  >
+                    <LogOut className="mr-2" size={16} />
+                    Sign Out
+                  </button>
+                </div>
+              </div>
+            </div>
+
             <button
               onClick={() => setIsMenuOpen(!isMenuOpen)}
               className="inline-flex items-center justify-center p-2 rounded-md text-gray-600 hover:text-gray-900 hover:bg-gray-100 focus:outline-none focus:bg-gray-100 focus:text-gray-900 transition-colors"
@@ -177,17 +306,6 @@ const Header = () => {
             <Utensils className="mr-2" size={18} />
             What To Eat
           </Link>
-
-          <button
-            onClick={() => {
-              handleSignOut();
-              setIsMenuOpen(false);
-            }}
-            className="w-full text-left px-3 py-2 rounded-md text-base font-medium flex items-center text-red-600 hover:bg-red-50 cursor-pointer"
-          >
-            <LogOut className="mr-2" size={18} />
-            Sign Out
-          </button>
         </div>
       </div>
 

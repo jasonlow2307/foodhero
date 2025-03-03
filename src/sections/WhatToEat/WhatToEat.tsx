@@ -649,9 +649,9 @@ const WhatToEat = () => {
 
           {/* Drawn card */}
           {drawnCard && (
-            <div className="flex flex-col items-center hover:cursor-pointer">
+            <div className="flex flex-col items-center">
               <div
-                className={`bg-white rounded-3xl p-4 sm:p-6 shadow-xl ${cardDimensions.width} transform transition-all duration-700`}
+                className="bg-white rounded-3xl p-4 sm:p-6 shadow-xl hover-gradient-shadow transition-all duration-300 hover: cursor-pointer"
                 onClick={() => handleLocationClick(drawnCard)}
                 style={{
                   animation: "cardAppear 0.7s ease-out",
@@ -668,7 +668,6 @@ const WhatToEat = () => {
                     }}
                   />
                 </div>
-
                 {/* Location Details */}
                 <div className="space-y-2 sm:space-y-3">
                   <h3 className="text-lg sm:text-xl font-semibold text-gray-800">
@@ -756,22 +755,32 @@ const WhatToEat = () => {
 
       {/* Add CSS animation for card appearance */}
       <style>{`
-        @keyframes cardAppear {
-          0% {
-            opacity: 0;
-            transform: translateY(-50px) scale(0.8);
-          }
-          100% {
-            opacity: 1;
-            transform: translateY(0) scale(1);
-          }
-        }
+  @keyframes cardAppear {
+    0% {
+      opacity: 0;
+      transform: translateY(-50px) scale(0.8);
+    }
+    100% {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+  }
 
-        /* Improve scrolling on mobile */
-        .overflow-y-auto {
-          -webkit-overflow-scrolling: touch;
-        }
-      `}</style>
+  /* Add this hover style for the green-blue gradient shadow */
+  .hover-gradient-shadow {
+    transition: transform 0.3s ease, box-shadow 0.4s ease;
+  }
+  
+  .hover-gradient-shadow:hover {
+    transform: scale(1.05);
+    box-shadow: rgba(22, 163, 74, 0.35) -8px -8px 32px 8px, rgba(2, 132, 199, 0.35) 8px 8px 32px 8px;
+  }
+
+  /* Improve scrolling on mobile */
+  .overflow-y-auto {
+    -webkit-overflow-scrolling: touch;
+  }
+`}</style>
     </div>
   );
 };
