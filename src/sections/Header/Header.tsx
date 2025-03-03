@@ -177,7 +177,7 @@ const Header = () => {
                   <hr className="my-1" />
                   <button
                     onClick={handleSignOut}
-                    className="w-full text-left block px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors flex items-center hover: cursor-pointer"
+                    className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors flex items-center hover: cursor-pointer"
                   >
                     <LogOut className="mr-2" size={16} />
                     Sign Out
@@ -225,7 +225,7 @@ const Header = () => {
                       handleSignOut();
                       setIsUserDropdownOpen(false);
                     }}
-                    className="w-full text-left block px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors flex items-center"
+                    className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors flex items-center"
                   >
                     <LogOut className="mr-2" size={16} />
                     Sign Out
