@@ -6,16 +6,9 @@ import { useNavigate } from "react-router-dom";
 interface SearchSuggestionsProps {
   locations: any[];
   onClose: () => void;
-  setSelectedLocation: (location: any) => void;
-  setOpen: (open: boolean) => void;
 }
 
-const SearchSuggestions = ({
-  locations,
-  onClose,
-  setSelectedLocation,
-  setOpen,
-}: SearchSuggestionsProps) => {
+const SearchSuggestions = ({ locations, onClose }: SearchSuggestionsProps) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [suggestions, setSuggestions] = useState<any[]>([]);
   const [categories, setCategories] = useState<string[]>([]);
@@ -66,10 +59,8 @@ const SearchSuggestions = ({
   }, [locations]);
 
   const handleLocationClick = (location) => {
-    console.log("CLICKED");
-    setSelectedLocation(location);
-    setOpen(true); // Open the dialog
-    onClose(); // Close the search modal
+    navigate(`?id=${location.id}`);
+    onClose();
   };
 
   // Handle search

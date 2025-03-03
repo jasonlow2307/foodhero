@@ -41,7 +41,7 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { useAuth } from "../../contexts/AuthContext";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import React from "react";
 import { useTheme } from "../../contexts/ThemeContext";
 import Loader from "../../components/Loader";
@@ -133,8 +133,6 @@ const LocationList: React.FC<LocationListProps> = ({
   const [locations, setLocations] = useState<any[]>([]);
   const [images, setImages] = useState<Images>({});
   const { fetchUnsplashImage } = useUnsplash();
-  const [selectedLocation, setSelectedLocation] = useState<any>(null);
-  const [open, setOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [hasOrderChanged, setHasOrderChanged] = useState(false);
@@ -150,6 +148,7 @@ const LocationList: React.FC<LocationListProps> = ({
   const [isFilterTransitioning, setIsFilterTransitioning] = useState(false);
   const [prevFilterMode, setPrevFilterMode] = useState(filterMode);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [searchParams, setSearchParams] = useSearchParams();
 
   const { darkMode } = useTheme();
 
@@ -170,6 +169,12 @@ const LocationList: React.FC<LocationListProps> = ({
       nodeRefs.current.set(location.id, React.createRef());
     }
   });
+
+  const locationId = searchParams.get("id");
+  const selectedLocation = useMemo(() => {
+    if (!locationId) return null;
+    return locations.find((loc) => loc.id === locationId);
+  }, [locationId, locations]);
 
   // Add useEffect for mobile detection
   useEffect(() => {
@@ -197,10 +202,6 @@ const LocationList: React.FC<LocationListProps> = ({
 
     return () => clearTimeout(timer);
   }, [locations]);
-
-  useEffect(() => {
-    console.log(selectedLocation, open);
-  }, [selectedLocation, open]);
 
   useEffect(() => {
     if (!isFilterTransitioning && !isTransitioning) {
@@ -438,8 +439,6 @@ const LocationList: React.FC<LocationListProps> = ({
   // Add effect to handle initial selected location
   useEffect(() => {
     if (initialSelectedLocation) {
-      setSelectedLocation(initialSelectedLocation);
-      setOpen(true);
       clearSelectedLocation?.();
     }
   }, [initialSelectedLocation, clearSelectedLocation]);
@@ -500,14 +499,13 @@ const LocationList: React.FC<LocationListProps> = ({
     </div>
   );
 
-  const handleClickOpen = async (location: any) => {
-    setSelectedLocation(location);
-    setOpen(true);
+  const handleClickOpen = (location: any) => {
+    setSearchParams({ id: location.id });
   };
 
+  // Update handleClose to use URL
   const handleClose = () => {
-    setOpen(false);
-    setSelectedLocation(null);
+    setSearchParams({});
   };
 
   const handleAddNewVisit = async (foodId: string, newVisit: Visit) => {
@@ -886,8 +884,6 @@ const LocationList: React.FC<LocationListProps> = ({
               <SearchSuggestions
                 locations={locations}
                 onClose={() => setIsSearchOpen(false)}
-                setSelectedLocation={setSelectedLocation}
-                setOpen={setOpen} // Pass the setOpen function
               />
             )}
 
@@ -1037,10 +1033,16 @@ const LocationList: React.FC<LocationListProps> = ({
                     </div>
                   )}
                 <LocationDialog
-                  open={open}
+                  open={!!locationId} // Dialog is open when there's an ID in URL
                   onClose={handleClose}
                   selectedFood={selectedLocation}
-                  setSelectedFood={setSelectedLocation}
+                  setSelectedFood={(location) => {
+                    if (location) {
+                      setSearchParams({ id: location.id });
+                    } else {
+                      setSearchParams({});
+                    }
+                  }}
                   images={images}
                   getBoundingBox={getBoundingBox}
                   getMapCenter={getMapCenter}
