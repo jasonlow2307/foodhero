@@ -18,6 +18,7 @@ import { Images } from "../../utils/models";
 import { useNavigate } from "react-router-dom";
 import { useTheme } from "../../contexts/ThemeContext";
 import Loader from "../../components/Loader";
+import { useAuth } from "../../contexts/AuthContext";
 
 const HomePage = () => {
   const navigate = useNavigate();
@@ -36,6 +37,8 @@ const HomePage = () => {
   const [scrollPosition, setScrollPosition] = useState(0);
   const [isScrollIndicatorVisible, setIsScrollIndicatorVisible] =
     useState(true);
+
+  const { currentUser } = useAuth();
 
   // Update the Recent Places Section
   useEffect(() => {
@@ -115,13 +118,18 @@ const HomePage = () => {
   // Calculate stats
   useEffect(() => {
     if (locations.length > 0) {
+      // Filter to only include user's own locations
+      const ownLocations = locations.filter(
+        (loc) => loc.userId === currentUser.uid
+      );
+
       let perfectCount = 0;
       let totalVisits = 0;
       let locationVisits = new Map();
       let fullnessValues = { perfect: 0, "too much": 0, "not enough": 0 };
 
-      // Process all locations and visits
-      locations.forEach((loc) => {
+      // Process user's own locations and visits
+      ownLocations.forEach((loc) => {
         if (loc.visits && loc.visits.length > 0) {
           totalVisits += loc.visits.length;
           locationVisits.set(
@@ -165,14 +173,14 @@ const HomePage = () => {
       const savedMeals = Math.floor(perfectCount * 0.5);
 
       setStats({
-        totalLocations: locations.length,
+        totalLocations: ownLocations.length,
         perfectPortions: perfectCount,
         savedMeals,
         topLocation,
         averageFullness,
       });
     }
-  }, [locations]);
+  }, [locations, currentUser.uid]);
 
   // Loading skeleton component
   const LoadingSkeleton = () => (

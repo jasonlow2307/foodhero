@@ -1031,7 +1031,28 @@ const LocationList: React.FC<LocationListProps> = ({
                       <div className="relative">
                         {isMobileReorderMode && (
                           <div className="absolute -top-2 inset-x-0 flex justify-center z-10 gap-2">
-                            {/* Reorder buttons */}
+                            <button
+                              onClick={() => moveLocationUp(index)}
+                              disabled={index === 0}
+                              className={`w-8 h-8 rounded-full shadow-md flex items-center justify-center ${
+                                index === 0
+                                  ? "bg-gray-200 text-gray-400"
+                                  : "bg-blue-500 text-white"
+                              }`}
+                            >
+                              ↑
+                            </button>
+                            <button
+                              onClick={() => moveLocationDown(index)}
+                              disabled={index === locations.length - 1}
+                              className={`w-8 h-8 rounded-full shadow-md flex items-center justify-center ${
+                                index === locations.length - 1
+                                  ? "bg-gray-200 text-gray-400"
+                                  : "bg-blue-500 text-white"
+                              }`}
+                            >
+                              ↓
+                            </button>
                           </div>
                         )}
                         <SortableLocationCard

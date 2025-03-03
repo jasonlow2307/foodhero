@@ -27,7 +27,9 @@ const WhatToEat = () => {
     if (!allLocations || !currentUser) return [];
 
     return allLocations.filter(
-      (location) => location.userId === currentUser.uid
+      (location) =>
+        location.userId === currentUser.uid ||
+        (location.sharedWith && location.sharedWith.includes(currentUser.uid))
     );
   }, [allLocations, currentUser]);
 
