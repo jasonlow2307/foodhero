@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import useFirestoreCollection from "../../firebase/useFirestoreCollection";
 import { useUnsplash } from "../../utils/useUnsplash";
 import { identifyFood } from "../../utils/identifyFood";
@@ -38,7 +38,63 @@ const HomePage = () => {
   const [isScrollIndicatorVisible, setIsScrollIndicatorVisible] =
     useState(true);
 
+  // Add these state variables to the component
+  const [activeSlideIndex, setActiveSlideIndex] = useState(0);
+  const carouselRef = useRef(null);
+
   const { currentUser } = useAuth();
+
+  // Update the effect that tracks horizontal scroll position
+  useEffect(() => {
+    if (!carouselRef.current) return;
+
+    // Initialize the activeSlideIndex based on current scroll position when mounted
+    const scrollPosition = carouselRef.current.scrollLeft;
+    const cardWidth = 280 + 16; // Card width + margin
+    const initialIndex = Math.min(
+      Math.floor((scrollPosition + cardWidth / 2) / cardWidth),
+      Math.min(3, locations.length - 1) // Maximum 4 cards or number of locations
+    );
+    setActiveSlideIndex(initialIndex);
+
+    // Create the scroll event listener function
+    const handleScroll = () => {
+      if (!carouselRef.current) return;
+      const scrollPosition = carouselRef.current.scrollLeft;
+      const cardWidth = 280 + 16; // Card width + margin
+      const newIndex = Math.min(
+        Math.floor((scrollPosition + cardWidth / 2) / cardWidth),
+        Math.min(3, locations.length - 1) // Ensure we don't exceed array bounds
+      );
+
+      setActiveSlideIndex(newIndex); // Update without conditional check
+    };
+
+    // Add the scroll event listener with passive option for better performance
+    carouselRef.current.addEventListener("scroll", handleScroll, {
+      passive: true,
+    });
+
+    // Return cleanup function
+    return () => {
+      if (carouselRef.current) {
+        carouselRef.current.removeEventListener("scroll", handleScroll);
+      }
+    };
+  }, [locations.length]);
+
+  // Update the scroll indicator click handler
+  const scrollToSlide = (index) => {
+    if (!carouselRef.current) return;
+
+    const cardWidth = 280 + 16; // Card width + margin
+    carouselRef.current.scrollTo({
+      left: index * cardWidth,
+      behavior: "smooth",
+    });
+
+    setActiveSlideIndex(index);
+  };
 
   // Update the Recent Places Section
   useEffect(() => {
@@ -449,6 +505,7 @@ const HomePage = () => {
 
           {/* Horizontal scrolling on mobile, grid on larger screens */}
           <div
+            ref={carouselRef}
             className="flex overflow-x-auto pb-20 sm:pb-0 sm:grid sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 hide-scrollbar snap-x snap-mandatory"
             style={{ padding: 20 }}
           >
@@ -551,16 +608,22 @@ const HomePage = () => {
               ))}
           </div>
 
-          {/* Scroll indicator for the horizontal scroll (mobile only) */}
+          {/* Interactive Scroll indicator for the horizontal scroll (mobile only) */}
           <div className="flex justify-center mt-4 sm:hidden">
-            <div className="flex space-x-1">
-              {[...Array(4)].map((_, i) => (
-                <div
+            <div className="flex space-x-3">
+              {" "}
+              {[...Array(Math.min(4, locations.length))].map((_, i) => (
+                <button
                   key={i}
-                  className={`h-1.5 rounded-full ${
-                    i === 0 ? "w-6 bg-blue-500" : "w-2 bg-gray-300"
+                  onClick={() => scrollToSlide(i)}
+                  className={`h-2 rounded-full transition-all duration-300 hover:cursor-pointer ${
+                    i === activeSlideIndex
+                      ? "w-8 bg-gradient-to-r from-green-400 to-blue-500 shadow-md"
+                      : "w-2 bg-gray-300 hover:bg-gray-400 hover:scale-110 hover:shadow-sm"
                   }`}
-                ></div>
+                  aria-label={`Go to slide ${i + 1}`}
+                  aria-current={i === activeSlideIndex ? "true" : "false"}
+                ></button>
               ))}
             </div>
           </div>
