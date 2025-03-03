@@ -3,6 +3,7 @@ import { Timestamp } from "firebase/firestore";
 import { Fullness, Visit } from "../utils/models";
 import { Icon } from "@iconify/react";
 import { X, Plus, Clock, Trash2 } from "lucide-react";
+import { useTheme } from "../contexts/ThemeContext";
 
 interface LocationDialogProps {
   open: boolean;
@@ -43,6 +44,8 @@ const LocationDialog = ({
   const [suggestions, setSuggestions] = useState<FoodSuggestion[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [activeInput, setActiveInput] = useState<number | null>(null);
+
+  const { darkMode } = useTheme();
 
   // Create memoized food suggestions from previous visits
   const foodSuggestions = useMemo(() => {
@@ -201,7 +204,11 @@ const LocationDialog = ({
       className="fixed inset-0 bg-black/50 flex items-center justify-center p-2 md:p-4 z-50"
       onClick={handleBackdropClick}
     >
-      <div className="bg-white rounded-3xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+      <div
+        className={`${
+          darkMode ? "bg-gray-800 text-white" : "bg-white text-gray-800"
+        } rounded-3xl w-full max-w-2xl max-h-[90vh] overflow-y-auto`}
+      >
         {/* Header */}
         <div className="relative p-4 md:p-6 border-b border-gray-100">
           <button

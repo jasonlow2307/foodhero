@@ -10,16 +10,21 @@ import {
   X,
   User,
   ChevronDown,
+  Moon,
+  Sun,
 } from "lucide-react";
 import { auth } from "../../firebase/firebase";
 import { signOut } from "firebase/auth";
 import { enqueueSnackbar } from "notistack";
+import { useTheme } from "../../contexts/ThemeContext";
 
 const Header = () => {
+  const { darkMode, toggleDarkMode } = useTheme();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isUserDropdownOpen, setIsUserDropdownOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
+
   const desktopDropdownRef = useRef<HTMLDivElement>(null);
   const mobileDropdownRef = useRef<HTMLDivElement>(null);
   const mobileButtonWrapperRef = useRef<HTMLDivElement>(null);
@@ -69,8 +74,8 @@ const Header = () => {
   };
 
   return (
-    <header className="bg-white shadow-md sticky top-0 z-50">
-      <div className="bg-white max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-50">
+    <header className="bg-white dark:bg-gray-900 shadow-md dark:shadow-gray-800 sticky top-0 z-50 transition-colors duration-200">
+      <div className="bg-white dark:bg-gray-900 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-50 transition-colors duration-200">
         <div className="flex justify-between h-16">
           <div className="flex">
             <div className="flex-shrink-0 flex items-center">
@@ -93,7 +98,11 @@ const Header = () => {
               to="/"
               className={`px-3 py-2 rounded-md text-sm font-medium flex items-center transition-colors ${
                 isActive("/")
-                  ? "bg-gradient-to-r from-green-50 to-blue-50 text-blue-700"
+                  ? darkMode
+                    ? "bg-gradient-to-r from-green-900 to-blue-900 text-blue-400"
+                    : "bg-gradient-to-r from-green-50 to-blue-50 text-blue-700"
+                  : darkMode
+                  ? "text-gray-300 hover:bg-gray-800"
                   : "text-gray-600 hover:bg-gray-50"
               }`}
             >
@@ -137,12 +146,24 @@ const Header = () => {
               What To Eat
             </Link>
 
+            <button
+              onClick={toggleDarkMode}
+              className="p-2 rounded-full text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 focus:outline-none transition-colors"
+              aria-label="Toggle dark mode"
+            >
+              {darkMode ? (
+                <Sun size={20} className="text-yellow-300" />
+              ) : (
+                <Moon size={20} />
+              )}
+            </button>
+
             {/* User profile dropdown */}
             <div className="relative ml-3">
               <button
                 ref={buttonRef}
                 onClick={() => setIsUserDropdownOpen(!isUserDropdownOpen)}
-                className="flex items-center gap-2 bg-white px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors focus:outline-none hover: cursor-pointer"
+                className="flex items-center gap-2 bg-white dark:bg-gray-900 px-3 py-2 rounded-md text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors focus:outline-none hover:cursor-pointer"
               >
                 <div className="w-8 h-8 rounded-full bg-gradient-to-r from-green-500 to-blue-500 flex items-center justify-center text-white">
                   <User size={16} />
@@ -159,7 +180,7 @@ const Header = () => {
               {/* Dropdown menu */}
               <div
                 ref={desktopDropdownRef}
-                className={`absolute right-0 mt-2 w-56 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 transition-all duration-300 ease-in-out transform origin-top-right ${
+                className={`absolute right-0 mt-2 w-56 rounded-md shadow-lg bg-white dark:bg-gray-800 ring-1 ring-black ring-opacity-5 dark:ring-gray-700 transition-all duration-300 ease-in-out transform origin-top-right ${
                   isUserDropdownOpen
                     ? "opacity-100 scale-100"
                     : "opacity-0 scale-95 pointer-events-none"
@@ -167,17 +188,17 @@ const Header = () => {
               >
                 <div className="py-1">
                   <div className="px-4 py-3">
-                    <p className="text-sm font-medium text-gray-900 truncate">
+                    <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
                       {userName}
                     </p>
-                    <p className="text-xs text-gray-500 truncate">
+                    <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
                       {userEmail}
                     </p>
                   </div>
-                  <hr className="my-1" />
+                  <hr className="my-1 dark:border-gray-700" />
                   <button
                     onClick={handleSignOut}
-                    className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors flex items-center hover: cursor-pointer"
+                    className="w-full text-left px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 transition-colors flex items-center hover:cursor-pointer"
                   >
                     <LogOut className="mr-2" size={16} />
                     Sign Out

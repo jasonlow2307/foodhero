@@ -8,6 +8,7 @@ import { Fullness, Location, LocationFormProp } from "../../utils/models";
 import { Search, Camera, Trash2, PlusCircle, Send } from "lucide-react";
 import useFirestoreCollection from "../../firebase/useFirestoreCollection";
 import { useAuth } from "../../contexts/AuthContext";
+import { useTheme } from "../../contexts/ThemeContext";
 
 interface Coordinates {
   latitude: number;
@@ -35,6 +36,8 @@ const LocationForm = () => {
   const [loading, setLoading] = useState(false);
   const { writeData } = useFirestoreWrite();
   const { data: locationsData } = useFirestoreCollection("locations");
+
+  const { darkMode } = useTheme();
 
   // Add new state for coordinates
   const [userCoordinates, setUserCoordinates] = useState<Coordinates | null>(
@@ -329,14 +332,28 @@ const LocationForm = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-100 to-blue-100 p-4">
-      <div className="w-full max-w-xl bg-white rounded-3xl shadow-xl p-4 md:p-8">
+    <div
+      className={`min-h-screen flex items-center justify-center ${
+        darkMode
+          ? "bg-gray-900"
+          : "bg-gradient-to-br from-green-100 to-blue-100"
+      } p-4`}
+    >
+      <div
+        className={`w-full max-w-xl ${
+          darkMode ? "bg-gray-800" : "bg-white"
+        } rounded-3xl shadow-xl p-4 md:p-8`}
+      >
         {/* Header */}
         <div className="text-center mb-6 md:mb-8">
           <h1 className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-green-400 to-blue-500 bg-clip-text text-transparent">
             Food Waste Hero 🌱
           </h1>
-          <p className="text-sm md:text-base text-gray-600 mt-2">
+          <p
+            className={`text-sm md:text-base ${
+              darkMode ? "text-gray-300" : "text-gray-600"
+            } mt-2`}
+          >
             Track your portions, save the planet!
           </p>
         </div>
@@ -360,17 +377,30 @@ const LocationForm = () => {
               type="text"
               autoComplete="off"
               placeholder="Restaurant Location"
-              className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-green-400 focus:outline-none transition-colors"
+              className={`w-full px-4 py-3 rounded-xl border-2 ${
+                darkMode
+                  ? "border-gray-700 bg-gray-700 text-white placeholder-gray-400"
+                  : "border-gray-200 focus:border-green-400"
+              } focus:outline-none transition-colors`}
               value={formData.location}
               onChange={handleChange}
             />
             <Search
-              className="absolute right-3 top-3 text-gray-400"
+              className={`absolute right-3 top-3 ${
+                darkMode ? "text-gray-300" : "text-gray-400"
+              }`}
               size={20}
             />
             {/* Add this section for search results */}
             {searchResults.length > 0 && formData.location && (
-              <div className="absolute z-10 w-full mt-1 bg-white rounded-xl shadow-lg border border-gray-200 max-h-60 overflow-y-auto">
+              <div
+                className={`absolute z-10 w-full mt-1 ${
+                  darkMode ? "bg-gray-700" : "bg-white"
+                } rounded-xl shadow-lg border ${
+                  darkMode ? "border-gray-600" : "border-gray-200"
+                } max-h-60 overflow-y-auto`}
+              >
+                {" "}
                 {loading ? (
                   <div className="p-4 text-center text-gray-500">
                     Loading...
@@ -380,13 +410,23 @@ const LocationForm = () => {
                     <div
                       key={location.place_id}
                       onClick={() => handleLocationSelect(location)}
-                      className="px-4 py-3 hover:bg-gray-50 cursor-pointer border-b last:border-b-0 transition-colors"
+                      className={`px-4 py-3 ${
+                        darkMode ? "hover:bg-gray-600" : "hover:bg-gray-50"
+                      } cursor-pointer border-b last:border-b-0 transition-colors`}
                     >
-                      <div className="font-medium text-gray-700">
+                      <div
+                        className={`font-medium ${
+                          darkMode ? "text-white" : "text-gray-700"
+                        }`}
+                      >
                         {location.display_name.split(",")[0]}
                       </div>
                       <div className="flex justify-between items-center">
-                        <div className="text-sm text-gray-500 truncate max-w-[80%]">
+                        <div
+                          className={`text-sm ${
+                            darkMode ? "text-gray-300" : "text-gray-500"
+                          } truncate max-w-[80%]`}
+                        >
                           {location.display_name.split(",").slice(1).join(",")}
                         </div>
                         {location.distance !== null && (
@@ -405,7 +445,11 @@ const LocationForm = () => {
           </div>
           {/* Food Items Section */}
           <div className="space-y-2">
-            <h2 className="text-xl font-semibold text-gray-700 flex items-center gap-2">
+            <h2
+              className={`text-xl font-semibold ${
+                darkMode ? "text-white" : "text-gray-700"
+              } flex items-center gap-2`}
+            >
               <Camera className="text-green-400" size={24} />
               What are you ordering?
             </h2>
@@ -418,19 +462,29 @@ const LocationForm = () => {
                     placeholder="Food name"
                     value={foodName}
                     onChange={(e) => handleFoodChange(e, index, "name")}
-                    className="flex-1 min-w-0 px-3 py-2 text-sm md:text-base md:px-4 rounded-lg border-2 border-gray-200 focus:border-green-400 focus:outline-none"
+                    className={`flex-1 min-w-0 px-3 py-2 text-sm md:text-base md:px-4 rounded-lg border-2 ${
+                      darkMode
+                        ? "border-gray-700 bg-gray-700 text-white placeholder-gray-400"
+                        : "border-gray-200 focus:border-green-400"
+                    } focus:outline-none`}
                   />
                   <input
                     type="number"
                     placeholder="Qty"
                     value={quantity}
                     onChange={(e) => handleFoodChange(e, index, "quantity")}
-                    className="w-16 md:w-20 px-2 py-2 text-sm md:text-base rounded-lg border-2 border-gray-200 focus:border-green-400 focus:outline-none"
+                    className={`w-16 md:w-20 px-2 py-2 text-sm md:text-base rounded-lg border-2 ${
+                      darkMode
+                        ? "border-gray-700 bg-gray-700 text-white placeholder-gray-400"
+                        : "border-gray-200 focus:border-green-400"
+                    } focus:outline-none`}
                   />
                   <button
                     type="button"
                     onClick={() => handleDeleteFood(index)}
-                    className="p-1.5 md:p-2 text-red-400 hover:bg-red-50 rounded-lg transition-colors hover:cursor-pointer flex-shrink-0"
+                    className={`p-1.5 md:p-2 text-red-400 ${
+                      darkMode ? "hover:bg-red-900/50" : "hover:bg-red-50"
+                    } rounded-lg transition-colors hover:cursor-pointer flex-shrink-0`}
                     disabled={Object.keys(formData.visits[0].food).length <= 1}
                   >
                     <Trash2 size={18} className="md:w-5 md:h-5" />
@@ -443,14 +497,22 @@ const LocationForm = () => {
           <button
             type="button"
             onClick={handleAddFood}
-            className="w-full py-3 rounded-xl border-2 border-dashed border-gray-300 text-gray-500 hover:border-green-400 hover:text-green-500 transition-colors flex items-center justify-center gap-2 hover:cursor-pointer"
+            className={`w-full py-3 rounded-xl border-2 border-dashed ${
+              darkMode
+                ? "border-gray-600 text-gray-300 hover:border-green-600 hover:text-green-400"
+                : "border-gray-300 text-gray-500 hover:border-green-400 hover:text-green-500"
+            } transition-colors flex items-center justify-center gap-2 hover:cursor-pointer`}
           >
             <PlusCircle size={20} />
             Add Another Item
           </button>
           {/* Fullness Level */}
           <div className="space-y-2">
-            <label className="text-gray-700 font-medium">
+            <label
+              className={`${
+                darkMode ? "text-white" : "text-gray-700"
+              } font-medium`}
+            >
               How full are you?
             </label>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-3">
@@ -466,6 +528,8 @@ const LocationForm = () => {
                   className={`py-2 px-4 rounded-xl border-2 transition-all hover:cursor-pointer ${
                     formData.visits[0].fullness === level
                       ? "border-green-400 bg-green-50 text-green-600"
+                      : darkMode
+                      ? "border-gray-700 hover:border-green-700"
                       : "border-gray-200 hover:border-green-200"
                   }`}
                 >

@@ -35,6 +35,7 @@ import { useAuth } from "../../contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { TransitionGroup, CSSTransition } from "react-transition-group";
 import React from "react";
+import { useTheme } from "../../contexts/ThemeContext";
 
 interface LocationListProps {
   initialSelectedLocation?: any;
@@ -132,6 +133,8 @@ const LocationList: React.FC<LocationListProps> = ({
   const [isMobileReorderMode, setIsMobileReorderMode] = useState(false);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [animatingItems, setAnimatingItems] = useState({});
+
+  const { darkMode } = useTheme();
 
   // Configure DnD sensors
   const sensors = useSensors(
@@ -552,14 +555,20 @@ const LocationList: React.FC<LocationListProps> = ({
       {locationLoading ? (
         <LoadingAnimation />
       ) : (
-        <div className="min-h-screen bg-gradient-to-br from-green-100 to-blue-100 py-8 px-4">
+        <div
+          className={`min-h-screen ${
+            darkMode
+              ? "bg-gray-900"
+              : "bg-gradient-to-br from-green-100 to-blue-100"
+          } py-8 px-4`}
+        >
           <div className="max-w-7xl mx-auto">
             {/* Header */}
             <div className="text-center mb-6">
               <h1 className="text-4xl font-bold bg-gradient-to-r from-green-400 to-blue-500 bg-clip-text text-transparent mb-4">
                 Your Food Journey 🌟
               </h1>
-              <p className="text-gray-600">
+              <p className={`${darkMode ? "text-gray-300" : "text-gray-600"}`}>
                 Tracking your favorite places and portions
               </p>
               {hasOrderChanged && (
@@ -574,20 +583,44 @@ const LocationList: React.FC<LocationListProps> = ({
               <div className="relative">
                 <button
                   onClick={() => setShowSortOptions(!showSortOptions)}
-                  className="flex items-center gap-2 px-4 py-2 bg-white/70 backdrop-blur-sm rounded-full shadow-sm hover:shadow-md transition-all duration-200 border border-gray-200"
+                  className={`flex items-center gap-2 px-4 py-2 ${
+                    darkMode ? "bg-gray-800/70" : "bg-white/70"
+                  } backdrop-blur-sm rounded-full shadow-sm hover:shadow-md transition-all duration-200 border ${
+                    darkMode ? "border-gray-700" : "border-gray-200"
+                  }`}
                 >
-                  <Filter size={16} className="text-gray-600" />
-                  <span className="font-medium text-gray-700">
+                  <Filter
+                    size={16}
+                    className={`${
+                      darkMode ? "text-gray-300" : "text-gray-600"
+                    }`}
+                  />
+                  <span
+                    className={`font-medium ${
+                      darkMode ? "text-gray-200" : "text-gray-700"
+                    }`}
+                  >
                     Sort by: {sortOption === "custom" && "Custom Order"}
                     {sortOption === "mostRecent" && "Most Recent Visit"}
                     {sortOption === "leastRecent" && "Least Recent Visit"}
                     {sortOption === "mostVisited" && "Most Visited"}
                   </span>
-                  <ArrowUpDown size={16} className="text-gray-600" />
+                  <ArrowUpDown
+                    size={16}
+                    className={`${
+                      darkMode ? "text-gray-300" : "text-gray-600"
+                    }`}
+                  />
                 </button>
 
                 {showSortOptions && (
-                  <div className="absolute z-10 mt-2 w-56 rounded-xl bg-white shadow-lg border border-gray-100 overflow-hidden">
+                  <div
+                    className={`absolute z-10 mt-2 w-56 rounded-xl ${
+                      darkMode ? "bg-gray-800" : "bg-white"
+                    } shadow-lg border ${
+                      darkMode ? "border-gray-700" : "border-gray-100"
+                    } overflow-hidden`}
+                  >
                     <div className="py-1">
                       <button
                         onClick={() => handleSortChange("custom")}
@@ -702,13 +735,25 @@ const LocationList: React.FC<LocationListProps> = ({
                 {/* Add New Location Card */}
                 {!isMobile && (
                   <div
-                    className="bg-white/50 backdrop-blur-sm rounded-3xl p-6 cursor-pointer group hover:transform hover:scale-105 transition-all duration-300 border-2 border-dashed border-gray-200 flex flex-col items-center justify-center min-h-[330px]"
+                    className={`bg-white/50 backdrop-blur-sm rounded-3xl p-6 cursor-pointer group hover:transform hover:scale-105 transition-all duration-300 border-2 border-dashed ${
+                      darkMode
+                        ? "bg-gray-800/50 border-gray-700"
+                        : "bg-white/50 border-gray-200"
+                    } flex flex-col items-center justify-center min-h-[330px]`}
                     onClick={() => navigate("add")}
                   >
-                    <div className="text-gray-400 group-hover:text-green-500 transition-colors duration-300">
+                    <div
+                      className={`text-gray-400 group-hover:text-green-500 transition-colors duration-300`}
+                    >
                       <Plus size={48} />
                     </div>
-                    <p className="mt-4 text-gray-500 group-hover:text-green-600 font-medium">
+                    <p
+                      className={`mt-4 ${
+                        darkMode
+                          ? "text-gray-300 group-hover:text-green-400"
+                          : "text-gray-500 group-hover:text-green-600"
+                      } font-medium`}
+                    >
                       Add New Location
                     </p>
                   </div>

@@ -2,6 +2,7 @@ import React, { forwardRef } from "react";
 import { Clock, User, GripVertical } from "lucide-react";
 import { Visit } from "../utils/models";
 import { getTimeAgo } from "../utils/timeUtil";
+import { useTheme } from "../contexts/ThemeContext";
 
 interface LocationCardProps {
   location: any;
@@ -28,6 +29,8 @@ const LocationCard = forwardRef<HTMLDivElement, LocationCardProps>(
   ) => {
     const lastVisit = location.visits[location.visits.length - 1];
 
+    const { darkMode } = useTheme();
+
     const handleMouseEnter = (e) => {
       if (!isDragging) {
         e.currentTarget.style.transform = "scale(1.05)";
@@ -46,7 +49,9 @@ const LocationCard = forwardRef<HTMLDivElement, LocationCardProps>(
     };
     return (
       <div
-        className={`bg-white rounded-3xl p-5 sm:p-6 shadow-lg cursor-pointer transition-all duration-300 ${
+        className={`${
+          darkMode ? "bg-gray-800 border-gray-700" : "bg-white border-gray-100"
+        } rounded-3xl p-5 sm:p-6 shadow-lg cursor-pointer transition-all duration-300 ${
           isDragging ? "opacity-60" : ""
         }`}
         style={{
@@ -85,7 +90,11 @@ const LocationCard = forwardRef<HTMLDivElement, LocationCardProps>(
 
         {/* Location Details */}
         <div className="space-y-2 sm:space-y-3">
-          <h3 className="text-lg sm:text-xl font-semibold text-gray-800">
+          <h3
+            className={`text-lg sm:text-xl font-semibold ${
+              darkMode ? "text-white" : "text-gray-800"
+            } mb-2 truncate`}
+          >
             {location.location}
           </h3>
 

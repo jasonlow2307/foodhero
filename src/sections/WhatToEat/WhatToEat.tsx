@@ -15,6 +15,7 @@ import { doc, getDoc, updateDoc } from "firebase/firestore";
 import { db } from "../../firebase/firebase";
 import { useAuth } from "../../contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
+import { useTheme } from "../../contexts/ThemeContext";
 
 const WhatToEat = () => {
   const navigate = useNavigate();
@@ -44,6 +45,8 @@ const WhatToEat = () => {
   const [cardPositions, setCardPositions] = useState<any[]>([]); // To track card positions during animations
   // Add a responsive state based on window width
   const [isMobile, setIsMobile] = useState(false);
+
+  const { darkMode } = useTheme();
 
   // Handle responsive detection
   useEffect(() => {
@@ -465,7 +468,14 @@ const WhatToEat = () => {
   // Add an empty state if no locations are available
   if (locations.length === 0 && !loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-green-100 to-blue-100 py-8 flex flex-col items-center justify-center px-4">
+      <div
+        className={`min-h-screen ${
+          darkMode
+            ? "bg-gray-900"
+            : "bg-gradient-to-br from-green-100 to-blue-100"
+        } py-4 sm:py-8 px-2 sm:px-4 overflow-hidden`}
+      >
+        {" "}
         <div className="text-center max-w-md">
           <div className="text-6xl mb-4">🍽️</div>
           <h2 className="text-2xl font-bold text-gray-800 mb-4">
@@ -651,7 +661,9 @@ const WhatToEat = () => {
           {drawnCard && (
             <div className="flex flex-col items-center">
               <div
-                className="bg-white rounded-3xl p-4 sm:p-6 shadow-xl hover-gradient-shadow transition-all duration-300 hover: cursor-pointer"
+                className={`${
+                  darkMode ? "bg-gray-800" : "bg-white"
+                } rounded-3xl p-4 sm:p-6 shadow-xl hover-gradient-shadow transition-all duration-300 hover: cursor-pointer`}
                 onClick={() => handleLocationClick(drawnCard)}
                 style={{
                   animation: "cardAppear 0.7s ease-out",
@@ -670,18 +682,33 @@ const WhatToEat = () => {
                 </div>
                 {/* Location Details */}
                 <div className="space-y-2 sm:space-y-3">
-                  <h3 className="text-lg sm:text-xl font-semibold text-gray-800">
+                  <h3
+                    className={`text-lg sm:text-xl font-semibold ${
+                      darkMode ? "text-white" : "text-gray-800"
+                    }`}
+                  >
                     {drawnCard.location}
                   </h3>
-
-                  <div className="flex items-center gap-2 text-gray-500">
+                  <div
+                    className={`flex items-center gap-2 ${
+                      darkMode ? "text-gray-300" : "text-gray-500"
+                    }`}
+                  >
                     <User size={isMobile ? 14 : 16} />
                     <span className="text-xs sm:text-sm">{drawnCard.name}</span>
                   </div>
 
                   {/* Visit Summary */}
-                  <div className="mt-2 sm:mt-4 p-2 sm:p-3 bg-gray-50 rounded-xl">
-                    <div className="text-xs sm:text-sm text-gray-600">
+                  <div
+                    className={`mt-2 sm:mt-4 p-2 sm:p-3 ${
+                      darkMode ? "bg-gray-700" : "bg-gray-50"
+                    } rounded-xl`}
+                  >
+                    <div
+                      className={`text-xs sm:text-sm ${
+                        darkMode ? "text-gray-300" : "text-gray-600"
+                      }`}
+                    >
                       Last order:
                       {Object.entries(drawnCard.visits[0].food).map(
                         ([item, quantity]: [string, string | number]) => (

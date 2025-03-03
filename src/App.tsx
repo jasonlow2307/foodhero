@@ -17,6 +17,7 @@ import HomePage from "./sections/HomePage/HomePage";
 import Footer from "./sections/Footer/Footer";
 import AuthPage from "./sections/AuthPage/AuthPage";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
+import { ThemeProvider } from "./contexts/ThemeContext";
 
 // Protected Route component to handle auth redirects
 const ProtectedRoute = ({ children }) => {
@@ -47,65 +48,67 @@ const AppContent = () => {
 
   return (
     <ScreenSizeProvider>
-      <SnackbarProvider
-        maxSnack={3}
-        anchorOrigin={{
-          vertical: "top",
-          horizontal: "center",
-        }}
-        style={{
-          marginTop: "20px",
-        }}
-      >
-        {/* Only show header if user is logged in */}
-        {currentUser && <Header />}
+      <ThemeProvider>
+        <SnackbarProvider
+          maxSnack={3}
+          anchorOrigin={{
+            vertical: "top",
+            horizontal: "center",
+          }}
+          style={{
+            marginTop: "20px",
+          }}
+        >
+          {/* Only show header if user is logged in */}
+          {currentUser && <Header />}
 
-        <main>
-          <Routes>
-            <Route path="/auth" element={<AuthPage />} />
+          <main>
+            <Routes>
+              <Route path="/auth" element={<AuthPage />} />
 
-            <Route
-              path="/"
-              element={
-                <ProtectedRoute>
-                  <HomePage />
-                </ProtectedRoute>
-              }
-            />
+              <Route
+                path="/"
+                element={
+                  <ProtectedRoute>
+                    <HomePage />
+                  </ProtectedRoute>
+                }
+              />
 
-            <Route
-              path="/list"
-              element={
-                <ProtectedRoute>
-                  <LocationList />
-                </ProtectedRoute>
-              }
-            />
+              <Route
+                path="/list"
+                element={
+                  <ProtectedRoute>
+                    <LocationList />
+                  </ProtectedRoute>
+                }
+              />
 
-            <Route
-              path="/add"
-              element={
-                <ProtectedRoute>
-                  <LocationForm />
-                </ProtectedRoute>
-              }
-            />
+              <Route
+                path="/add"
+                element={
+                  <ProtectedRoute>
+                    <LocationForm />
+                  </ProtectedRoute>
+                }
+              />
 
-            <Route
-              path="/what-to-eat"
-              element={
-                <ProtectedRoute>
-                  <WhatToEat />
-                </ProtectedRoute>
-              }
-            />
+              <Route
+                path="/what-to-eat"
+                element={
+                  <ProtectedRoute>
+                    <WhatToEat />
+                  </ProtectedRoute>
+                }
+              />
 
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </Routes>
-        </main>
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
+          </main>
 
-        <Footer />
-      </SnackbarProvider>
+          <Footer />
+        </SnackbarProvider>
+      </ThemeProvider>
     </ScreenSizeProvider>
   );
 };
