@@ -88,6 +88,7 @@ const LocationDialog = ({
                 id: userDoc.id,
                 email: userDoc.data().email,
                 displayName: userDoc.data().displayName,
+                photoURL: userDoc.data().photoURL,
               });
             }
           }
@@ -789,9 +790,17 @@ const LocationDialog = ({
                         className="flex justify-between items-center"
                       >
                         <div className="flex items-center">
-                          <div className="w-8 h-8 rounded-full bg-gradient-to-r from-green-400 to-blue-500 flex items-center justify-center text-white">
-                            <User size={16} />
-                          </div>
+                          {user.photoURL ? (
+                            <img
+                              src={user.photoURL}
+                              alt={user.email}
+                              className="w-8 h-8 rounded-full object-cover border-2 border-white hover:shadow-md transition-shadow duration-300"
+                            />
+                          ) : (
+                            <div className="w-8 h-8 rounded-full bg-gradient-to-r from-green-400 to-blue-500 flex items-center justify-center text-white hover:shadow-md transition-all duration-300">
+                              <User size={16} />
+                            </div>
+                          )}
                           <span
                             className={`ml-2 ${
                               darkMode ? "text-gray-300" : "text-gray-700"
