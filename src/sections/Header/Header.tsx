@@ -17,6 +17,7 @@ import { auth } from "../../firebase/firebase";
 import { signOut } from "firebase/auth";
 import { enqueueSnackbar } from "notistack";
 import { useTheme } from "../../contexts/ThemeContext";
+import Switch from "../../components/Switch";
 
 const Header = () => {
   const { darkMode, toggleDarkMode } = useTheme();
@@ -109,36 +110,45 @@ const Header = () => {
               <Home className="mr-1" size={18} />
               Home
             </Link>
-
             <Link
               to="/list"
               className={`px-3 py-2 rounded-md text-sm font-medium flex items-center transition-colors ${
                 isActive("/list")
-                  ? "bg-gradient-to-r from-green-50 to-blue-50 text-blue-700"
+                  ? darkMode
+                    ? "bg-gradient-to-r from-green-900 to-blue-900 text-blue-400"
+                    : "bg-gradient-to-r from-green-50 to-blue-50 text-blue-700"
+                  : darkMode
+                  ? "text-gray-300 hover:bg-gray-800"
                   : "text-gray-600 hover:bg-gray-50"
               }`}
             >
               <Map className="mr-1" size={18} />
               My Places
             </Link>
-
             <Link
               to="/add"
               className={`px-3 py-2 rounded-md text-sm font-medium flex items-center transition-colors ${
                 isActive("/add")
-                  ? "bg-gradient-to-r from-green-50 to-blue-50 text-blue-700"
+                  ? darkMode
+                    ? "bg-gradient-to-r from-green-900 to-blue-900 text-blue-400"
+                    : "bg-gradient-to-r from-green-50 to-blue-50 text-blue-700"
+                  : darkMode
+                  ? "text-gray-300 hover:bg-gray-800"
                   : "text-gray-600 hover:bg-gray-50"
               }`}
             >
               <PlusCircle className="mr-1" size={18} />
               Add Place
             </Link>
-
             <Link
               to="/what-to-eat"
               className={`px-3 py-2 rounded-md text-sm font-medium flex items-center transition-colors ${
                 isActive("/what-to-eat")
-                  ? "bg-gradient-to-r from-green-50 to-blue-50 text-blue-700"
+                  ? darkMode
+                    ? "bg-gradient-to-r from-green-900 to-blue-900 text-blue-400"
+                    : "bg-gradient-to-r from-green-50 to-blue-50 text-blue-700"
+                  : darkMode
+                  ? "text-gray-300 hover:bg-gray-800"
                   : "text-gray-600 hover:bg-gray-50"
               }`}
             >
@@ -146,17 +156,13 @@ const Header = () => {
               What To Eat
             </Link>
 
-            <button
-              onClick={toggleDarkMode}
-              className="p-2 rounded-full text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 focus:outline-none transition-colors"
-              aria-label="Toggle dark mode"
-            >
-              {darkMode ? (
-                <Sun size={20} className="text-yellow-300" />
-              ) : (
-                <Moon size={20} />
-              )}
-            </button>
+            <div className="flex items-center">
+              <Switch
+                checked={darkMode}
+                onChange={toggleDarkMode}
+                className="scale-60 mb-4"
+              />
+            </div>
 
             {/* User profile dropdown */}
             <div className="relative ml-3">
@@ -239,6 +245,17 @@ const Header = () => {
                     <p className="text-xs text-gray-500 truncate">
                       {userEmail}
                     </p>
+                  </div>
+                  <div className="px-3 py-2 rounded-md flex items-center justify-between">
+                    <div className="flex items-center text-gray-600">
+                      <Sun size={18} className="mr-2" />
+                      Dark Mode
+                    </div>
+                    <Switch
+                      checked={darkMode}
+                      onChange={toggleDarkMode}
+                      className="transform scale-75"
+                    />
                   </div>
                   <hr className="my-1" />
                   <button

@@ -456,10 +456,18 @@ const WhatToEat = () => {
   // Add a loading state
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-green-100 to-blue-100 flex items-center justify-center">
+      <div
+        className={`min-h-screen ${
+          darkMode
+            ? "bg-gradient-to-br from-gray-900 to-gray-800"
+            : "bg-gradient-to-br from-green-100 to-blue-100"
+        } flex items-center justify-center transition-colors duration-300`}
+      >
         <div className="text-center">
           <div className="w-16 h-16 border-t-4 border-green-500 border-solid rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading your food options...</p>
+          <p className={`${darkMode ? "text-gray-300" : "text-gray-600"}`}>
+            Loading your food options...
+          </p>
         </div>
       </div>
     );
@@ -471,23 +479,26 @@ const WhatToEat = () => {
       <div
         className={`min-h-screen ${
           darkMode
-            ? "bg-gray-900"
+            ? "bg-gradient-to-br from-gray-900 to-gray-800"
             : "bg-gradient-to-br from-green-100 to-blue-100"
-        } py-4 sm:py-8 px-2 sm:px-4 overflow-hidden`}
+        } py-4 sm:py-8 px-2 sm:px-4 overflow-hidden flex items-center justify-center transition-colors duration-300`}
       >
-        {" "}
         <div className="text-center max-w-md">
           <div className="text-6xl mb-4">🍽️</div>
-          <h2 className="text-2xl font-bold text-gray-800 mb-4">
+          <h2
+            className={`text-2xl font-bold ${
+              darkMode ? "text-white" : "text-gray-800"
+            } mb-4`}
+          >
             No Food Places Yet
           </h2>
-          <p className="text-gray-600 mb-6">
+          <p className={`${darkMode ? "text-gray-300" : "text-gray-600"} mb-6`}>
             You haven't added any food places to your collection. Add some
             locations to start tracking your food journey!
           </p>
           <button
             onClick={() => navigate("/add")}
-            className="px-6 py-3 bg-gradient-to-r from-green-400 to-blue-500 text-white rounded-xl font-medium hover:opacity-90 transition-opacity hover: cursor-pointer"
+            className="px-6 py-3 bg-gradient-to-r from-green-400 to-blue-500 text-white rounded-xl font-medium hover:opacity-90 transition-opacity hover:cursor-pointer"
           >
             Add New Location
           </button>
@@ -497,14 +508,25 @@ const WhatToEat = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-100 to-blue-100 py-4 sm:py-8 px-2 sm:px-4 overflow-hidden">
+    <div
+      className={`min-h-screen ${
+        darkMode
+          ? "bg-gradient-to-br from-gray-900 to-gray-800"
+          : "bg-gradient-to-br from-green-100 to-blue-100"
+      } py-4 sm:py-8 px-2 sm:px-4 overflow-hidden transition-colors duration-300`}
+    >
+      {" "}
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="text-center mb-6 sm:mb-12">
           <h1 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-green-400 to-blue-500 bg-clip-text text-transparent mb-2 sm:mb-4">
             What To Eat Today? 🍽️
           </h1>
-          <p className="text-gray-600 mb-4 sm:mb-8 text-sm sm:text-base">
+          <p
+            className={`${
+              darkMode ? "text-gray-300" : "text-gray-600"
+            } mb-4 sm:mb-8 text-sm sm:text-base transition-colors duration-300`}
+          >
             Shuffle your favorite places and let fate decide!
           </p>
 
@@ -524,7 +546,9 @@ const WhatToEat = () => {
                 animationStage === "shuffling" ||
                 animationStage === "drawing" ||
                 animationStage === "drawn"
-                  ? "bg-gray-200 text-gray-400 cursor-not-allowed"
+                  ? darkMode
+                    ? "bg-gray-700 text-gray-400 cursor-not-allowed"
+                    : "bg-gray-200 text-gray-400 cursor-not-allowed"
                   : "bg-gradient-to-r from-green-400 to-blue-500 text-white hover:opacity-90"
               }`}
             >
@@ -542,10 +566,16 @@ const WhatToEat = () => {
               {locations.map((location) => (
                 <div
                   key={location.id}
-                  className="bg-white rounded-3xl p-4 sm:p-6 shadow-xl hover:transform hover:scale-105 transition-all duration-300"
+                  className={`${
+                    darkMode ? "bg-gray-800" : "bg-white"
+                  } rounded-3xl p-4 sm:p-6 shadow-xl hover:transform hover:scale-105 transition-all duration-300`}
                 >
                   {/* Location Image */}
-                  <div className="h-36 sm:h-48 rounded-2xl bg-gray-100 mb-3 sm:mb-4 overflow-hidden">
+                  <div
+                    className={`h-36 sm:h-48 rounded-2xl ${
+                      darkMode ? "bg-gray-700" : "bg-gray-100"
+                    } mb-3 sm:mb-4 overflow-hidden`}
+                  >
                     <img
                       src={images[location.id] || "/api/placeholder/400/320"}
                       alt={location.location}
@@ -558,18 +588,30 @@ const WhatToEat = () => {
 
                   {/* Location Details */}
                   <div className="space-y-2 sm:space-y-3">
-                    <h3 className="text-lg sm:text-xl font-semibold text-gray-800">
+                    <h3
+                      className={`text-lg sm:text-xl font-semibold ${
+                        darkMode ? "text-white" : "text-gray-800"
+                      }`}
+                    >
                       {location.location}
                     </h3>
 
-                    <div className="flex items-center gap-2 text-gray-500">
+                    <div
+                      className={`flex items-center gap-2 ${
+                        darkMode ? "text-gray-300" : "text-gray-500"
+                      }`}
+                    >
                       <User size={isMobile ? 14 : 16} />
                       <span className="text-xs sm:text-sm">
                         {location.name}
                       </span>
                     </div>
 
-                    <div className="flex items-center gap-2 text-gray-500">
+                    <div
+                      className={`flex items-center gap-2 ${
+                        darkMode ? "text-gray-300" : "text-gray-500"
+                      }`}
+                    >
                       <Clock size={isMobile ? 14 : 16} />
                       <span className="text-xs sm:text-sm">
                         Previously visited
@@ -616,14 +658,18 @@ const WhatToEat = () => {
                       style={getCardStyle(card, index)}
                       className={`${cardDimensions.width} ${
                         cardDimensions.height
-                      } bg-white rounded-3xl p-4 sm:p-6 shadow-xl transition-all border-2 border-gray-100
-                             ${
-                               animationStage === "collecting"
-                                 ? "duration-500"
-                                 : animationStage === "shuffling"
-                                 ? "duration-100"
-                                 : "duration-300"
-                             }`}
+                      } ${
+                        darkMode
+                          ? "bg-gray-800 border-gray-700"
+                          : "bg-white border-gray-100"
+                      } rounded-3xl p-4 sm:p-6 shadow-xl transition-all border-2
+                          ${
+                            animationStage === "collecting"
+                              ? "duration-500"
+                              : animationStage === "shuffling"
+                              ? "duration-100"
+                              : "duration-300"
+                          }`}
                     >
                       {/* Card back design */}
                       <div className="h-full w-full flex flex-col items-center justify-center">
@@ -646,7 +692,11 @@ const WhatToEat = () => {
                           </h3>
                           {remainingCards.length > 0 &&
                             animationStage === "shuffled" && (
-                              <p className="text-gray-500 mt-2 text-sm">
+                              <p
+                                className={`${
+                                  darkMode ? "text-gray-400" : "text-gray-500"
+                                } mt-2 text-sm`}
+                              >
                                 {remainingCards.length} places remaining
                               </p>
                             )}
@@ -663,14 +713,21 @@ const WhatToEat = () => {
               <div
                 className={`${
                   darkMode ? "bg-gray-800" : "bg-white"
-                } rounded-3xl p-4 sm:p-6 shadow-xl hover-gradient-shadow transition-all duration-300 hover: cursor-pointer`}
+                } rounded-3xl p-4 sm:p-6 shadow-xl hover-gradient-shadow transition-all duration-300 hover:cursor-pointer ${
+                  cardDimensions.width
+                }`}
                 onClick={() => handleLocationClick(drawnCard)}
                 style={{
                   animation: "cardAppear 0.7s ease-out",
+                  minWidth: isMobile ? "18rem" : "20rem", // Add minimum width
                 }}
               >
                 {/* Location Image */}
-                <div className="h-36 sm:h-48 rounded-2xl bg-gray-100 mb-3 sm:mb-4 overflow-hidden">
+                <div
+                  className={`h-36 sm:h-48 rounded-2xl ${
+                    darkMode ? "bg-gray-700" : "bg-gray-100"
+                  } mb-3 sm:mb-4 overflow-hidden`}
+                >
                   <img
                     src={images[drawnCard.id] || "/api/placeholder/400/320"}
                     alt={drawnCard.location}
@@ -680,6 +737,7 @@ const WhatToEat = () => {
                     }}
                   />
                 </div>
+
                 {/* Location Details */}
                 <div className="space-y-2 sm:space-y-3">
                   <h3
@@ -714,7 +772,9 @@ const WhatToEat = () => {
                         ([item, quantity]: [string, string | number]) => (
                           <span
                             key={item}
-                            className="block mt-1 text-xs sm:text-sm text-gray-700"
+                            className={`block mt-1 text-xs sm:text-sm ${
+                              darkMode ? "text-gray-400" : "text-gray-700"
+                            }`}
                           >
                             {quantity}x {item}
                           </span>
@@ -726,30 +786,38 @@ const WhatToEat = () => {
                   {/* Fullness Indicator */}
                   <div
                     className={`mt-2 inline-flex items-center px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm
-                    ${
-                      drawnCard.visits[0].fullness === "perfect"
-                        ? "bg-green-100 text-green-600"
-                        : drawnCard.visits[0].fullness === "too much"
-                        ? "bg-red-100 text-red-600"
-                        : "bg-yellow-100 text-yellow-600"
-                    }`}
+                  ${
+                    drawnCard.visits[0].fullness === "perfect"
+                      ? darkMode
+                        ? "bg-green-900/50 text-green-400"
+                        : "bg-green-100 text-green-600"
+                      : drawnCard.visits[0].fullness === "too much"
+                      ? darkMode
+                        ? "bg-red-900/50 text-red-400"
+                        : "bg-red-100 text-red-600"
+                      : darkMode
+                      ? "bg-yellow-900/50 text-yellow-400"
+                      : "bg-yellow-100 text-yellow-600"
+                  }`}
                   >
                     {drawnCard.visits[0].fullness === "perfect"
                       ? "😊 Just Right"
                       : drawnCard.visits[0].fullness === "too much"
-                      ? "😅 Too Much"
+                      ? "😅 Too Full"
                       : "😋 Not Enough"}
                   </div>
                 </div>
               </div>
 
-              <div className="mt-6 sm:mt-8 flex gap-2 sm:gap-4 mb-4">
+              <div className="mt-6 sm:mt-8 flex gap-2 sm:gap-4 mb-8">
                 <button
                   onClick={handleDrawCard}
                   disabled={remainingCards.length === 0}
                   className={`px-4 sm:px-6 py-2 sm:py-3 rounded-xl flex items-center gap-2 text-xs sm:text-base font-medium transition-all ${
                     remainingCards.length === 0
-                      ? "bg-gray-200 text-gray-400 cursor-not-allowed"
+                      ? darkMode
+                        ? "bg-gray-700 text-gray-500 cursor-not-allowed"
+                        : "bg-gray-200 text-gray-400 cursor-not-allowed"
                       : "bg-gradient-to-r from-green-400 to-blue-500 text-white hover:opacity-90 hover:cursor-pointer"
                   }`}
                 >
@@ -757,7 +825,11 @@ const WhatToEat = () => {
                 </button>
                 <button
                   onClick={handleReset}
-                  className="px-4 sm:px-6 py-2 sm:py-3 rounded-xl border-2 border-gray-300 text-gray-600 hover:border-red-300 hover:text-red-500 flex items-center gap-2 text-xs sm:text-base font-medium transition-all hover:cursor-pointer"
+                  className={`px-4 sm:px-6 py-2 sm:py-3 rounded-xl border-2 ${
+                    darkMode
+                      ? "border-gray-700 text-gray-300 hover:border-red-900/70 hover:text-red-400"
+                      : "border-gray-300 text-gray-600 hover:border-red-300 hover:text-red-500"
+                  } flex items-center gap-2 text-xs sm:text-base font-medium transition-all hover:cursor-pointer`}
                 >
                   Start Over
                 </button>
@@ -766,7 +838,6 @@ const WhatToEat = () => {
           )}
         </div>
       </div>
-
       {/* Location Dialog */}
       <LocationDialog
         open={isDialogOpen}
@@ -779,35 +850,39 @@ const WhatToEat = () => {
         getWazeLink={getWazeLink}
         onAddNewVisit={handleAddNewVisit}
       />
-
       {/* Add CSS animation for card appearance */}
+      {/* Add CSS animation for card appearance with dark mode support */}
       <style>{`
-  @keyframes cardAppear {
-    0% {
-      opacity: 0;
-      transform: translateY(-50px) scale(0.8);
-    }
-    100% {
-      opacity: 1;
-      transform: translateY(0) scale(1);
-    }
-  }
+      @keyframes cardAppear {
+        0% {
+          opacity: 0;
+          transform: translateY(-50px) scale(0.8);
+        }
+        100% {
+          opacity: 1;
+          transform: translateY(0) scale(1);
+        }
+      }
 
-  /* Add this hover style for the green-blue gradient shadow */
-  .hover-gradient-shadow {
-    transition: transform 0.3s ease, box-shadow 0.4s ease;
-  }
-  
-  .hover-gradient-shadow:hover {
-    transform: scale(1.05);
-    box-shadow: rgba(22, 163, 74, 0.35) -8px -8px 32px 8px, rgba(2, 132, 199, 0.35) 8px 8px 32px 8px;
-  }
+      /* Add this hover style for the green-blue gradient shadow */
+      .hover-gradient-shadow {
+        transition: transform 0.3s ease, box-shadow 0.4s ease;
+      }
+      
+      .hover-gradient-shadow:hover {
+        transform: scale(1.05);
+        box-shadow: ${
+          darkMode
+            ? "rgba(74, 222, 128, 0.25) -8px -8px 32px 8px, rgba(56, 189, 248, 0.25) 8px 8px 32px 8px"
+            : "rgba(22, 163, 74, 0.35) -8px -8px 32px 8px, rgba(2, 132, 199, 0.35) 8px 8px 32px 8px"
+        };
+      }
 
-  /* Improve scrolling on mobile */
-  .overflow-y-auto {
-    -webkit-overflow-scrolling: touch;
-  }
-`}</style>
+      /* Improve scrolling on mobile */
+      .overflow-y-auto {
+        -webkit-overflow-scrolling: touch;
+      }
+    `}</style>
     </div>
   );
 };

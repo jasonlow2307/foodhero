@@ -34,19 +34,33 @@ const LocationCard = forwardRef<HTMLDivElement, LocationCardProps>(
     const handleMouseEnter = (e) => {
       if (!isDragging) {
         e.currentTarget.style.transform = "scale(1.05)";
-        e.currentTarget.style.boxShadow =
-          "rgba(22, 163, 74, 0.35) -8px -8px 32px 8px, rgba(2, 132, 199, 0.35) 8px 8px 32px 8px";
-        // Using green-600 and blue-600 with higher opacity (0.35)
+
+        // Different shadow styles based on dark mode
+        if (darkMode) {
+          e.currentTarget.style.boxShadow =
+            "rgba(34, 197, 94, 0.4) -8px -8px 32px 8px, rgba(14, 165, 233, 0.4) 8px 8px 32px 8px";
+        } else {
+          e.currentTarget.style.boxShadow =
+            "rgba(22, 163, 74, 0.35) -8px -8px 32px 8px, rgba(2, 132, 199, 0.35) 8px 8px 32px 8px";
+        }
       }
     };
 
     const handleMouseLeave = (e) => {
       if (!isDragging) {
         e.currentTarget.style.transform = "scale(1)";
-        e.currentTarget.style.boxShadow =
-          "0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.05)";
+
+        // Different shadow styles based on dark mode
+        if (darkMode) {
+          e.currentTarget.style.boxShadow =
+            "0 10px 25px -5px rgba(0, 0, 0, 0.7), 0 8px 10px -6px rgba(0, 0, 0, 0.6)";
+        } else {
+          e.currentTarget.style.boxShadow =
+            "0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.05)";
+        }
       }
     };
+
     return (
       <div
         className={`${
@@ -55,8 +69,9 @@ const LocationCard = forwardRef<HTMLDivElement, LocationCardProps>(
           isDragging ? "opacity-60" : ""
         }`}
         style={{
-          boxShadow:
-            "0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.05)",
+          boxShadow: darkMode
+            ? "0 10px 25px -5px rgba(0, 0, 0, 0.7), 0 8px 10px -6px rgba(0, 0, 0, 0.6)"
+            : "0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.05)",
           transform: "scale(1)",
           transition: "transform 0.3s ease, box-shadow 0.4s ease",
         }}
@@ -65,16 +80,25 @@ const LocationCard = forwardRef<HTMLDivElement, LocationCardProps>(
         onMouseLeave={handleMouseLeave}
       >
         {/* Location Image */}
-        <div className="relative h-36 sm:h-48 rounded-2xl bg-gray-100 mb-3 sm:mb-4 overflow-hidden">
+        <div
+          className={`relative h-36 sm:h-48 rounded-2xl ${
+            darkMode ? "bg-gray-700" : "bg-gray-100"
+          } mb-3 sm:mb-4 overflow-hidden`}
+        >
+          {" "}
           {draggable && (
             <div
               {...dragHandleProps}
-              className="absolute top-2 right-2 p-1 rounded-full bg-white/80 hover:bg-white cursor-grab active:cursor-grabbing"
+              className={`absolute top-2 right-2 p-1 rounded-full ${
+                darkMode
+                  ? "bg-gray-700/80 hover:bg-gray-600"
+                  : "bg-white/80 hover:bg-white"
+              } cursor-grab active:cursor-grabbing`}
               onClick={(e) => e.stopPropagation()} // Prevent card click when using drag handle
             >
               <GripVertical
                 size={isMobile ? 16 : 20}
-                className="text-gray-500"
+                className={darkMode ? "text-gray-400" : "text-gray-500"}
               />
             </div>
           )}
@@ -98,27 +122,55 @@ const LocationCard = forwardRef<HTMLDivElement, LocationCardProps>(
             {location.location}
           </h3>
 
-          <div className="flex items-center gap-2 text-gray-500">
+          <div
+            className={`flex items-center gap-2 ${
+              darkMode ? "text-gray-400" : "text-gray-500"
+            }`}
+          >
             <User size={isMobile ? 14 : 16} />
-            <span className="text-xs sm:text-sm">{location.name}</span>
+            <span
+              className={`text-xs sm:text-sm ${
+                darkMode ? "text-gray-400" : "text-gray-500"
+              }`}
+            >
+              {location.name}
+            </span>
           </div>
 
-          <div className="flex items-center gap-2 text-gray-500">
+          <div
+            className={`flex items-center gap-2 ${
+              darkMode ? "text-gray-400" : "text-gray-500"
+            }`}
+          >
             <Clock size={isMobile ? 14 : 16} />
-            <span className="text-xs sm:text-sm">
+            <span
+              className={`text-xs sm:text-sm ${
+                darkMode ? "text-gray-400" : "text-gray-500"
+              }`}
+            >
               Last {getTimeAgo(lastVisit.date)}
             </span>
           </div>
 
           {/* Visit Summary */}
-          <div className="mt-2 sm:mt-4 p-2 sm:p-3 bg-gray-50 rounded-xl">
-            <div className="text-xs sm:text-sm text-gray-600">
+          <div
+            className={`mt-2 sm:mt-4 p-2 sm:p-3 ${
+              darkMode ? "bg-gray-700" : "bg-gray-50"
+            } rounded-xl`}
+          >
+            <div
+              className={`text-xs sm:text-sm ${
+                darkMode ? "text-gray-300" : "text-gray-600"
+              }`}
+            >
               Last order:
               {Object.entries(lastVisit.food).map(
                 ([item, quantity]: [string, string | number]) => (
                   <span
                     key={item}
-                    className="block mt-1 text-xs sm:text-sm text-gray-700"
+                    className={`block mt-1 text-xs sm:text-sm ${
+                      darkMode ? "text-gray-400" : "text-gray-700"
+                    }`}
                   >
                     {quantity}x {item}
                   </span>
@@ -130,13 +182,19 @@ const LocationCard = forwardRef<HTMLDivElement, LocationCardProps>(
           {/* Fullness Indicator */}
           <div
             className={`mt-2 inline-flex items-center px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm
-            ${
-              lastVisit.fullness === "perfect"
-                ? "bg-green-100 text-green-600"
-                : lastVisit.fullness === "too much"
-                ? "bg-red-100 text-red-600"
-                : "bg-yellow-100 text-yellow-600"
-            }`}
+  ${
+    lastVisit.fullness === "perfect"
+      ? darkMode
+        ? "bg-green-900/50 text-green-400"
+        : "bg-green-100 text-green-600"
+      : lastVisit.fullness === "too much"
+      ? darkMode
+        ? "bg-red-900/50 text-red-400"
+        : "bg-red-100 text-red-600"
+      : darkMode
+      ? "bg-yellow-900/50 text-yellow-400"
+      : "bg-yellow-100 text-yellow-600"
+  }`}
           >
             {lastVisit.fullness === "perfect"
               ? "😊 Just Right"

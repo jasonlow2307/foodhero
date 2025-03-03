@@ -16,11 +16,9 @@ import {
 } from "lucide-react";
 import { Images } from "../../utils/models";
 import { useNavigate } from "react-router-dom";
-import { useTheme } from "../../contexts/ThemeContext";
 
 const HomePage = () => {
   const navigate = useNavigate();
-  const { darkMode } = useTheme();
   const { data: locations, loading } = useFirestoreCollection("locations");
   const [images, setImages] = useState<Images>({});
   const { fetchUnsplashImage } = useUnsplash();
@@ -291,39 +289,21 @@ const HomePage = () => {
       </div>
 
       {/* Stats Section - Mobile optimized */}
-      <div
-        className={`py-12 sm:py-16 md:py-24 ${
-          darkMode
-            ? "bg-gray-800 bg-opacity-30"
-            : "bg-gradient-to-br from-green-50 to-blue-50"
-        }`}
-      >
+      <div className="py-12 sm:py-16 md:py-24 bg-gradient-to-br from-green-50 to-blue-50">
         <div className="container mx-auto px-4">
           <h2 className="text-2xl xs:text-3xl md:text-4xl font-bold text-center mb-8 sm:mb-12 bg-gradient-to-r from-green-500 to-blue-500 bg-clip-text text-transparent">
             Your Food Waste Impact
           </h2>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-6">
             {/* Stat Cards - Made smaller on mobile */}
-            <div
-              className={`${
-                darkMode ? "bg-gray-700" : "bg-white"
-              } rounded-3xl p-4 sm:p-6 shadow-lg hover:shadow-xl transition-all hover:transform hover:scale-105 duration-300`}
-            >
+            <div className="bg-white rounded-3xl p-4 sm:p-6 shadow-lg hover:shadow-xl transition-all hover:transform hover:scale-105 duration-300">
               <div className="mb-3 sm:mb-4 bg-green-100 w-10 h-10 sm:w-14 sm:h-14 rounded-full flex items-center justify-center">
                 <MapPin className="text-green-500" size={20} />
               </div>
-              <h3
-                className={`text-2xl sm:text-4xl font-bold ${
-                  darkMode ? "text-white" : "text-gray-800"
-                } mb-1 sm:mb-2`}
-              >
+              <h3 className="text-2xl sm:text-4xl font-bold text-gray-800 mb-1 sm:mb-2">
                 {stats.totalLocations}
               </h3>
-              <p
-                className={`text-sm sm:text-base ${
-                  darkMode ? "text-gray-300" : "text-gray-600"
-                }`}
-              >
+              <p className="text-sm sm:text-base text-gray-600">
                 Places Tracked
               </p>
             </div>
@@ -372,11 +352,7 @@ const HomePage = () => {
       </div>
 
       {/* Recent Places Section - Mobile optimized */}
-      <div
-        className={`py-12 sm:py-16 md:py-24 ${
-          darkMode ? "bg-gray-900" : "bg-white"
-        }`}
-      >
+      <div className="py-12 sm:py-16 md:py-24 bg-white">
         <div className="container mx-auto px-4">
           <div className="flex flex-col xs:flex-row justify-between items-start xs:items-center mb-8 sm:mb-12 gap-4 xs:gap-0">
             <h2 className="text-2xl xs:text-3xl md:text-4xl font-bold bg-gradient-to-r from-green-500 to-blue-500 bg-clip-text text-transparent">
@@ -416,11 +392,7 @@ const HomePage = () => {
               .map((location) => (
                 <div
                   key={location.id}
-                  className={`flex-shrink-0 w-[280px] sm:w-auto snap-start sm:snap-align-none ${
-                    darkMode ? "bg-gray-800" : "bg-white"
-                  } rounded-3xl p-4 sm:p-5 border ${
-                    darkMode ? "border-gray-700" : "border-gray-100"
-                  } transition-all duration-300 cursor-pointer mr-4 sm:mr-0`}
+                  className="flex-shrink-0 w-[280px] sm:w-auto snap-start sm:snap-align-none bg-white rounded-3xl p-4 sm:p-5 border border-gray-100 transition-all duration-300 cursor-pointer mr-4 sm:mr-0"
                   style={{
                     boxShadow:
                       "0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.05)",
@@ -448,19 +420,10 @@ const HomePage = () => {
                       className="w-full h-full object-cover"
                     />
                   </div>
-                  <h3
-                    className={`text-lg sm:text-xl font-semibold ${
-                      darkMode ? "text-white" : "text-gray-800"
-                    } mb-2 truncate`}
-                  >
+                  <h3 className="text-lg sm:text-xl font-semibold text-gray-800 mb-2 truncate">
                     {location.location}
                   </h3>
-                  <div
-                    className={`flex items-center gap-2 ${
-                      darkMode ? "text-gray-400" : "text-gray-500"
-                    } mb-2 sm:mb-3`}
-                  >
-                    {" "}
+                  <div className="flex items-center gap-2 text-gray-500 mb-2 sm:mb-3">
                     <Clock size={14} className="sm:w-4 sm:h-4" />
                     <span className="text-xs sm:text-sm">
                       Last visit:{" "}
@@ -511,41 +474,21 @@ const HomePage = () => {
       </div>
 
       {/* Features Section - Mobile optimized */}
-      <div
-        className={`py-12 sm:py-16 md:py-24 ${
-          darkMode
-            ? "bg-gray-800 bg-opacity-40"
-            : "bg-gradient-to-br from-green-100 to-blue-100"
-        }`}
-      >
-        {" "}
+      <div className="py-12 sm:py-16 md:py-24 bg-gradient-to-br from-green-100 to-blue-100">
         <div className="container mx-auto px-4">
           <h2 className="text-2xl xs:text-3xl md:text-4xl font-bold text-center mb-8 sm:mb-16 bg-gradient-to-r from-green-500 to-blue-500 bg-clip-text text-transparent">
             Why Use Food Waste Hero?
           </h2>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8">
-            <div
-              className={`${
-                darkMode ? "bg-gray-700" : "bg-white"
-              } rounded-3xl p-5 sm:p-6 shadow-lg hover:shadow-xl transition-all hover:transform hover:scale-105 duration-300`}
-            >
-              {" "}
+            <div className="bg-white rounded-3xl p-5 sm:p-6 shadow-lg hover:shadow-xl transition-all hover:transform hover:scale-105 duration-300">
               <div className="mb-4 sm:mb-6 bg-green-100 w-12 h-12 sm:w-16 sm:h-16 rounded-full flex items-center justify-center">
                 <CalendarCheck className="text-green-500" size={24} />
               </div>
-              <h3
-                className={`text-lg sm:text-xl font-bold ${
-                  darkMode ? "text-white" : "text-gray-800"
-                } mb-2 sm:mb-3`}
-              >
+              <h3 className="text-lg sm:text-xl font-bold text-gray-800 mb-2 sm:mb-3">
                 Track Your Meals
               </h3>
-              <p
-                className={`text-sm sm:text-base ${
-                  darkMode ? "text-gray-300" : "text-gray-600"
-                }`}
-              >
+              <p className="text-sm sm:text-base text-gray-600">
                 Keep a record of every restaurant visit and meal, so you'll
                 always remember what and how much to order.
               </p>

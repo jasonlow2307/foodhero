@@ -333,16 +333,21 @@ const LocationForm = () => {
 
   return (
     <div
-      className={`min-h-screen flex items-center justify-center ${
+      className={`min-h-screen flex items-center justify-center transition-colors duration-300 ${
         darkMode
-          ? "bg-gray-900"
+          ? "bg-gradient-to-br from-gray-900 to-gray-800"
           : "bg-gradient-to-br from-green-100 to-blue-100"
       } p-4`}
     >
       <div
         className={`w-full max-w-xl ${
           darkMode ? "bg-gray-800" : "bg-white"
-        } rounded-3xl shadow-xl p-4 md:p-8`}
+        } rounded-3xl shadow-xl p-4 md:p-8 transition-all duration-300`}
+        style={{
+          boxShadow: darkMode
+            ? "0 10px 25px -5px rgba(0, 0, 0, 0.7), 0 8px 10px -6px rgba(0, 0, 0, 0.6)"
+            : "0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.05)",
+        }}
       >
         {/* Header */}
         <div className="text-center mb-6 md:mb-8">
@@ -499,7 +504,7 @@ const LocationForm = () => {
             onClick={handleAddFood}
             className={`w-full py-3 rounded-xl border-2 border-dashed ${
               darkMode
-                ? "border-gray-600 text-gray-300 hover:border-green-600 hover:text-green-400"
+                ? "border-gray-700 text-gray-300 hover:border-green-600 hover:text-green-400"
                 : "border-gray-300 text-gray-500 hover:border-green-400 hover:text-green-500"
             } transition-colors flex items-center justify-center gap-2 hover:cursor-pointer`}
           >
@@ -515,27 +520,43 @@ const LocationForm = () => {
             >
               How full are you?
             </label>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-3">
-              {["not enough", "perfect", "too much"].map((level) => (
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-3 mt-2">
+              {[
+                {
+                  value: "not enough",
+                  label: "😋 Still Hungry",
+                  color: "yellow",
+                },
+                { value: "perfect", label: "😊 Just Right", color: "green" },
+                { value: "too much", label: "😅 Too Full", color: "red" },
+              ].map(({ value, label, color }) => (
                 <button
-                  key={level}
+                  key={value}
                   type="button"
                   onClick={() =>
                     handleFullnessChange({
-                      target: { value: level as Fullness, name: "fullness" },
+                      target: { value: value as Fullness, name: "fullness" },
                     } as SelectChangeEvent<Fullness>)
                   }
                   className={`py-2 px-4 rounded-xl border-2 transition-all hover:cursor-pointer ${
-                    formData.visits[0].fullness === level
-                      ? "border-green-400 bg-green-50 text-green-600"
+                    formData.visits[0].fullness === value
+                      ? darkMode
+                        ? color === "green"
+                          ? "border-green-600 bg-green-900/30 text-green-400"
+                          : color === "red"
+                          ? "border-red-600 bg-red-900/30 text-red-400"
+                          : "border-yellow-600 bg-yellow-900/30 text-yellow-400"
+                        : color === "green"
+                        ? "border-green-400 bg-green-50 text-green-600"
+                        : color === "red"
+                        ? "border-red-400 bg-red-50 text-red-600"
+                        : "border-yellow-400 bg-yellow-50 text-yellow-600"
                       : darkMode
-                      ? "border-gray-700 hover:border-green-700"
-                      : "border-gray-200 hover:border-green-200"
+                      ? "border-gray-700 hover:border-gray-600 text-gray-300"
+                      : "border-gray-200 hover:border-gray-300"
                   }`}
                 >
-                  {level === "not enough" && "😋 Still Hungry"}
-                  {level === "perfect" && "😊 Just Right"}
-                  {level === "too much" && "😅 Too Full"}
+                  {label}
                 </button>
               ))}
             </div>
@@ -544,7 +565,12 @@ const LocationForm = () => {
           {/* Submit Button */}
           <button
             type="submit"
-            className="w-full py-3 md:py-4 bg-gradient-to-r from-green-400 to-blue-500 text-white rounded-xl hover:opacity-90 transition-opacity flex items-center justify-center gap-2 font-medium hover:cursor-pointer"
+            className={`w-full py-3 md:py-4 bg-gradient-to-r from-green-400 to-blue-500 text-white rounded-xl hover:opacity-90 transition-all flex items-center justify-center gap-2 font-medium hover:cursor-pointer`}
+            style={{
+              boxShadow: darkMode
+                ? "0 4px 12px rgba(74, 222, 128, 0.25)"
+                : "0 4px 12px rgba(74, 222, 128, 0.15)",
+            }}
           >
             <Send size={20} />
             Save My Order
