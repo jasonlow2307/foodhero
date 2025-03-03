@@ -75,8 +75,16 @@ const Header = () => {
   };
 
   return (
-    <header className="bg-white dark:bg-gray-900 shadow-md dark:shadow-gray-800 sticky top-0 z-50 transition-colors duration-200">
-      <div className="bg-white dark:bg-gray-900 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-50 transition-colors duration-200">
+    <header
+      className={`${
+        darkMode ? "bg-gray-900 shadow-gray-900/70" : "bg-white shadow-gray-200"
+      } shadow-md sticky top-0 z-50 transition-colors duration-200`}
+    >
+      <div
+        className={`${
+          darkMode ? "bg-gray-900" : "bg-white"
+        } max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-50 transition-colors duration-200`}
+      >
         <div className="flex justify-between h-16">
           <div className="flex">
             <div className="flex-shrink-0 flex items-center">
@@ -160,7 +168,7 @@ const Header = () => {
               <Switch
                 checked={darkMode}
                 onChange={toggleDarkMode}
-                className="scale-60 mb-4"
+                className={`scale-60 mb-4`}
               />
             </div>
 
@@ -169,7 +177,11 @@ const Header = () => {
               <button
                 ref={buttonRef}
                 onClick={() => setIsUserDropdownOpen(!isUserDropdownOpen)}
-                className="flex items-center gap-2 bg-white dark:bg-gray-900 px-3 py-2 rounded-md text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors focus:outline-none hover:cursor-pointer"
+                className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors focus:outline-none hover:cursor-pointer ${
+                  darkMode
+                    ? "bg-gray-800 text-gray-300 hover:bg-gray-700"
+                    : "bg-gray-50 text-gray-700 hover:bg-gray-100"
+                }`}
               >
                 <div className="w-8 h-8 rounded-full bg-gradient-to-r from-green-500 to-blue-500 flex items-center justify-center text-white">
                   <User size={16} />
@@ -221,7 +233,11 @@ const Header = () => {
               <button
                 ref={mobileButtonRef}
                 onClick={() => setIsUserDropdownOpen(!isUserDropdownOpen)}
-                className="flex items-center justify-center bg-white p-2 rounded-md text-gray-600 hover:text-gray-900 hover:bg-gray-100 focus:outline-none"
+                className={`flex items-center justify-center p-2 rounded-md focus:outline-none ${
+                  darkMode
+                    ? "bg-gray-800 text-gray-300 hover:bg-gray-700"
+                    : "bg-gray-50 text-gray-600 hover:bg-gray-100"
+                }`}
               >
                 <div className="w-8 h-8 rounded-full bg-gradient-to-r from-green-500 to-blue-500 flex items-center justify-center text-white">
                   <User size={16} />
@@ -231,7 +247,11 @@ const Header = () => {
               {/* Mobile dropdown menu */}
               <div
                 ref={mobileDropdownRef}
-                className={`absolute right-0 mt-2 mr-4 w-56 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-50 transition-all duration-300 ease-in-out transform origin-top-right ${
+                className={`absolute right-0 mt-2 mr-4 w-56 rounded-md shadow-lg ${
+                  darkMode
+                    ? "bg-gray-800 ring-1 ring-gray-700"
+                    : "bg-white ring-1 ring-black ring-opacity-5"
+                } z-50 transition-all duration-300 ease-in-out transform origin-top-right ${
                   isUserDropdownOpen
                     ? "opacity-100 scale-100"
                     : "opacity-0 scale-95 pointer-events-none"
@@ -239,31 +259,55 @@ const Header = () => {
               >
                 <div className="py-1">
                   <div className="px-4 py-3">
-                    <p className="text-sm font-medium text-gray-900 truncate">
+                    <p
+                      className={`text-sm font-medium ${
+                        darkMode ? "text-white" : "text-gray-900"
+                      } truncate`}
+                    >
                       {userName}
                     </p>
-                    <p className="text-xs text-gray-500 truncate">
+                    <p
+                      className={`text-xs ${
+                        darkMode ? "text-gray-400" : "text-gray-500"
+                      } truncate`}
+                    >
                       {userEmail}
                     </p>
                   </div>
                   <div className="px-3 py-2 rounded-md flex items-center justify-between">
-                    <div className="flex items-center text-gray-600">
-                      <Sun size={18} className="mr-2" />
-                      Dark Mode
+                    <div
+                      className={`flex items-center ${
+                        darkMode ? "text-gray-300" : "text-gray-600"
+                      }`}
+                    >
+                      {darkMode ? (
+                        <Moon size={18} className="mr-2 text-blue-400" />
+                      ) : (
+                        <Sun size={18} className="mr-2 text-amber-500" />
+                      )}
+                      {darkMode ? "Dark Mode" : "Light Mode"}
                     </div>
                     <Switch
                       checked={darkMode}
                       onChange={toggleDarkMode}
-                      className="transform scale-75"
+                      className="transform scale-75 mb-3"
                     />
                   </div>
-                  <hr className="my-1" />
+                  <hr
+                    className={`my-1 ${
+                      darkMode ? "border-gray-700" : "border-gray-200"
+                    }`}
+                  />
                   <button
                     onClick={() => {
                       handleSignOut();
                       setIsUserDropdownOpen(false);
                     }}
-                    className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors flex items-center"
+                    className={`w-full text-left px-4 py-2 text-sm text-red-600 ${
+                      darkMode
+                        ? "hover:bg-red-900/30 text-red-400"
+                        : "hover:bg-red-50"
+                    } transition-colors flex items-center`}
                   >
                     <LogOut className="mr-2" size={16} />
                     Sign Out
@@ -274,7 +318,11 @@ const Header = () => {
 
             <button
               onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="inline-flex items-center justify-center p-2 rounded-md text-gray-600 hover:text-gray-900 hover:bg-gray-100 focus:outline-none focus:bg-gray-100 focus:text-gray-900 transition-colors"
+              className={`inline-flex items-center justify-center p-2 rounded-md transition-colors ${
+                darkMode
+                  ? "text-gray-300 hover:text-white hover:bg-gray-700"
+                  : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
+              } focus:outline-none`}
             >
               {isMenuOpen ? (
                 <X className="block h-6 w-6" />
@@ -290,14 +338,22 @@ const Header = () => {
       <div
         className={`md:hidden fixed top-16 left-0 w-full transform transition-transform duration-300 ease-in-out ${
           isMenuOpen ? "translate-x-0" : "-translate-x-full"
-        } bg-white shadow-lg z-40`}
+        } ${darkMode ? "bg-gray-800" : "bg-white"} shadow-lg z-40`}
       >
-        <div className="pt-2 pb-3 space-y-1 shadow-inner bg-gray-50">
+        <div
+          className={`pt-2 pb-3 space-y-1 shadow-inner ${
+            darkMode ? "bg-gray-900" : "bg-gray-50"
+          }`}
+        >
           <Link
             to="/"
             className={`px-3 py-2 rounded-md text-base font-medium flex items-center ${
               isActive("/")
-                ? "bg-gradient-to-r from-green-50 to-blue-50 text-blue-700"
+                ? darkMode
+                  ? "bg-gradient-to-r from-green-900 to-blue-900 text-blue-400"
+                  : "bg-gradient-to-r from-green-50 to-blue-50 text-blue-700"
+                : darkMode
+                ? "text-gray-300 hover:bg-gray-700"
                 : "text-gray-600 hover:bg-gray-100"
             }`}
             onClick={() => setIsMenuOpen(false)}
@@ -305,12 +361,15 @@ const Header = () => {
             <Home className="mr-2" size={18} />
             Home
           </Link>
-
           <Link
             to="/list"
             className={`px-3 py-2 rounded-md text-base font-medium flex items-center ${
               isActive("/list")
-                ? "bg-gradient-to-r from-green-50 to-blue-50 text-blue-700"
+                ? darkMode
+                  ? "bg-gradient-to-r from-green-900 to-blue-900 text-blue-400"
+                  : "bg-gradient-to-r from-green-50 to-blue-50 text-blue-700"
+                : darkMode
+                ? "text-gray-300 hover:bg-gray-700"
                 : "text-gray-600 hover:bg-gray-100"
             }`}
             onClick={() => setIsMenuOpen(false)}
@@ -323,7 +382,11 @@ const Header = () => {
             to="/add"
             className={`px-3 py-2 rounded-md text-base font-medium flex items-center ${
               isActive("/add")
-                ? "bg-gradient-to-r from-green-50 to-blue-50 text-blue-700"
+                ? darkMode
+                  ? "bg-gradient-to-r from-green-900 to-blue-900 text-blue-400"
+                  : "bg-gradient-to-r from-green-50 to-blue-50 text-blue-700"
+                : darkMode
+                ? "text-gray-300 hover:bg-gray-700"
                 : "text-gray-600 hover:bg-gray-100"
             }`}
             onClick={() => setIsMenuOpen(false)}
@@ -336,7 +399,11 @@ const Header = () => {
             to="/what-to-eat"
             className={`px-3 py-2 rounded-md text-base font-medium flex items-center ${
               isActive("/what-to-eat")
-                ? "bg-gradient-to-r from-green-50 to-blue-50 text-blue-700"
+                ? darkMode
+                  ? "bg-gradient-to-r from-green-900 to-blue-900 text-blue-400"
+                  : "bg-gradient-to-r from-green-50 to-blue-50 text-blue-700"
+                : darkMode
+                ? "text-gray-300 hover:bg-gray-700"
                 : "text-gray-600 hover:bg-gray-100"
             }`}
             onClick={() => setIsMenuOpen(false)}
