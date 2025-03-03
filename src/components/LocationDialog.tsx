@@ -275,9 +275,16 @@ const LocationDialog = ({
   const handleShareLocation = async () => {
     if (!sharingEmail || !selectedFood) return;
 
-    const isLoading = true;
-
     try {
+      // Check if user is trying to share with themselves
+      if (sharingEmail.toLowerCase() === currentUser.email.toLowerCase()) {
+        enqueueSnackbar("You can't share a location with yourself", {
+          variant: "warning",
+          anchorOrigin: { vertical: "bottom", horizontal: "center" },
+        });
+        return;
+      }
+
       // First, find the user by email
       const usersRef = collection(db, "users");
       const q = query(usersRef, where("email", "==", sharingEmail));
@@ -294,6 +301,15 @@ const LocationDialog = ({
 
       // Get the user ID
       const targetUserId = querySnapshot.docs[0].id;
+
+      // Double-check we're not sharing with ourselves (by ID)
+      if (targetUserId === currentUser.uid) {
+        enqueueSnackbar("You can't share a location with yourself", {
+          variant: "warning",
+          anchorOrigin: { vertical: "bottom", horizontal: "center" },
+        });
+        return;
+      }
 
       // Update the location document
       const locationRef = doc(db, "locations", selectedFood.id);
@@ -323,6 +339,8 @@ const LocationDialog = ({
         });
 
         setIsShareMenuOpen(false);
+        setSharingEmail("");
+
         // Show success message
         enqueueSnackbar(`Location shared successfully with ${sharingEmail}`, {
           variant: "success",

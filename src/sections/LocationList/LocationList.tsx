@@ -36,6 +36,7 @@ import { useNavigate } from "react-router-dom";
 import React from "react";
 import { useTheme } from "../../contexts/ThemeContext";
 import Loader from "../../components/Loader";
+import FilterRadio from "../../components/FilterRadio";
 
 interface LocationListProps {
   initialSelectedLocation?: any;
@@ -136,6 +137,8 @@ const LocationList: React.FC<LocationListProps> = ({
   const [filterMode, setFilterMode] = useState<"all" | "owned" | "shared">(
     "all"
   );
+  const [isFilterTransitioning, setIsFilterTransitioning] = useState(false);
+  const [prevFilterMode, setPrevFilterMode] = useState(filterMode);
 
   const { darkMode } = useTheme();
 
@@ -183,6 +186,66 @@ const LocationList: React.FC<LocationListProps> = ({
 
     return () => clearTimeout(timer);
   }, [locations]);
+
+  useEffect(() => {
+    if (!isFilterTransitioning && !isTransitioning) {
+      // Only update the filtered locations when we're not transitioning
+      // This prevents the list from jumping during animations
+      const newFilteredLocations = filterLocations(filterMode);
+      // No need to setFilteredLocations here since we're using useMemo
+    }
+  }, [filterMode, isFilterTransitioning, isTransitioning]);
+
+  const handleFilterChange = (newMode) => {
+    if (newMode === filterMode) return;
+
+    // Mark all items as "exiting"
+    const allExiting = {};
+    filteredLocations.forEach((location) => {
+      allExiting[location.id] = "exiting";
+    });
+    setAnimatingItems(allExiting);
+
+    // Start transition
+    setIsFilterTransitioning(true);
+    setPrevFilterMode(filterMode);
+
+    // Give the browser a moment to process the exit animations
+    setTimeout(() => {
+      // Apply the new filter mode
+      setFilterMode(newMode);
+
+      // Mark all items as "entering" after filter applied
+      setTimeout(() => {
+        const allEntering = {};
+        // We need to use the newly filtered locations here
+        const newlyFilteredLocations = filterLocations(newMode);
+        newlyFilteredLocations.forEach((location) => {
+          allEntering[location.id] = "entering";
+        });
+        setAnimatingItems(allEntering);
+
+        // Reset transition state after animations complete
+        setTimeout(() => {
+          setIsFilterTransitioning(false);
+          setAnimatingItems({});
+        }, 600);
+      }, 50);
+    }, 300);
+  };
+
+  const filterLocations = (mode) => {
+    if (mode === "all") {
+      return locations;
+    } else if (mode === "owned") {
+      return locations.filter(
+        (location) => location.userId === currentUser.uid
+      );
+    } else {
+      // Shared with me
+      return locations.filter((location) => location.isShared);
+    }
+  };
 
   // Mobile reorder mode handlers
   const enableMobileReorderMode = () => {
@@ -495,7 +558,7 @@ const LocationList: React.FC<LocationListProps> = ({
 
     // Mark all items as "exiting"
     const allExiting = {};
-    locations.forEach((location) => {
+    filteredLocations.forEach((location) => {
       allExiting[location.id] = "exiting";
     });
     setAnimatingItems(allExiting);
@@ -510,17 +573,21 @@ const LocationList: React.FC<LocationListProps> = ({
       setSortOption(option);
 
       // Mark all items as "entering" after sort applied
-      const allEntering = {};
-      locations.forEach((location) => {
-        allEntering[location.id] = "entering";
-      });
-      setAnimatingItems(allEntering);
-
-      // Reset isTransitioning after animations complete
       setTimeout(() => {
-        setIsTransitioning(false);
-        setAnimatingItems({});
-      }, 600);
+        const allEntering = {};
+        // We need to get the newly sorted and filtered locations
+        const newlyFilteredLocations = filterLocations(filterMode);
+        newlyFilteredLocations.forEach((location) => {
+          allEntering[location.id] = "entering";
+        });
+        setAnimatingItems(allEntering);
+
+        // Reset isTransitioning after animations complete
+        setTimeout(() => {
+          setIsTransitioning(false);
+          setAnimatingItems({});
+        }, 600);
+      }, 50);
     }, 300);
   };
 
@@ -565,7 +632,7 @@ const LocationList: React.FC<LocationListProps> = ({
   @keyframes enterAnimation {
     from {
       opacity: 0;
-      transform: translateY(20px) scale(0.9);
+      transform: translateY(20px) scale(0.95);
     }
     to {
       opacity: 1;
@@ -580,10 +647,31 @@ const LocationList: React.FC<LocationListProps> = ({
     }
     to {
       opacity: 0;
-      transform: translateY(-20px) scale(0.9);
+      transform: translateY(-20px) scale(0.95);
     }
   }
-`}
+  
+  /* Add filter fade animation */
+  .filter-fade-enter {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  
+  .filter-fade-enter-active {
+    opacity: 1;
+    transform: translateY(0);
+    transition: opacity 0.3s ease-out, transform 0.3s ease-out;
+  }
+  
+  .filter-fade-exit {
+    opacity: 1;
+  }
+  
+  .filter-fade-exit-active {
+    opacity: 0;
+    transition: opacity 0.3s ease-in;
+  }
+  `}
       </style>
       {locationLoading ? (
         <LoadingAnimation />
@@ -763,56 +851,8 @@ const LocationList: React.FC<LocationListProps> = ({
               </div>
             )}
 
-            <div className="mb-6 flex justify-center">
-              <div
-                className={`inline-flex rounded-lg ${
-                  darkMode ? "bg-gray-800" : "bg-white"
-                } p-1 shadow`}
-              >
-                <button
-                  className={`px-4 py-2 rounded-md text-sm font-medium ${
-                    filterMode === "all"
-                      ? darkMode
-                        ? "bg-blue-900/50 text-blue-400"
-                        : "bg-blue-100 text-blue-700"
-                      : darkMode
-                      ? "text-gray-300 hover:bg-gray-700"
-                      : "text-gray-600 hover:bg-gray-100"
-                  }`}
-                  onClick={() => setFilterMode("all")}
-                >
-                  All
-                </button>
-                <button
-                  className={`px-4 py-2 rounded-md text-sm font-medium ${
-                    filterMode === "owned"
-                      ? darkMode
-                        ? "bg-blue-900/50 text-blue-400"
-                        : "bg-blue-100 text-blue-700"
-                      : darkMode
-                      ? "text-gray-300 hover:bg-gray-700"
-                      : "text-gray-600 hover:bg-gray-100"
-                  }`}
-                  onClick={() => setFilterMode("owned")}
-                >
-                  My Places
-                </button>
-                <button
-                  className={`px-4 py-2 rounded-md text-sm font-medium ${
-                    filterMode === "shared"
-                      ? darkMode
-                        ? "bg-blue-900/50 text-blue-400"
-                        : "bg-blue-100 text-blue-700"
-                      : darkMode
-                      ? "text-gray-300 hover:bg-gray-700"
-                      : "text-gray-600 hover:bg-gray-100"
-                  } flex items-center gap-1`}
-                  onClick={() => setFilterMode("shared")}
-                >
-                  <Share size={14} />
-                  Shared with me
-                </button>
-              </div>
+            <div className="flex justify-center mb-6">
+              <FilterRadio value={filterMode} onChange={handleFilterChange} />
             </div>
 
             {/* Location Grid */}
@@ -824,12 +864,12 @@ const LocationList: React.FC<LocationListProps> = ({
             >
               <div
                 className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6 location-grid ${
-                  isTransitioning ? "is-sorting" : ""
+                  isTransitioning || isFilterTransitioning ? "is-sorting" : ""
                 }`}
               >
                 {" "}
                 {/* Add New Location Card */}
-                {!isMobile && (
+                {!isMobile && filterMode != "shared" && (
                   <div
                     className={`bg-white/50 backdrop-blur-sm rounded-3xl p-6 cursor-pointer group hover:transform hover:scale-105 transition-all duration-300 border-2 border-dashed ${
                       darkMode
@@ -854,6 +894,112 @@ const LocationList: React.FC<LocationListProps> = ({
                     </p>
                   </div>
                 )}
+                {filterMode === "shared" && filteredLocations.length === 0 && (
+                  <div className="col-span-1 sm:col-span-2 lg:col-span-3 xl:col-span-4 flex justify-center">
+                    <div
+                      className={`${
+                        darkMode ? "bg-gray-800/70" : "bg-white/70"
+                      } backdrop-blur-sm rounded-3xl p-8 max-w-md w-full text-center shadow-md`}
+                    >
+                      <div className="mb-4 flex justify-center">
+                        <div
+                          className={`p-4 rounded-full ${
+                            darkMode ? "bg-blue-900/30" : "bg-blue-100"
+                          }`}
+                        >
+                          <Share
+                            size={32}
+                            className={`${
+                              darkMode ? "text-blue-400" : "text-blue-600"
+                            }`}
+                          />
+                        </div>
+                      </div>
+                      <h3
+                        className={`text-xl font-bold mb-2 ${
+                          darkMode ? "text-white" : "text-gray-800"
+                        }`}
+                      >
+                        No Shared Locations Yet
+                      </h3>
+                      <p
+                        className={`mb-6 ${
+                          darkMode ? "text-gray-300" : "text-gray-600"
+                        }`}
+                      >
+                        Nobody has shared any food locations with you yet. When
+                        someone shares a location, it will appear here.
+                      </p>
+                      <div className="flex flex-col items-center gap-4">
+                        <button
+                          onClick={() => handleFilterChange("owned")}
+                          className="px-4 py-2 rounded-xl bg-gradient-to-r from-green-400 to-blue-500 text-white font-medium hover:opacity-90 transition-opacity flex items-center gap-2 hover: cursor-pointer"
+                        >
+                          <span>View My Locations</span>
+                        </button>
+                        <button
+                          onClick={() => handleFilterChange("all")}
+                          className={`px-4 py-2 rounded-xl ${
+                            darkMode
+                              ? "bg-gray-700 text-gray-300 hover:bg-gray-600"
+                              : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                          } font-medium transition-colors hover: cursor-pointer`}
+                        >
+                          Show All Places
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+                {filterMode === "owned" &&
+                  filteredLocations.length === 0 &&
+                  !isMobile && (
+                    <div className="col-span-1 sm:col-span-2 lg:col-span-3 xl:col-span-4 flex justify-center">
+                      <div
+                        className={`${
+                          darkMode ? "bg-gray-800/70" : "bg-white/70"
+                        } backdrop-blur-sm rounded-3xl p-8 max-w-md w-full text-center shadow-md`}
+                      >
+                        <div className="mb-4 flex justify-center">
+                          <div
+                            className={`p-4 rounded-full ${
+                              darkMode ? "bg-green-900/30" : "bg-green-100"
+                            }`}
+                          >
+                            <Plus
+                              size={32}
+                              className={`${
+                                darkMode ? "text-green-400" : "text-green-600"
+                              }`}
+                            />
+                          </div>
+                        </div>
+                        <h3
+                          className={`text-xl font-bold mb-2 ${
+                            darkMode ? "text-white" : "text-gray-800"
+                          }`}
+                        >
+                          No Food Places Yet
+                        </h3>
+                        <p
+                          className={`mb-6 ${
+                            darkMode ? "text-gray-300" : "text-gray-600"
+                          }`}
+                        >
+                          You haven't added any food places to your collection.
+                          Add some locations to start tracking your food
+                          journey!
+                        </p>
+                        <button
+                          onClick={() => navigate("add")}
+                          className="px-4 py-2 rounded-xl bg-gradient-to-r from-green-400 to-blue-500 text-white font-medium hover:opacity-90 transition-opacity flex items-center gap-2"
+                        >
+                          <Plus size={18} />
+                          <span>Add New Location</span>
+                        </button>
+                      </div>
+                    </div>
+                  )}
                 <LocationDialog
                   open={open}
                   onClose={handleClose}

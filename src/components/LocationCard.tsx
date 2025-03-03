@@ -85,7 +85,14 @@ const LocationCard = forwardRef<HTMLDivElement, LocationCardProps>(
             darkMode ? "bg-gray-700" : "bg-gray-100"
           } mb-3 sm:mb-4 overflow-hidden`}
         >
-          {" "}
+          {location.isShared && (
+            <div className="absolute top-3 left-3 backdrop-blur-md bg-gradient-to-r from-blue-500/80 to-indigo-600/80 text-white text-xs px-3 py-1.5 rounded-full flex items-center shadow-lg transform -translate-x-1 -translate-y-1 animate-fadeIn">
+              <Share size={14} className="mr-1.5" strokeWidth={2.5} />
+              <span className="font-medium">Shared</span>
+            </div>
+          )}
+
+          {/* Drag handle */}
           {draggable && (
             <div
               {...dragHandleProps}
@@ -94,7 +101,7 @@ const LocationCard = forwardRef<HTMLDivElement, LocationCardProps>(
                   ? "bg-gray-700/80 hover:bg-gray-600"
                   : "bg-white/80 hover:bg-white"
               } cursor-grab active:cursor-grabbing`}
-              onClick={(e) => e.stopPropagation()} // Prevent card click when using drag handle
+              onClick={(e) => e.stopPropagation()}
             >
               <GripVertical
                 size={isMobile ? 16 : 20}
@@ -102,6 +109,7 @@ const LocationCard = forwardRef<HTMLDivElement, LocationCardProps>(
               />
             </div>
           )}
+
           <img
             src={image || "/api/placeholder/400/320"}
             alt={location.location}
@@ -122,34 +130,34 @@ const LocationCard = forwardRef<HTMLDivElement, LocationCardProps>(
             {location.location}
           </h3>
 
-          <div
-            className={`flex items-center gap-2 ${
-              darkMode ? "text-gray-400" : "text-gray-500"
-            }`}
-          >
-            <User size={isMobile ? 14 : 16} />
-            <span
-              className={`text-xs sm:text-sm ${
-                darkMode ? "text-gray-400" : "text-gray-500"
+          {location.isShared && location.name && (
+            <div
+              className={`flex items-center gap-2 ${
+                darkMode ? "text-blue-400" : "text-blue-600"
               }`}
             >
-              {location.name}
-            </span>
-          </div>
-
-          {location.isShared && (
-            <div className="absolute top-2 left-2 bg-blue-500/80 text-white text-xs px-2 py-1 rounded-md flex items-center">
-              <Share size={12} className="mr-1" />
-              Shared
+              <Share size={isMobile ? 14 : 16} className="flex-shrink-0" />
+              <span className={`text-xs sm:text-sm truncate`}>
+                Shared by{" "}
+                <span className="font-medium">{location.name || "a user"}</span>
+              </span>
             </div>
           )}
-          {location.isShared && location.sharedBy && (
+
+          {!location.isShared && (
             <div
-              className={`mt-2 text-xs ${
+              className={`flex items-center gap-2 ${
                 darkMode ? "text-gray-400" : "text-gray-500"
               }`}
             >
-              Shared by {location.sharedByName || "a user"}
+              <User size={isMobile ? 14 : 16} />
+              <span
+                className={`text-xs sm:text-sm ${
+                  darkMode ? "text-gray-400" : "text-gray-500"
+                }`}
+              >
+                {location.name}
+              </span>
             </div>
           )}
 
