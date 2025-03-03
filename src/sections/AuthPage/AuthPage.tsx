@@ -196,6 +196,15 @@ const AuthPage = () => {
           console.log("Registration successful");
           enqueueSnackbar("Account created successfully!", {
             variant: "success",
+            action: (snackbarId) => (
+              <button
+                onClick={() => {
+                  closeSnackbar(snackbarId);
+                }}
+              >
+                Dismiss
+              </button>
+            ),
           });
         }
       }
@@ -209,13 +218,46 @@ const AuthPage = () => {
         // Handle Firebase Auth errors
         const message = getAuthErrorMessage(err as AuthError);
         setError(message);
-        enqueueSnackbar(message, { variant: "error" });
+        enqueueSnackbar(message, {
+          variant: "error",
+          action: (snackbarId) => (
+            <button
+              onClick={() => {
+                closeSnackbar(snackbarId);
+              }}
+            >
+              Dismiss
+            </button>
+          ),
+        });
       } else if (err instanceof Error) {
         setError(err.message);
-        enqueueSnackbar(err.message, { variant: "error" });
+        enqueueSnackbar(err.message, {
+          variant: "error",
+          action: (snackbarId) => (
+            <button
+              onClick={() => {
+                closeSnackbar(snackbarId);
+              }}
+            >
+              Dismiss
+            </button>
+          ),
+        });
       } else {
         setError("An unknown error occurred");
-        enqueueSnackbar("An unknown error occurred", { variant: "error" });
+        enqueueSnackbar("An unknown error occurred", {
+          variant: "error",
+          action: (snackbarId) => (
+            <button
+              onClick={() => {
+                closeSnackbar(snackbarId);
+              }}
+            >
+              Dismiss
+            </button>
+          ),
+        });
       }
     } finally {
       setLoading(false);
@@ -235,6 +277,15 @@ const AuthPage = () => {
       console.log("Google sign-in successful");
       enqueueSnackbar("Successfully signed in with Google!", {
         variant: "success",
+        action: (snackbarId) => (
+          <button
+            onClick={() => {
+              closeSnackbar(snackbarId);
+            }}
+          >
+            Dismiss
+          </button>
+        ),
       });
 
       // Get Google user info
@@ -272,13 +323,46 @@ const AuthPage = () => {
         // Handle Firebase Auth errors
         const message = getAuthErrorMessage(err as AuthError);
         setError(message);
-        enqueueSnackbar(message, { variant: "error" });
+        enqueueSnackbar(message, {
+          variant: "error",
+          action: (snackbarId) => (
+            <button
+              onClick={() => {
+                closeSnackbar(snackbarId);
+              }}
+            >
+              Dismiss
+            </button>
+          ),
+        });
       } else if (err instanceof Error) {
         setError(err.message);
-        enqueueSnackbar(err.message, { variant: "error" });
+        enqueueSnackbar(err.message, {
+          variant: "error",
+          action: (snackbarId) => (
+            <button
+              onClick={() => {
+                closeSnackbar(snackbarId);
+              }}
+            >
+              Dismiss
+            </button>
+          ),
+        });
       } else {
         setError("Google sign-in failed. Please try again.");
-        enqueueSnackbar("Google sign-in failed", { variant: "error" });
+        enqueueSnackbar("Google sign-in failed", {
+          variant: "error",
+          action: (snackbarId) => (
+            <button
+              onClick={() => {
+                closeSnackbar(snackbarId);
+              }}
+            >
+              Dismiss
+            </button>
+          ),
+        });
       }
     } finally {
       setLoading(false);

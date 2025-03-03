@@ -175,9 +175,17 @@ const Header = () => {
                     : "bg-gray-50 text-gray-700 hover:bg-gray-100"
                 }`}
               >
-                <div className="w-8 h-8 rounded-full bg-gradient-to-r from-green-500 to-blue-500 flex items-center justify-center text-white">
-                  <User size={16} />
-                </div>
+                {user?.photoURL ? (
+                  <img
+                    src={user.photoURL}
+                    alt={userName}
+                    className="w-8 h-8 rounded-full object-cover border-2 border-white hover:shadow-md transition-shadow duration-300"
+                  />
+                ) : (
+                  <div className="w-8 h-8 rounded-full bg-gradient-to-r from-green-500 to-blue-500 flex items-center justify-center text-white hover:shadow-md transition-all duration-300 cursor-pointer">
+                    <User size={16} />
+                  </div>
+                )}
                 <span className="hidden lg:block">{userName}</span>
                 <ChevronDown
                   size={14}
@@ -266,15 +274,23 @@ const Header = () => {
               <button
                 ref={mobileButtonRef}
                 onClick={() => setIsUserDropdownOpen(!isUserDropdownOpen)}
-                className={`flex items-center justify-center p-2 rounded-md focus:outline-none ${
+                className={`flex items-center justify-center p-2 rounded-md focus:outline-none hover:cursor-pointer transition-colors duration-200 ${
                   darkMode
                     ? "bg-gray-800 text-gray-300 hover:bg-gray-700"
                     : "bg-gray-50 text-gray-600 hover:bg-gray-100"
                 }`}
               >
-                <div className="w-8 h-8 rounded-full bg-gradient-to-r from-green-500 to-blue-500 flex items-center justify-center text-white">
-                  <User size={16} />
-                </div>
+                {user?.photoURL ? (
+                  <img
+                    src={user.photoURL}
+                    alt={userName}
+                    className="w-8 h-8 rounded-full object-cover border-2 border-white hover:shadow-md transition-shadow duration-300"
+                  />
+                ) : (
+                  <div className="w-8 h-8 rounded-full bg-gradient-to-r from-green-500 to-blue-500 flex items-center justify-center text-white hover:shadow-md transition-all duration-300">
+                    <User size={16} />
+                  </div>
+                )}
               </button>
 
               {/* Mobile dropdown menu */}
@@ -336,11 +352,11 @@ const Header = () => {
                       handleSignOut();
                       setIsUserDropdownOpen(false);
                     }}
-                    className={`w-full text-left px-4 py-2 text-sm text-red-600 ${
+                    className={`w-full text-left px-4 py-2 text-sm text-red-600 hover:cursor-pointer ${
                       darkMode
                         ? "hover:bg-red-900/30 text-red-400"
                         : "hover:bg-red-50"
-                    } transition-colors flex items-center`}
+                    } transition-colors duration-200 flex items-center`}
                   >
                     <LogOut className="mr-2" size={16} />
                     Sign Out
