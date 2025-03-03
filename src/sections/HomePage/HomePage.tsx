@@ -109,7 +109,7 @@ const HomePage = () => {
       }
     };
     fetchHeroImage();
-  }, [fetchUnsplashImage, loading]); // Add loading as a dependency
+  }, [loading]); // Add loading as a dependency
 
   // Calculate stats
   useEffect(() => {
@@ -197,7 +197,7 @@ const HomePage = () => {
       <div
         className="relative h-[100vh] sm:h-[90vh] flex items-center justify-center overflow-hidden"
         style={{
-          backgroundImage: fetchUnsplashImage("healthy food plate")
+          backgroundImage: heroImage
             ? `linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.8)), url(${heroImage})`
             : "linear-gradient(to right, #22c55e, #0ea5e9)",
           backgroundSize: "cover",
