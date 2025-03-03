@@ -33,10 +33,6 @@ export const useUnsplash = () => {
 
     // Check Firestore cache next
     if (data) {
-      data.map((d) =>
-        console.log("EXISTING DATA", d.query.toLowerCase().trim())
-      );
-      console.log("NORMALIZED", normalizedQuery);
       const cachedData = data.find(
         (d: any) => d.query.toLowerCase().trim() === normalizedQuery
       );

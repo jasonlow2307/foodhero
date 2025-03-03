@@ -1,20 +1,11 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import useFirestoreCollection from "../../firebase/useFirestoreCollection";
 import { useUnsplash } from "../../utils/useUnsplash";
 import { identifyFood } from "../../utils/identifyFood";
 import { doc, getDoc, updateDoc } from "firebase/firestore";
 import { db } from "../../firebase/firebase";
 import { Images, Visit } from "../../utils/models";
-import {
-  Clock,
-  User,
-  Plus,
-  ArrowUpDown,
-  Filter,
-  Check,
-  Move,
-  X,
-} from "lucide-react";
+import { Plus, ArrowUpDown, Filter, Check, Move, X } from "lucide-react";
 import LocationDialog from "../../components/LocationDialog";
 import {
   getBoundingBox,
@@ -22,8 +13,6 @@ import {
   getGoogleMapsLink,
   getWazeLink,
 } from "../../utils/mapUtils";
-import { getTimeAgo } from "../../utils/timeUtil";
-import analyzeLocation from "../../utils/analyzeLocation";
 import LocationCard from "../../components/LocationCard";
 import {
   DndContext,
@@ -44,6 +33,8 @@ import {
 import { CSS } from "@dnd-kit/utilities";
 import { useAuth } from "../../contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
+import { TransitionGroup, CSSTransition } from "react-transition-group";
+import React from "react";
 
 interface LocationListProps {
   initialSelectedLocation?: any;
@@ -139,6 +130,8 @@ const LocationList: React.FC<LocationListProps> = ({
   const [sortOption, setSortOption] = useState<SortOption>("custom");
   const [showSortOptions, setShowSortOptions] = useState(false);
   const [isMobileReorderMode, setIsMobileReorderMode] = useState(false);
+  const [isTransitioning, setIsTransitioning] = useState(false);
+  const [animatingItems, setAnimatingItems] = useState({});
 
   // Configure DnD sensors
   const sensors = useSensors(
@@ -148,6 +141,15 @@ const LocationList: React.FC<LocationListProps> = ({
       },
     })
   );
+
+  const nodeRefs = useRef(new Map());
+
+  // Make sure the map has a ref for each location
+  locations.forEach((location) => {
+    if (!nodeRefs.current.has(location.id)) {
+      nodeRefs.current.set(location.id, React.createRef());
+    }
+  });
 
   // Add useEffect for mobile detection
   useEffect(() => {
@@ -450,8 +452,40 @@ const LocationList: React.FC<LocationListProps> = ({
 
   // Handle sort option change
   const handleSortChange = (option: SortOption) => {
-    setSortOption(option);
+    if (option === sortOption) {
+      setShowSortOptions(false);
+      return;
+    }
+
+    // Mark all items as "exiting"
+    const allExiting = {};
+    locations.forEach((location) => {
+      allExiting[location.id] = "exiting";
+    });
+    setAnimatingItems(allExiting);
+
+    // Close dropdown and start transition
     setShowSortOptions(false);
+    setIsTransitioning(true);
+
+    // Give the browser a moment to process the exit animations
+    setTimeout(() => {
+      // Apply the new sorting option
+      setSortOption(option);
+
+      // Mark all items as "entering" after sort applied
+      const allEntering = {};
+      locations.forEach((location) => {
+        allEntering[location.id] = "entering";
+      });
+      setAnimatingItems(allEntering);
+
+      // Reset isTransitioning after animations complete
+      setTimeout(() => {
+        setIsTransitioning(false);
+        setAnimatingItems({});
+      }, 600);
+    }, 300);
   };
 
   // Add an empty state if no locations are available
@@ -483,6 +517,37 @@ const LocationList: React.FC<LocationListProps> = ({
       <style>
         {slideUpAnimation}
         {slideDownAnimation}
+        {`
+  .sort-entering {
+    animation: enterAnimation 0.5s forwards;
+  }
+  
+  .sort-exiting {
+    animation: exitAnimation 0.5s forwards;
+  }
+  
+  @keyframes enterAnimation {
+    from {
+      opacity: 0;
+      transform: translateY(20px) scale(0.9);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+  }
+  
+  @keyframes exitAnimation {
+    from {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+    to {
+      opacity: 0;
+      transform: translateY(-20px) scale(0.9);
+    }
+  }
+`}
       </style>
       {locationLoading ? (
         <LoadingAnimation />
@@ -628,7 +693,12 @@ const LocationList: React.FC<LocationListProps> = ({
               onDragStart={handleDragStart}
               onDragEnd={handleDragEnd}
             >
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
+              <div
+                className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6 location-grid ${
+                  isTransitioning ? "is-sorting" : ""
+                }`}
+              >
+                {" "}
                 {/* Add New Location Card */}
                 {!isMobile && (
                   <div
@@ -643,7 +713,6 @@ const LocationList: React.FC<LocationListProps> = ({
                     </p>
                   </div>
                 )}
-
                 <LocationDialog
                   open={open}
                   onClose={handleClose}
@@ -655,62 +724,50 @@ const LocationList: React.FC<LocationListProps> = ({
                   getWazeLink={getWazeLink}
                   onAddNewVisit={handleAddNewVisit}
                 />
-
-                {/* Sortable Location Cards */}
+                {/* Sortable Location Cards with TransitionGroup */}
                 <SortableContext
                   items={locations.map((loc) => loc.id)}
                   strategy={rectSortingStrategy}
                 >
                   {locations.map((location, index) => (
-                    <div key={location.id} className="relative">
-                      {isMobileReorderMode && (
-                        <div className="absolute -top-2 inset-x-0 flex justify-center z-10 gap-2">
-                          <button
-                            onClick={() => moveLocationUp(index)}
-                            disabled={index === 0}
-                            className={`w-8 h-8 rounded-full shadow-md flex items-center justify-center ${
-                              index === 0
-                                ? "bg-gray-200 text-gray-400"
-                                : "bg-blue-500 text-white"
-                            }`}
-                          >
-                            ↑
-                          </button>
-                          <button
-                            onClick={() => moveLocationDown(index)}
-                            disabled={index === locations.length - 1}
-                            className={`w-8 h-8 rounded-full shadow-md flex items-center justify-center ${
-                              index === locations.length - 1
-                                ? "bg-gray-200 text-gray-400"
-                                : "bg-blue-500 text-white"
-                            }`}
-                          >
-                            ↓
-                          </button>
-                        </div>
-                      )}
-                      <SortableLocationCard
-                        key={`${location.id}-${location.animationKey || ""}`}
-                        id={location.id}
-                        location={location}
-                        image={images[location.id]}
-                        isMobile={isMobile}
-                        onClick={() =>
-                          !isMobileReorderMode && handleClickOpen(location)
-                        }
-                        isDraggingDisabled={
-                          sortOption !== "custom" ||
-                          (isMobile && isMobileReorderMode)
-                        }
-                        className="transition-transform duration-300"
-                        style={{
-                          animation: location.animateUp
-                            ? "slideUp 0.3s ease-in-out"
-                            : location.animateDown
-                            ? "slideDown 0.3s ease-in-out"
-                            : "",
-                        }}
-                      />
+                    <div
+                      key={`${location.id}-${sortOption}`}
+                      className={`location-item ${
+                        animatingItems[location.id] === "entering"
+                          ? "sort-entering"
+                          : animatingItems[location.id] === "exiting"
+                          ? "sort-exiting"
+                          : ""
+                      }`}
+                    >
+                      <div className="relative">
+                        {isMobileReorderMode && (
+                          <div className="absolute -top-2 inset-x-0 flex justify-center z-10 gap-2">
+                            {/* Reorder buttons */}
+                          </div>
+                        )}
+                        <SortableLocationCard
+                          id={location.id}
+                          location={location}
+                          image={images[location.id]}
+                          isMobile={isMobile}
+                          onClick={() =>
+                            !isMobileReorderMode && handleClickOpen(location)
+                          }
+                          isDraggingDisabled={
+                            sortOption !== "custom" ||
+                            (isMobile && isMobileReorderMode)
+                          }
+                          className="transition-transform duration-300"
+                          style={{
+                            animation: location.animateUp
+                              ? "slideUp 0.3s ease-in-out"
+                              : location.animateDown
+                              ? "slideDown 0.3s ease-in-out"
+                              : "",
+                          }}
+                        />
+                      </div>
                     </div>
                   ))}
                 </SortableContext>
