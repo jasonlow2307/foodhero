@@ -9,6 +9,9 @@ export interface Location {
   lon: number;
   lat: number;
   distance?: number;
+  sharedWith?: string[];
+  sharedBy?: string;
+  isShared?: boolean;
 }
 
 export interface Visit {

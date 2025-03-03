@@ -843,6 +843,7 @@ const WhatToEat = () => {
         open={isDialogOpen}
         onClose={handleDialogClose}
         selectedFood={selectedLocation}
+        setSelectedFood={setSelectedLocation}
         images={images}
         getBoundingBox={getBoundingBox}
         getMapCenter={getMapCenter}

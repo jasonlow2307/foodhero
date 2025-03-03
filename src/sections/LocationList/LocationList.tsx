@@ -1,11 +1,11 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import useFirestoreCollection from "../../firebase/useFirestoreCollection";
 import { useUnsplash } from "../../utils/useUnsplash";
 import { identifyFood } from "../../utils/identifyFood";
 import { doc, getDoc, updateDoc } from "firebase/firestore";
 import { db } from "../../firebase/firebase";
 import { Images, Visit } from "../../utils/models";
-import { Plus, ArrowUpDown, Filter, Check, Move, X } from "lucide-react";
+import { Plus, ArrowUpDown, Filter, Check, Move, X, Share } from "lucide-react";
 import LocationDialog from "../../components/LocationDialog";
 import {
   getBoundingBox,
@@ -33,7 +33,6 @@ import {
 import { CSS } from "@dnd-kit/utilities";
 import { useAuth } from "../../contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
-import { TransitionGroup, CSSTransition } from "react-transition-group";
 import React from "react";
 import { useTheme } from "../../contexts/ThemeContext";
 import Loader from "../../components/Loader";
@@ -134,6 +133,9 @@ const LocationList: React.FC<LocationListProps> = ({
   const [isMobileReorderMode, setIsMobileReorderMode] = useState(false);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [animatingItems, setAnimatingItems] = useState({});
+  const [filterMode, setFilterMode] = useState<"all" | "owned" | "shared">(
+    "all"
+  );
 
   const { darkMode } = useTheme();
 
@@ -313,10 +315,27 @@ const LocationList: React.FC<LocationListProps> = ({
   // Initialize locations from Firestore data
   useEffect(() => {
     if (locationsData.length > 0) {
-      const filteredLocations = locationsData.filter(
+      // Get locations owned by the current user
+      const ownedLocations = locationsData.filter(
         (location) => location.userId === currentUser.uid
       );
-      setLocations(getSortedLocations(filteredLocations));
+
+      // Get locations shared with the current user
+      const sharedLocations = locationsData
+        .filter(
+          (location) =>
+            location.userId !== currentUser.uid &&
+            location.sharedWith &&
+            location.sharedWith.includes(currentUser.uid)
+        )
+        .map((location) => ({
+          ...location,
+          isShared: true, // Mark as shared for UI differentiation
+        }));
+
+      // Combine and sort
+      const allLocations = [...ownedLocations, ...sharedLocations];
+      setLocations(getSortedLocations(allLocations));
     }
   }, [locationsData, sortOption]);
 
@@ -370,6 +389,20 @@ const LocationList: React.FC<LocationListProps> = ({
       setHasOrderChanged(false);
     }
   }, [hasOrderChanged, locations]);
+
+  // Modify the rendering of locations to apply filtering
+  const filteredLocations = useMemo(() => {
+    if (filterMode === "all") {
+      return locations;
+    } else if (filterMode === "owned") {
+      return locations.filter(
+        (location) => location.userId === currentUser.uid
+      );
+    } else {
+      // Shared with me
+      return locations.filter((location) => location.isShared);
+    }
+  }, [locations, filterMode, currentUser.uid]);
 
   // Add this loading animation component within your LocationList component
   const LoadingAnimation = () => (
@@ -730,6 +763,58 @@ const LocationList: React.FC<LocationListProps> = ({
               </div>
             )}
 
+            <div className="mb-6 flex justify-center">
+              <div
+                className={`inline-flex rounded-lg ${
+                  darkMode ? "bg-gray-800" : "bg-white"
+                } p-1 shadow`}
+              >
+                <button
+                  className={`px-4 py-2 rounded-md text-sm font-medium ${
+                    filterMode === "all"
+                      ? darkMode
+                        ? "bg-blue-900/50 text-blue-400"
+                        : "bg-blue-100 text-blue-700"
+                      : darkMode
+                      ? "text-gray-300 hover:bg-gray-700"
+                      : "text-gray-600 hover:bg-gray-100"
+                  }`}
+                  onClick={() => setFilterMode("all")}
+                >
+                  All
+                </button>
+                <button
+                  className={`px-4 py-2 rounded-md text-sm font-medium ${
+                    filterMode === "owned"
+                      ? darkMode
+                        ? "bg-blue-900/50 text-blue-400"
+                        : "bg-blue-100 text-blue-700"
+                      : darkMode
+                      ? "text-gray-300 hover:bg-gray-700"
+                      : "text-gray-600 hover:bg-gray-100"
+                  }`}
+                  onClick={() => setFilterMode("owned")}
+                >
+                  My Places
+                </button>
+                <button
+                  className={`px-4 py-2 rounded-md text-sm font-medium ${
+                    filterMode === "shared"
+                      ? darkMode
+                        ? "bg-blue-900/50 text-blue-400"
+                        : "bg-blue-100 text-blue-700"
+                      : darkMode
+                      ? "text-gray-300 hover:bg-gray-700"
+                      : "text-gray-600 hover:bg-gray-100"
+                  } flex items-center gap-1`}
+                  onClick={() => setFilterMode("shared")}
+                >
+                  <Share size={14} />
+                  Shared with me
+                </button>
+              </div>
+            </div>
+
             {/* Location Grid */}
             <DndContext
               sensors={sensors}
@@ -773,6 +858,7 @@ const LocationList: React.FC<LocationListProps> = ({
                   open={open}
                   onClose={handleClose}
                   selectedFood={selectedLocation}
+                  setSelectedFood={setSelectedLocation}
                   images={images}
                   getBoundingBox={getBoundingBox}
                   getMapCenter={getMapCenter}
@@ -782,10 +868,10 @@ const LocationList: React.FC<LocationListProps> = ({
                 />
                 {/* Sortable Location Cards with TransitionGroup */}
                 <SortableContext
-                  items={locations.map((loc) => loc.id)}
+                  items={filteredLocations.map((loc) => loc.id)}
                   strategy={rectSortingStrategy}
                 >
-                  {locations.map((location, index) => (
+                  {filteredLocations.map((location, index) => (
                     <div
                       key={`${location.id}-${sortOption}`}
                       className={`location-item ${
@@ -812,9 +898,12 @@ const LocationList: React.FC<LocationListProps> = ({
                           }
                           isDraggingDisabled={
                             sortOption !== "custom" ||
-                            (isMobile && isMobileReorderMode)
+                            (isMobile && isMobileReorderMode) ||
+                            location.isShared
                           }
-                          className="transition-transform duration-300"
+                          className={`transition-transform duration-300 ${
+                            location.isShared ? "shared-card" : ""
+                          }`}
                           style={{
                             animation: location.animateUp
                               ? "slideUp 0.3s ease-in-out"

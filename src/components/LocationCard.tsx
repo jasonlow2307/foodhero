@@ -1,5 +1,5 @@
 import React, { forwardRef } from "react";
-import { Clock, User, GripVertical } from "lucide-react";
+import { Clock, User, GripVertical, Share } from "lucide-react";
 import { Visit } from "../utils/models";
 import { getTimeAgo } from "../utils/timeUtil";
 import { useTheme } from "../contexts/ThemeContext";
@@ -136,6 +136,22 @@ const LocationCard = forwardRef<HTMLDivElement, LocationCardProps>(
               {location.name}
             </span>
           </div>
+
+          {location.isShared && (
+            <div className="absolute top-2 left-2 bg-blue-500/80 text-white text-xs px-2 py-1 rounded-md flex items-center">
+              <Share size={12} className="mr-1" />
+              Shared
+            </div>
+          )}
+          {location.isShared && location.sharedBy && (
+            <div
+              className={`mt-2 text-xs ${
+                darkMode ? "text-gray-400" : "text-gray-500"
+              }`}
+            >
+              Shared by {location.sharedByName || "a user"}
+            </div>
+          )}
 
           <div
             className={`flex items-center gap-2 ${
