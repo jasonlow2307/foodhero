@@ -623,48 +623,59 @@ const LocationList: React.FC<LocationListProps> = ({
                   >
                     <div className="py-1">
                       <button
-                        onClick={() => handleSortChange("custom")}
-                        className={`w-full text-left px-4 py-2 text-sm ${
-                          sortOption === "custom"
-                            ? "bg-gradient-to-r from-green-50 to-blue-50 text-blue-700 font-medium"
-                            : "text-gray-700 hover:bg-gray-50"
-                        }`}
-                      >
-                        Custom Order {sortOption === "custom" && "✓"}
-                        {sortOption === "custom" && (
-                          <span className="block text-xs text-gray-500 mt-1">
-                            Drag to reorder
-                          </span>
-                        )}
-                      </button>
-
-                      <button
                         onClick={() => handleSortChange("mostRecent")}
                         className={`w-full text-left px-4 py-2 text-sm ${
                           sortOption === "mostRecent"
-                            ? "bg-gradient-to-r from-green-50 to-blue-50 text-blue-700 font-medium"
+                            ? darkMode
+                              ? "bg-gradient-to-r from-green-900/70 to-blue-900/70 text-blue-400 font-medium"
+                              : "bg-gradient-to-r from-green-50 to-blue-50 text-blue-700 font-medium"
+                            : darkMode
+                            ? "text-gray-300 hover:bg-gray-700"
                             : "text-gray-700 hover:bg-gray-50"
                         }`}
                       >
-                        Most Recent Visit {sortOption === "mostRecent" && "✓"}
+                        Most Recent {sortOption === "mostRecent" && "✓"}
                       </button>
 
                       <button
                         onClick={() => handleSortChange("leastRecent")}
                         className={`w-full text-left px-4 py-2 text-sm ${
                           sortOption === "leastRecent"
-                            ? "bg-gradient-to-r from-green-50 to-blue-50 text-blue-700 font-medium"
+                            ? darkMode
+                              ? "bg-gradient-to-r from-green-900/70 to-blue-900/70 text-blue-400 font-medium"
+                              : "bg-gradient-to-r from-green-50 to-blue-50 text-blue-700 font-medium"
+                            : darkMode
+                            ? "text-gray-300 hover:bg-gray-700"
                             : "text-gray-700 hover:bg-gray-50"
                         }`}
                       >
-                        Least Recent Visit {sortOption === "leastRecent" && "✓"}
+                        Least Recent {sortOption === "leastRecent" && "✓"}
+                      </button>
+
+                      <button
+                        onClick={() => handleSortChange("custom")}
+                        className={`w-full text-left px-4 py-2 text-sm ${
+                          sortOption === "custom"
+                            ? darkMode
+                              ? "bg-gradient-to-r from-green-900/70 to-blue-900/70 text-blue-400 font-medium"
+                              : "bg-gradient-to-r from-green-50 to-blue-50 text-blue-700 font-medium"
+                            : darkMode
+                            ? "text-gray-300 hover:bg-gray-700"
+                            : "text-gray-700 hover:bg-gray-50"
+                        }`}
+                      >
+                        Custom Order {sortOption === "custom" && "✓"}
                       </button>
 
                       <button
                         onClick={() => handleSortChange("mostVisited")}
                         className={`w-full text-left px-4 py-2 text-sm ${
                           sortOption === "mostVisited"
-                            ? "bg-gradient-to-r from-green-50 to-blue-50 text-blue-700 font-medium"
+                            ? darkMode
+                              ? "bg-gradient-to-r from-green-900/70 to-blue-900/70 text-blue-400 font-medium"
+                              : "bg-gradient-to-r from-green-50 to-blue-50 text-blue-700 font-medium"
+                            : darkMode
+                            ? "text-gray-300 hover:bg-gray-700"
                             : "text-gray-700 hover:bg-gray-50"
                         }`}
                       >
