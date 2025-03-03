@@ -36,6 +36,7 @@ import { useNavigate } from "react-router-dom";
 import { TransitionGroup, CSSTransition } from "react-transition-group";
 import React from "react";
 import { useTheme } from "../../contexts/ThemeContext";
+import Loader from "../../components/Loader";
 
 interface LocationListProps {
   initialSelectedLocation?: any;
@@ -372,18 +373,17 @@ const LocationList: React.FC<LocationListProps> = ({
 
   // Add this loading animation component within your LocationList component
   const LoadingAnimation = () => (
-    <div className="min-h-screen flex flex-col items-center justify-center">
-      <div className="relative w-24 h-24 mb-8">
-        {/* Circular spinner */}
-        <div className="absolute inset-0 rounded-full border-t-4 border-green-400 animate-spin"></div>
-        <div className="absolute inset-0 rounded-full border-r-4 border-t-4 border-blue-500 animate-spin-slow"></div>
-
-        {/* Food icon in the middle */}
-        <div className="absolute inset-0 flex items-center justify-center text-3xl">
-          🍽️
-        </div>
-      </div>
-      <p className="text-gray-600 font-medium animate-pulse">
+    <div
+      className={`min-h-screen flex flex-col items-center justify-center ${
+        darkMode ? "bg-gray-900" : "bg-white"
+      }`}
+    >
+      <Loader />
+      <p
+        className={`mt-6 font-medium animate-pulse ${
+          darkMode ? "text-gray-300" : "text-gray-600"
+        }`}
+      >
         Loading your food journey...
       </p>
     </div>

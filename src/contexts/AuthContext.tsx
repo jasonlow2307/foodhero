@@ -8,6 +8,8 @@ import {
   browserLocalPersistence,
 } from "firebase/auth";
 import { auth } from "../firebase/firebase";
+import Loader from "../components/Loader";
+import { useTheme } from "./ThemeContext";
 
 interface AuthContextType {
   currentUser: FirebaseUser | null;
@@ -92,11 +94,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       {!loading ? (
         children
       ) : (
-        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-100 to-blue-100">
-          <div className="text-center">
-            <div className="w-16 h-16 mx-auto border-t-4 border-green-500 border-solid rounded-full animate-spin mb-4"></div>
-            <p className="text-gray-600">Loading your account...</p>
-          </div>
+        <div
+          className={`min-h-screen flex flex-col items-center justify-center bg-white
+          `}
+        >
+          <Loader />
+          <p
+            className={`mt-6 font-medium animate-pulse text-gray-600
+            `}
+          >
+            Loading your food journey...
+          </p>
         </div>
       )}
     </AuthContext.Provider>

@@ -164,14 +164,6 @@ const Header = () => {
               What To Eat
             </Link>
 
-            <div className="flex items-center">
-              <Switch
-                checked={darkMode}
-                onChange={toggleDarkMode}
-                className={`scale-60 mb-4`}
-              />
-            </div>
-
             {/* User profile dropdown */}
             <div className="relative ml-3">
               <button
@@ -198,7 +190,11 @@ const Header = () => {
               {/* Dropdown menu */}
               <div
                 ref={desktopDropdownRef}
-                className={`absolute right-0 mt-2 w-56 rounded-md shadow-lg bg-white dark:bg-gray-800 ring-1 ring-black ring-opacity-5 dark:ring-gray-700 transition-all duration-300 ease-in-out transform origin-top-right ${
+                className={`absolute right-0 mt-2 w-56 rounded-md shadow-lg ${
+                  darkMode ? "bg-gray-800" : "bg-white"
+                } ring-1 ${
+                  darkMode ? "ring-gray-700" : "ring-black ring-opacity-5"
+                } transition-all duration-300 ease-in-out transform origin-top-right ${
                   isUserDropdownOpen
                     ? "opacity-100 scale-100"
                     : "opacity-0 scale-95 pointer-events-none"
@@ -206,17 +202,54 @@ const Header = () => {
               >
                 <div className="py-1">
                   <div className="px-4 py-3">
-                    <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
+                    <p
+                      className={`text-sm font-medium ${
+                        darkMode ? "text-white" : "text-gray-900"
+                      } truncate`}
+                    >
                       {userName}
                     </p>
-                    <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
+                    <p
+                      className={`text-xs ${
+                        darkMode ? "text-gray-400" : "text-gray-500"
+                      } truncate`}
+                    >
                       {userEmail}
                     </p>
                   </div>
-                  <hr className="my-1 dark:border-gray-700" />
+                  <div className="px-3 py-1 rounded-md flex items-center justify-between">
+                    <div
+                      className={`flex items-center ${
+                        darkMode ? "text-gray-300" : "text-gray-600"
+                      }`}
+                    >
+                      {darkMode ? (
+                        <Moon size={18} className="mr-2 text-blue-400" />
+                      ) : (
+                        <Sun size={18} className="mr-2 text-amber-500" />
+                      )}
+                      <span className="whitespace-nowrap">
+                        {darkMode ? "Dark Mode" : "Light Mode"}
+                      </span>
+                    </div>
+                    <Switch
+                      checked={darkMode}
+                      onChange={toggleDarkMode}
+                      className="transform scale-50 ml-2 mb-2"
+                    />
+                  </div>
+                  <hr
+                    className={`my-1 ${
+                      darkMode ? "border-gray-700" : "border-gray-200"
+                    }`}
+                  />
                   <button
                     onClick={handleSignOut}
-                    className="w-full text-left px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 transition-colors flex items-center hover:cursor-pointer"
+                    className={`w-full text-left px-4 py-2 text-sm ${
+                      darkMode
+                        ? "text-red-400 hover:bg-red-900/30"
+                        : "text-red-600 hover:bg-red-50"
+                    } transition-colors flex items-center hover:cursor-pointer`}
                   >
                     <LogOut className="mr-2" size={16} />
                     Sign Out
@@ -414,10 +447,11 @@ const Header = () => {
         </div>
       </div>
 
-      {/* Optional: Add overlay when menu is open */}
       {isMenuOpen && (
         <div
-          className="fixed inset-0 bg-black opacity-80 md:hidden z-30"
+          className={`fixed inset-0 ${
+            darkMode ? "bg-black opacity-90" : "bg-black opacity-80"
+          } md:hidden z-30`}
           onClick={() => setIsMenuOpen(false)}
         ></div>
       )}

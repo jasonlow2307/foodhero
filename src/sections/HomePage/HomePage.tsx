@@ -17,6 +17,7 @@ import {
 import { Images } from "../../utils/models";
 import { useNavigate } from "react-router-dom";
 import { useTheme } from "../../contexts/ThemeContext";
+import Loader from "../../components/Loader";
 
 const HomePage = () => {
   const navigate = useNavigate();
@@ -175,15 +176,17 @@ const HomePage = () => {
 
   // Loading skeleton component
   const LoadingSkeleton = () => (
-    <div className="min-h-screen flex flex-col items-center justify-center">
-      <div className="relative w-24 h-24 mb-8">
-        <div className="absolute inset-0 rounded-full border-t-4 border-green-400 animate-spin"></div>
-        <div className="absolute inset-0 rounded-full border-r-4 border-transparent border-t-4 border-blue-500 animate-spin-slow"></div>
-        <div className="absolute inset-0 flex items-center justify-center text-3xl">
-          🍽️
-        </div>
-      </div>
-      <p className="text-gray-600 font-medium animate-pulse">
+    <div
+      className={`min-h-screen flex flex-col items-center justify-center ${
+        darkMode ? "bg-gray-900" : "bg-white"
+      }`}
+    >
+      <Loader />
+      <p
+        className={`mt-6 font-medium animate-pulse ${
+          darkMode ? "text-gray-300" : "text-gray-600"
+        }`}
+      >
         Loading your food journey...
       </p>
     </div>
