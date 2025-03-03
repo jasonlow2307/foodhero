@@ -5,7 +5,16 @@ import { identifyFood } from "../../utils/identifyFood";
 import { doc, getDoc, updateDoc } from "firebase/firestore";
 import { db } from "../../firebase/firebase";
 import { Images, Visit } from "../../utils/models";
-import { Plus, ArrowUpDown, Filter, Check, Move, X, Share } from "lucide-react";
+import {
+  Plus,
+  ArrowUpDown,
+  Filter,
+  Check,
+  Move,
+  X,
+  Share,
+  Search,
+} from "lucide-react";
 import LocationDialog from "../../components/LocationDialog";
 import {
   getBoundingBox,
@@ -37,6 +46,7 @@ import React from "react";
 import { useTheme } from "../../contexts/ThemeContext";
 import Loader from "../../components/Loader";
 import FilterRadio from "../../components/FilterRadio";
+import SearchSuggestions from "../../components/SearchSuggestions";
 
 interface LocationListProps {
   initialSelectedLocation?: any;
@@ -139,6 +149,7 @@ const LocationList: React.FC<LocationListProps> = ({
   );
   const [isFilterTransitioning, setIsFilterTransitioning] = useState(false);
   const [prevFilterMode, setPrevFilterMode] = useState(filterMode);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
 
   const { darkMode } = useTheme();
 
@@ -186,6 +197,10 @@ const LocationList: React.FC<LocationListProps> = ({
 
     return () => clearTimeout(timer);
   }, [locations]);
+
+  useEffect(() => {
+    console.log(selectedLocation, open);
+  }, [selectedLocation, open]);
 
   useEffect(() => {
     if (!isFilterTransitioning && !isTransitioning) {
@@ -854,6 +869,27 @@ const LocationList: React.FC<LocationListProps> = ({
             <div className="flex justify-center mb-6">
               <FilterRadio value={filterMode} onChange={handleFilterChange} />
             </div>
+            <div className="flex justify-center mb-6">
+              <div className="ml-3">
+                <button
+                  onClick={() => setIsSearchOpen(true)}
+                  className="flex items-center gap-2 px-4 py-2 bg-white/80 backdrop-blur-sm rounded-full shadow-sm hover:shadow-md transition-all duration-200 border border-gray-200 hover:cursor-pointer"
+                >
+                  <Search size={16} className="text-gray-600" />
+                  <span className="font-medium text-gray-700">Search</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Search modal */}
+            {isSearchOpen && (
+              <SearchSuggestions
+                locations={locations}
+                onClose={() => setIsSearchOpen(false)}
+                setSelectedLocation={setSelectedLocation}
+                setOpen={setOpen} // Pass the setOpen function
+              />
+            )}
 
             {/* Location Grid */}
             <DndContext
