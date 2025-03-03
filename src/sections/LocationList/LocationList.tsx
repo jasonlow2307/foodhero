@@ -449,8 +449,13 @@ const LocationList: React.FC<LocationListProps> = ({
       // Save the new order to Firestore
       const saveOrderToFirestore = async () => {
         try {
-          // Update each document with its new index
-          const updatePromises = locations.map((location, index) => {
+          // Filter to only update locations owned by the current user
+          const ownedLocations = locations.filter(
+            (location) => location.userId === currentUser.uid
+          );
+
+          // Update each owned document with its new index
+          const updatePromises = ownedLocations.map((location, index) => {
             const locationRef = doc(db, "locations", location.id);
             return updateDoc(locationRef, { index });
           });
@@ -538,6 +543,20 @@ const LocationList: React.FC<LocationListProps> = ({
 
     if (over && active.id !== over.id) {
       setLocations((items) => {
+        // Find the locations being dragged and dropped
+        const activeLocation = items.find((item) => item.id === active.id);
+        const overLocation = items.find((item) => item.id === over.id);
+
+        // Only allow reordering if both locations are owned by the current user
+        if (
+          !activeLocation?.userId ||
+          !overLocation?.userId ||
+          activeLocation.userId !== currentUser.uid ||
+          overLocation.userId !== currentUser.uid
+        ) {
+          return items;
+        }
+
         const oldIndex = items.findIndex((item) => item.id === active.id);
         const newIndex = items.findIndex((item) => item.id === over.id);
 
@@ -1104,10 +1123,12 @@ const LocationList: React.FC<LocationListProps> = ({
                           isDraggingDisabled={
                             sortOption !== "custom" ||
                             (isMobile && isMobileReorderMode) ||
-                            location.isShared
+                            location.userId !== currentUser.uid // Disable dragging for shared locations
                           }
                           className={`transition-transform duration-300 ${
-                            location.isShared ? "shared-card" : ""
+                            location.userId !== currentUser.uid
+                              ? "shared-card"
+                              : ""
                           }`}
                           style={{
                             animation: location.animateUp
