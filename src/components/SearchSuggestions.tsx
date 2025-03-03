@@ -263,15 +263,6 @@ const SearchSuggestions = ({
             </div>
           ) : null}
         </div>
-
-        <div className="text-center mt-4">
-          <button
-            onClick={() => navigate("/add")}
-            className="px-4 py-2 bg-gradient-to-r from-green-400 to-blue-500 text-white rounded-xl font-medium hover:opacity-90 transition-all duration-300 hover:cursor-pointer"
-          >
-            Add New Location
-          </button>
-        </div>
       </div>
     </div>
   );
