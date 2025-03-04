@@ -12,6 +12,7 @@ import {
   ChevronDown,
   Moon,
   Sun,
+  Users,
 } from "lucide-react";
 import { auth } from "../../firebase/firebase";
 import { signOut } from "firebase/auth";
@@ -163,7 +164,21 @@ const Header = () => {
               <Utensils className="mr-1" size={18} />
               What To Eat
             </Link>
-
+            <Link
+              to="/groups"
+              className={`px-3 py-2 rounded-md text-sm font-medium flex items-center transition-colors ${
+                isActive("/groups")
+                  ? darkMode
+                    ? "bg-gradient-to-r from-green-900 to-blue-900 text-blue-400"
+                    : "bg-gradient-to-r from-green-50 to-blue-50 text-blue-700"
+                  : darkMode
+                  ? "text-gray-300 hover:bg-gray-800"
+                  : "text-gray-600 hover:bg-gray-50"
+              }`}
+            >
+              <Users className="mr-1" size={18} />
+              Groups
+            </Link>
             {/* User profile dropdown */}
             <div className="relative ml-3">
               <button
@@ -459,6 +474,22 @@ const Header = () => {
           >
             <Utensils className="mr-2" size={18} />
             What To Eat
+          </Link>
+          <Link
+            to="/groups"
+            className={`px-3 py-2 rounded-md text-base font-medium flex items-center ${
+              isActive("/groups")
+                ? darkMode
+                  ? "bg-gradient-to-r from-green-900 to-blue-900 text-blue-400"
+                  : "bg-gradient-to-r from-green-50 to-blue-50 text-blue-700"
+                : darkMode
+                ? "text-gray-300 hover:bg-gray-700"
+                : "text-gray-600 hover:bg-gray-100"
+            }`}
+            onClick={() => setIsMenuOpen(false)}
+          >
+            <Users className="mr-2" size={18} />
+            Groups
           </Link>
         </div>
       </div>

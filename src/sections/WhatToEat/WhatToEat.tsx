@@ -4,6 +4,7 @@ import { useUnsplash } from "../../utils/useUnsplash";
 import { identifyFood } from "../../utils/identifyFood";
 import { Images, Visit } from "../../utils/models";
 import { Clock, User, Shuffle, Map } from "lucide-react";
+import Loader from "../../components/Loader";
 import LocationDialog from "../../components/LocationDialog";
 import {
   getBoundingBox,
@@ -459,18 +460,18 @@ const WhatToEat = () => {
   if (loading) {
     return (
       <div
-        className={`min-h-screen ${
-          darkMode
-            ? "bg-gradient-to-br from-gray-900 to-gray-800"
-            : "bg-gradient-to-br from-green-100 to-blue-100"
-        } flex items-center justify-center transition-colors duration-300`}
+        className={`min-h-screen flex flex-col items-center justify-center ${
+          darkMode ? "bg-gray-900" : "bg-white"
+        }`}
       >
-        <div className="text-center">
-          <div className="w-16 h-16 border-t-4 border-green-500 border-solid rounded-full animate-spin mx-auto mb-4"></div>
-          <p className={`${darkMode ? "text-gray-300" : "text-gray-600"}`}>
-            Loading your food options...
-          </p>
-        </div>
+        <Loader />
+        <p
+          className={`mt-6 font-medium animate-pulse ${
+            darkMode ? "text-gray-300" : "text-gray-600"
+          }`}
+        >
+          Loading your food options...
+        </p>
       </div>
     );
   }
