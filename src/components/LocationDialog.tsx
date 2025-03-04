@@ -67,6 +67,10 @@ const LocationDialog = ({
   const [sharingEmail, setSharingEmail] = useState("");
   const [sharedUsers, setSharedUsers] = useState([]);
 
+  const [shareType, setShareType] = useState("user"); // 'user' or 'group'
+  const [userGroups, setUserGroups] = useState([]);
+  const [selectedGroupId, setSelectedGroupId] = useState("");
+
   const { currentUser } = useAuth();
 
   const { darkMode } = useTheme();
@@ -104,45 +108,72 @@ const LocationDialog = ({
     }
   }, [selectedFood]);
 
+  useEffect(() => {
+    const fetchUserGroups = async () => {
+      if (!currentUser) return;
+
+      try {
+        const userDoc = await getDoc(doc(db, "users", currentUser.uid));
+        if (!userDoc.exists()) return;
+
+        const groupIds = userDoc.data().groups || [];
+        const groupsData = await Promise.all(
+          groupIds.map(async (groupId) => {
+            const groupDoc = await getDoc(doc(db, "groups", groupId));
+            return { id: groupDoc.id, ...groupDoc.data() };
+          })
+        );
+
+        setUserGroups(groupsData);
+      } catch (error) {
+        console.error("Error fetching user groups:", error);
+      }
+    };
+
+    fetchUserGroups();
+  }, [currentUser]);
+
   // Function to remove sharing permission
   const removeSharing = async (userId) => {
-    if (!selectedFood) return;
-
     try {
-      const userToRemove = sharedUsers.find((user) => user.id === userId);
-      const userEmail = userToRemove ? userToRemove.email : "user";
-
+      // Get fresh data before updating
       const locationRef = doc(db, "locations", selectedFood.id);
       const locationDoc = await getDoc(locationRef);
 
-      if (locationDoc.exists()) {
-        const currentData = locationDoc.data();
-        const updatedSharedWith = (currentData.sharedWith || []).filter(
-          (id) => id !== userId
-        );
-
-        await updateDoc(locationRef, {
-          sharedWith: updatedSharedWith,
-        });
-
-        // Update the local state
-        setSharedUsers((prev) => prev.filter((user) => user.id !== userId));
-
-        // Optional: Update the selected food object
-        setSelectedFood((prev) => ({
-          ...prev,
-          sharedWith: updatedSharedWith,
-        }));
-
-        // Show success message
-        enqueueSnackbar(`Sharing removed for ${userEmail}`, {
-          variant: "success",
-          anchorOrigin: { vertical: "bottom", horizontal: "center" },
-        });
+      if (!locationDoc.exists()) {
+        console.error("Location document not found");
+        return;
       }
+
+      const currentData = locationDoc.data();
+
+      // Remove the user from sharedWith array
+      const updatedSharedWith = (currentData.sharedWith || []).filter(
+        (id) => id !== userId
+      );
+
+      // Update Firestore
+      await updateDoc(locationRef, {
+        sharedWith: updatedSharedWith,
+      });
+
+      // Update local states in the correct order
+      setSelectedFood((prev) => ({
+        ...prev,
+        sharedWith: updatedSharedWith,
+      }));
+
+      setSharedUsers((prev) => prev.filter((user) => user.id !== userId));
+
+      // Show success message
+      const userToRemove = sharedUsers.find((user) => user.id === userId);
+      enqueueSnackbar(`Sharing removed for ${userToRemove?.email || "user"}`, {
+        variant: "success",
+        anchorOrigin: { vertical: "bottom", horizontal: "center" },
+      });
     } catch (error) {
       console.error("Error removing shared user:", error);
-      enqueueSnackbar("Failed to remove user sharing. Please try again.", {
+      enqueueSnackbar("Failed to remove user sharing", {
         variant: "error",
         anchorOrigin: { vertical: "bottom", horizontal: "center" },
       });
@@ -274,79 +305,126 @@ const LocationDialog = ({
 
   // Add this function to handle the sharing logic
   const handleShareLocation = async () => {
-    if (!sharingEmail || !selectedFood) return;
+    if (
+      (!sharingEmail && shareType === "user") ||
+      (!selectedGroupId && shareType === "group")
+    )
+      return;
 
     try {
-      // Check if user is trying to share with themselves
-      if (sharingEmail.toLowerCase() === currentUser.email.toLowerCase()) {
-        enqueueSnackbar("You can't share a location with yourself", {
-          variant: "warning",
-          anchorOrigin: { vertical: "bottom", horizontal: "center" },
-        });
-        return;
-      }
-
-      // First, find the user by email
-      const usersRef = collection(db, "users");
-      const q = query(usersRef, where("email", "==", sharingEmail));
-      const querySnapshot = await getDocs(q);
-
-      if (querySnapshot.empty) {
-        // No user found with that email
-        enqueueSnackbar("No user found with that email address", {
-          variant: "error",
-          anchorOrigin: { vertical: "bottom", horizontal: "center" },
-        });
-        return;
-      }
-
-      // Get the user ID
-      const targetUserId = querySnapshot.docs[0].id;
-
-      // Double-check we're not sharing with ourselves (by ID)
-      if (targetUserId === currentUser.uid) {
-        enqueueSnackbar("You can't share a location with yourself", {
-          variant: "warning",
-          anchorOrigin: { vertical: "bottom", horizontal: "center" },
-        });
-        return;
-      }
-
-      // Update the location document
-      const locationRef = doc(db, "locations", selectedFood.id);
-      const locationDoc = await getDoc(locationRef);
-
-      if (locationDoc.exists()) {
-        const currentData = locationDoc.data();
-        const currentSharedWith = currentData.sharedWith || [];
-
-        // Prevent duplicate sharing
-        if (currentSharedWith.includes(targetUserId)) {
-          // already shared
-          enqueueSnackbar(`Location already shared with ${sharingEmail}`, {
-            variant: "info",
+      if (shareType === "user") {
+        // Check if user is trying to share with themselves
+        if (sharingEmail.toLowerCase() === currentUser.email.toLowerCase()) {
+          enqueueSnackbar("You can't share a location with yourself", {
+            variant: "warning",
             anchorOrigin: { vertical: "bottom", horizontal: "center" },
           });
-          setIsShareMenuOpen(false);
-          setSharingEmail("");
           return;
         }
 
-        // Add the new user to sharedWith array
-        const updatedSharedWith = [...currentSharedWith, targetUserId];
+        // First, find the user by email
+        const usersRef = collection(db, "users");
+        const q = query(usersRef, where("email", "==", sharingEmail));
+        const querySnapshot = await getDocs(q);
 
-        await updateDoc(locationRef, {
-          sharedWith: updatedSharedWith,
-        });
+        if (querySnapshot.empty) {
+          // No user found with that email
+          enqueueSnackbar("No user found with that email address", {
+            variant: "error",
+            anchorOrigin: { vertical: "bottom", horizontal: "center" },
+          });
+          return;
+        }
 
-        setIsShareMenuOpen(false);
-        setSharingEmail("");
+        // Get the user ID
+        const targetUserId = querySnapshot.docs[0].id;
 
-        // Show success message
-        enqueueSnackbar(`Location shared successfully with ${sharingEmail}`, {
-          variant: "success",
-          anchorOrigin: { vertical: "bottom", horizontal: "center" },
-        });
+        // Double-check we're not sharing with ourselves (by ID)
+        if (targetUserId === currentUser.uid) {
+          enqueueSnackbar("You can't share a location with yourself", {
+            variant: "warning",
+            anchorOrigin: { vertical: "bottom", horizontal: "center" },
+          });
+          return;
+        }
+
+        // Update the location document
+        const locationRef = doc(db, "locations", selectedFood.id);
+        const locationDoc = await getDoc(locationRef);
+
+        if (locationDoc.exists()) {
+          const currentData = locationDoc.data();
+          const currentSharedWith = currentData.sharedWith || [];
+
+          // Prevent duplicate sharing
+          if (currentSharedWith.includes(targetUserId)) {
+            // already shared
+            enqueueSnackbar(`Location already shared with ${sharingEmail}`, {
+              variant: "info",
+              anchorOrigin: { vertical: "bottom", horizontal: "center" },
+            });
+            setIsShareMenuOpen(false);
+            setSharingEmail("");
+            return;
+          }
+
+          // Add the new user to sharedWith array
+          const updatedSharedWith = [...currentSharedWith, targetUserId];
+
+          await updateDoc(locationRef, {
+            sharedWith: updatedSharedWith,
+          });
+
+          setIsShareMenuOpen(false);
+          setSharingEmail("");
+
+          // Show success message
+          enqueueSnackbar(`Location shared successfully with ${sharingEmail}`, {
+            variant: "success",
+            anchorOrigin: { vertical: "bottom", horizontal: "center" },
+          });
+        }
+      } else {
+        // Group sharing logic
+        const groupDoc = await getDoc(doc(db, "groups", selectedGroupId));
+        if (!groupDoc.exists()) {
+          enqueueSnackbar("Group not found", { variant: "error" });
+          return;
+        }
+
+        const groupData = groupDoc.data();
+        // Filter out the current user from the members array
+        const memberIds = (groupData.members || []).filter(
+          (memberId) => memberId !== currentUser.uid
+        );
+
+        // Update location's sharedWith array with filtered group members
+        const locationRef = doc(db, "locations", selectedFood.id);
+        const locationDoc = await getDoc(locationRef);
+
+        if (locationDoc.exists()) {
+          const currentData = locationDoc.data();
+          const currentSharedWith = currentData.sharedWith || [];
+
+          // Add filtered group members who aren't already shared with
+          const newSharedWith = [
+            ...new Set([...currentSharedWith, ...memberIds]),
+          ];
+
+          await updateDoc(locationRef, {
+            sharedWith: newSharedWith,
+          });
+
+          setIsShareMenuOpen(false);
+          setSelectedGroupId("");
+
+          enqueueSnackbar(
+            `Location shared successfully with group ${groupData.displayName}`,
+            {
+              variant: "success",
+            }
+          );
+        }
       }
     } catch (error) {
       console.error("Error sharing location:", error);
@@ -434,77 +512,65 @@ const LocationDialog = ({
             Map
           </h2>
           <div className="mb-4 md:mb-6 rounded-2xl overflow-hidden h-48 md:h-64 bg-gray-100 dark:bg-gray-700">
-            <iframe
-              width="100%"
-              height="100%"
-              frameBorder="0"
-              scrolling="no"
-              src={`https://www.openstreetmap.org/export/embed.html?bbox=${getBoundingBox(
-                selectedFood.selectedLocation.boundingBox
-              )}&layer=mapnik&marker=${getMapCenter(
-                selectedFood.selectedLocation.boundingBox
-              )}`}
-              className="w-full h-full"
-              style={{
-                filter: darkMode
-                  ? "invert(0.85) hue-rotate(180deg) contrast(0.9) brightness(0.9)"
-                  : "none",
-              }}
-            ></iframe>
+            {selectedFood?.selectedLocation ? (
+              <iframe
+                width="100%"
+                height="100%"
+                frameBorder="0"
+                scrolling="no"
+                src={`https://www.openstreetmap.org/export/embed.html?bbox=${getBoundingBox(
+                  selectedFood.selectedLocation.boundingBox
+                )}&layer=mapnik&marker=${getMapCenter(
+                  selectedFood.selectedLocation.boundingBox
+                )}`}
+                className="w-full h-full"
+                style={{
+                  filter: darkMode
+                    ? "invert(0.85) hue-rotate(180deg) contrast(0.9) brightness(0.9)"
+                    : "none",
+                }}
+              ></iframe>
+            ) : (
+              <div className="w-full h-full flex items-center justify-center text-gray-500 dark:text-gray-400">
+                No location data available
+              </div>
+            )}
           </div>
 
           {/* Navigation Links */}
           <div className="flex flex-wrap justify-center gap-2 md:gap-4 mb-4 md:mb-6">
-            {selectedFood && selectedFood.userId === currentUser.uid && (
-              <button
-                onClick={() => setIsShareMenuOpen(true)}
-                className="flex items-center gap-2 cursor-pointer px-4 py-2 rounded-xl 
-      bg-gradient-to-r from-purple-500 to-indigo-600 text-white 
-      shadow-md hover:shadow-lg transform hover:-translate-y-0.5 
-      transition-all duration-300 hover:scale-105 font-medium"
-              >
-                <Share size={16} className="animate-pulse" />
-                Share
-              </button>
+            {selectedFood?.selectedLocation && (
+              <>
+                <a
+                  href={getGoogleMapsLink(
+                    selectedFood.selectedLocation.boundingBox
+                  )}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-xl ${
+                    darkMode
+                      ? "bg-blue-900/30 text-blue-400 hover:bg-blue-900/50"
+                      : "bg-blue-50 text-blue-600 hover:bg-blue-100"
+                  } transition-colors hover:cursor-pointer`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <Icon icon="simple-icons:googlemaps" width="20" height="20" />
+                  Google Maps
+                </a>
+                <a
+                  href={getWazeLink(selectedFood.selectedLocation.boundingBox)}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-xl ${
+                    darkMode
+                      ? "bg-blue-900/30 text-blue-400 hover:bg-blue-900/50"
+                      : "bg-blue-50 text-blue-600 hover:bg-blue-100"
+                  } transition-colors hover:cursor-pointer`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <Icon icon="mdi:waze" width="24" height="24" />
+                  Waze
+                </a>
+              </>
             )}
-            <a
-              href={getGoogleMapsLink(
-                selectedFood.selectedLocation.boundingBox
-              )}
-              className={`flex items-center gap-2 px-4 py-2 rounded-xl ${
-                darkMode
-                  ? "bg-blue-900/30 text-blue-400 hover:bg-blue-900/50"
-                  : "bg-blue-50 text-blue-600 hover:bg-blue-100"
-              } transition-colors`}
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              <Icon
-                icon="simple-icons:googlemaps"
-                width="20"
-                height="20"
-                className={darkMode ? "text-blue-400" : "text-blue-600"}
-              />
-              Google Maps
-            </a>
-            <a
-              href={getWazeLink(selectedFood.selectedLocation.boundingBox)}
-              className={`flex items-center gap-2 px-4 py-2 rounded-xl ${
-                darkMode
-                  ? "bg-blue-900/30 text-blue-400 hover:bg-blue-900/50"
-                  : "bg-blue-50 text-blue-600 hover:bg-blue-100"
-              } transition-colors`}
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              <Icon
-                icon="mdi:waze"
-                width="24"
-                height="24"
-                className={darkMode ? "text-blue-400" : "text-blue-600"}
-              />
-              Waze
-            </a>
           </div>
           {/* Add New Visit Button */}
           {!isAddingFood ? (
@@ -773,6 +839,130 @@ const LocationDialog = ({
 
             {selectedFood && selectedFood.userId === currentUser.uid && (
               <div className="mt-4 border-t pt-4 border-gray-200 dark:border-gray-700">
+                {selectedFood && selectedFood.userId === currentUser.uid && (
+                  <div className="flex justify-center mb-4">
+                    <button
+                      onClick={() => setIsShareMenuOpen((prev) => !prev)}
+                      className="flex items-center gap-2 cursor-pointer px-4 py-2 rounded-xl 
+              bg-gradient-to-r from-purple-500 to-indigo-600 text-white 
+              shadow-md hover:shadow-lg transform hover:-translate-y-0.5 
+              transition-all duration-300 hover:scale-105 font-medium"
+                    >
+                      <Share size={16} className="animate-pulse" />
+                      Share
+                    </button>
+                  </div>
+                )}
+                {/* Share Dialog */}
+                {isShareMenuOpen && (
+                  <div className="mb-4">
+                    <div className="flex gap-4 mb-4">
+                      <button
+                        onClick={() => setShareType("user")}
+                        className={`flex-1 py-2 px-4 rounded-xl transition-all duration-200 hover:cursor-pointer ${
+                          shareType === "user"
+                            ? darkMode
+                              ? "bg-blue-500/20 text-blue-400 border-2 border-blue-500/50"
+                              : "bg-blue-50 text-blue-600 border-2 border-blue-200"
+                            : darkMode
+                            ? "bg-gray-800 text-gray-400 border-2 border-gray-700"
+                            : "bg-gray-50 text-gray-600 border-2 border-gray-200"
+                        }`}
+                      >
+                        Share with User
+                      </button>
+                      <button
+                        onClick={() => setShareType("group")}
+                        className={`flex-1 py-2 px-4 rounded-xl transition-all duration-200 hover:cursor-pointer ${
+                          shareType === "group"
+                            ? darkMode
+                              ? "bg-green-500/20 text-green-400 border-2 border-green-500/50"
+                              : "bg-green-50 text-green-600 border-2 border-green-200"
+                            : darkMode
+                            ? "bg-gray-800 text-gray-400 border-2 border-gray-700"
+                            : "bg-gray-50 text-gray-600 border-2 border-gray-200"
+                        }`}
+                      >
+                        Share with Group
+                      </button>
+                    </div>
+
+                    {shareType === "user" ? (
+                      <div>
+                        <label
+                          htmlFor="share-email"
+                          className={`block text-sm font-medium mb-2 ${
+                            darkMode ? "text-gray-300" : "text-gray-700"
+                          }`}
+                        >
+                          Enter email to share with
+                        </label>
+                        <input
+                          id="share-email"
+                          type="email"
+                          value={sharingEmail}
+                          onChange={(e) => setSharingEmail(e.target.value)}
+                          className={`w-full px-4 py-2 rounded-lg ${
+                            darkMode
+                              ? "bg-gray-700 text-white border-gray-600"
+                              : "bg-white text-gray-800 border-gray-300"
+                          } border focus:outline-none focus:ring-2 focus:ring-blue-500`}
+                          placeholder="friend@example.com"
+                        />
+                      </div>
+                    ) : (
+                      <div>
+                        <label
+                          htmlFor="share-group"
+                          className={`block text-sm font-medium mb-2 ${
+                            darkMode ? "text-gray-300" : "text-gray-700"
+                          }`}
+                        >
+                          Select group to share with
+                        </label>
+                        <select
+                          id="share-group"
+                          value={selectedGroupId}
+                          onChange={(e) => setSelectedGroupId(e.target.value)}
+                          className={`w-full px-4 py-2 rounded-lg ${
+                            darkMode
+                              ? "bg-gray-700 text-white border-gray-600"
+                              : "bg-white text-gray-800 border-gray-300"
+                          } border focus:outline-none focus:ring-2 focus:ring-blue-500 hover:cursor-pointer`}
+                          required
+                        >
+                          <option value="" disabled>
+                            Select a group
+                          </option>
+                          {userGroups.map((group) => (
+                            <option key={group.id} value={group.id}>
+                              {group.displayName}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    )}
+                    <div className="mt-4 flex gap-3">
+                      <button
+                        onClick={() => setIsShareMenuOpen(false)}
+                        className={`flex-1 py-2 px-4 rounded-lg ${
+                          darkMode
+                            ? "bg-gray-700 hover:bg-gray-600 text-gray-300"
+                            : "bg-gray-100 hover:bg-gray-200 text-gray-600"
+                        } transition-all duration-200 hover:cursor-pointer`}
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        onClick={handleShareLocation}
+                        className="flex-1 py-2 px-4 rounded-lg bg-gradient-to-r from-green-500 to-blue-500 
+    text-white font-medium hover:opacity-90 transition-all duration-200 hover:cursor-pointer"
+                      >
+                        Share
+                      </button>
+                    </div>
+                  </div>
+                )}
                 <h3
                   className={`text-sm font-medium mb-4 ${
                     darkMode ? "text-gray-300" : "text-gray-700"
@@ -780,7 +970,6 @@ const LocationDialog = ({
                 >
                   Shared with
                 </h3>
-
                 {selectedFood.sharedWith &&
                 selectedFood.sharedWith.length > 0 ? (
                   <div className="space-y-2">
@@ -828,73 +1017,6 @@ const LocationDialog = ({
                     Not shared with anyone yet
                   </p>
                 )}
-              </div>
-            )}
-
-            {/* Share Dialog */}
-            {isShareMenuOpen && (
-              <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-                <div
-                  className={`m-4 p-6 rounded-2xl shadow-lg ${
-                    darkMode ? "bg-gray-800" : "bg-white"
-                  } max-w-md w-full`}
-                >
-                  <h3
-                    className={`text-xl font-bold mb-4 ${
-                      darkMode ? "text-white" : "text-gray-800"
-                    }`}
-                  >
-                    Share this location
-                  </h3>
-
-                  {/* User email input */}
-                  <div className="mb-4">
-                    <label
-                      htmlFor="share-email"
-                      className={`block text-sm font-medium mb-2 ${
-                        darkMode ? "text-gray-300" : "text-gray-700"
-                      }`}
-                    >
-                      Enter email to share with
-                    </label>
-                    <input
-                      id="share-email"
-                      type="email"
-                      value={sharingEmail}
-                      onChange={(e) => setSharingEmail(e.target.value)}
-                      className={`w-full px-4 py-2 rounded-lg ${
-                        darkMode
-                          ? "bg-gray-700 text-white border-gray-600"
-                          : "bg-white text-gray-800 border-gray-300"
-                      } border focus:outline-none focus:ring-2 focus:ring-blue-500`}
-                      placeholder="friend@example.com"
-                    />
-                  </div>
-
-                  {/* Action buttons */}
-                  <div className="flex justify-end gap-2">
-                    <button
-                      onClick={() => {
-                        setIsShareMenuOpen(false);
-                        setSharingEmail("");
-                      }}
-                      className={`px-4 py-2 rounded-xl transition-colors hover:cursor-pointer ${
-                        darkMode
-                          ? "border border-gray-700 text-gray-300 hover:bg-gray-700"
-                          : "border border-gray-200 text-gray-600 hover:bg-gray-50"
-                      }`}
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      onClick={handleShareLocation}
-                      disabled={!sharingEmail}
-                      className={`px-4 py-2 rounded-xl bg-gradient-to-r from-green-400 to-blue-500 text-white hover:opacity-90 transition-opacity hover:cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed`}
-                    >
-                      <span>Share</span>
-                    </button>
-                  </div>
-                </div>
               </div>
             )}
           </div>
