@@ -24,7 +24,7 @@ const GroupCard = ({ group }) => {
     >
       <div className="p-5">
         <div className="flex items-center justify-between mb-3">
-          <h3 className="text-xl font-semibold">{group.name}</h3>
+          <h3 className="text-xl font-semibold">{group.displayName}</h3>
           {isAdmin && (
             <div className="flex items-center bg-amber-100 text-amber-600 px-2 py-1 rounded-full">
               <Crown size={14} className="mr-1" />
