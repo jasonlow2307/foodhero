@@ -8,6 +8,9 @@ import {
   updateDoc,
   arrayUnion,
   doc,
+  getDocs,
+  query,
+  where,
 } from "firebase/firestore";
 import { X } from "lucide-react";
 import { generateGroupCode } from "../utils/groupUtils";
@@ -35,12 +38,25 @@ const CreateGroup = ({ onClose, onGroupCreated }) => {
       setIsLoading(true);
       setError("");
 
+      const groupsQuery = query(
+        collection(db, "groups"),
+        where("createdBy", "==", currentUser.uid),
+        where("name", "==", name.trim().toLowerCase())
+      );
+
+      const existingGroups = await getDocs(groupsQuery);
+      if (!existingGroups.empty) {
+        setError("You already have a group with this name");
+        return;
+      }
+
       // Generate a unique 6-letter code for the group
       const groupCode = generateGroupCode();
 
       // Create the group document
       const groupRef = await addDoc(collection(db, "groups"), {
-        name: name.trim(),
+        name: name.trim().toLowerCase(), // Store in lowercase
+        displayName: name.trim(),
         description: description.trim(),
         code: groupCode,
         createdBy: currentUser.uid,
@@ -56,7 +72,8 @@ const CreateGroup = ({ onClose, onGroupCreated }) => {
       // Get the created group with its ID
       const newGroup = {
         id: groupRef.id,
-        name: name.trim(),
+        name: name.trim().toLowerCase(), // Lowercase for comparisons
+        displayName: name.trim(),
         description: description.trim(),
         code: groupCode,
         createdBy: currentUser.uid,

@@ -176,7 +176,7 @@ const GroupMembers = () => {
           >
             <ArrowLeft size={20} />
           </button>
-          <h1 className="text-2xl font-bold">{group.name} - Members</h1>
+          <h1 className="text-2xl font-bold">{group.displayName} - Members</h1>
         </div>
 
         {/* Group Code Section */}
