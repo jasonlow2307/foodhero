@@ -55,25 +55,29 @@ const JoinGroup = ({ onClose, onGroupJoined }) => {
         return;
       }
 
-      // Add user to the group's members
+      // Create a new members array with the current user added
+      const updatedMembers = [...(groupData.members || []), currentUser.uid];
+
+      // Update group document with new members array
       await updateDoc(doc(db, "groups", groupDoc.id), {
-        members: arrayUnion(currentUser.uid),
+        members: updatedMembers,
       });
 
-      // Add group to user's groups
+      // Add group to user's groups array
       await updateDoc(doc(db, "users", currentUser.uid), {
         groups: arrayUnion(groupDoc.id),
       });
 
-      // Get the complete group data to return
+      // Get the updated group data
       const updatedGroupDoc = await getDoc(doc(db, "groups", groupDoc.id));
       const updatedGroupData = updatedGroupDoc.data();
 
-      // Call the callback with the joined group
       onGroupJoined({
         id: groupDoc.id,
         ...updatedGroupData,
       });
+
+      onClose(); // Close the modal after successful join
     } catch (error) {
       console.error("Error joining group:", error);
       setError("Failed to join group. Please try again.");
@@ -120,12 +124,12 @@ const JoinGroup = ({ onClose, onGroupJoined }) => {
               id="groupCode"
               value={groupCode}
               onChange={(e) => setGroupCode(e.target.value.toUpperCase())}
-              className={`w-full p-3 rounded-lg uppercase ${
+              className={`w-full p-3 rounded-lg [&:not(:placeholder-shown)]:uppercase ${
                 darkMode
                   ? "bg-gray-700 border-gray-600 text-white"
                   : "bg-white border-gray-300 text-gray-700"
               } border focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all`}
-              placeholder="Enter 6-letter group code"
+              placeholder="Enter 6-letter code"
               maxLength={6}
               required
             />
