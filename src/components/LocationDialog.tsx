@@ -119,12 +119,23 @@ const LocationDialog = ({
         const groupIds = userDoc.data().groups || [];
         const groupsData = await Promise.all(
           groupIds.map(async (groupId) => {
-            const groupDoc = await getDoc(doc(db, "groups", groupId));
-            return { id: groupDoc.id, ...groupDoc.data() };
+            try {
+              const groupDoc = await getDoc(doc(db, "groups", groupId));
+              // Only return groups that exist and have required fields
+              if (groupDoc.exists() && groupDoc.data().displayName) {
+                return { id: groupDoc.id, ...groupDoc.data() };
+              }
+              return null;
+            } catch (error) {
+              console.error(`Error fetching group ${groupId}:`, error);
+              return null;
+            }
           })
         );
 
-        setUserGroups(groupsData);
+        // Filter out any null values from failed or invalid groups
+        const validGroups = groupsData.filter((group) => group !== null);
+        setUserGroups(validGroups);
       } catch (error) {
         console.error("Error fetching user groups:", error);
       }
@@ -132,6 +143,10 @@ const LocationDialog = ({
 
     fetchUserGroups();
   }, [currentUser]);
+
+  useEffect(() => {
+    console.log("USERRGROUPS", userGroups);
+  }, [userGroups]);
 
   // Function to remove sharing permission
   const removeSharing = async (userId) => {
