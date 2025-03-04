@@ -151,7 +151,6 @@ const LocationDialog = ({
   // Function to remove sharing permission
   const removeSharing = async (userId) => {
     try {
-      // Get fresh data before updating
       const locationRef = doc(db, "locations", selectedFood.id);
       const locationDoc = await getDoc(locationRef);
 
@@ -161,18 +160,16 @@ const LocationDialog = ({
       }
 
       const currentData = locationDoc.data();
-
-      // Remove the user from sharedWith array
       const updatedSharedWith = (currentData.sharedWith || []).filter(
         (id) => id !== userId
       );
 
-      // Update Firestore
+      // Update Firestore first
       await updateDoc(locationRef, {
         sharedWith: updatedSharedWith,
       });
 
-      // Update local states in the correct order
+      // Update local states
       setSelectedFood((prev) => ({
         ...prev,
         sharedWith: updatedSharedWith,
@@ -186,6 +183,14 @@ const LocationDialog = ({
         variant: "success",
         anchorOrigin: { vertical: "bottom", horizontal: "center" },
       });
+
+      // Close the dialog if no more shared users
+      if (updatedSharedWith.length === 0) {
+        // Let the state updates complete before navigating
+        setTimeout(() => {
+          onClose(); // This should clear the URL params
+        }, 100);
+      }
     } catch (error) {
       console.error("Error removing shared user:", error);
       enqueueSnackbar("Failed to remove user sharing", {
