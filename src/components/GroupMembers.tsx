@@ -12,6 +12,8 @@ import {
 } from "firebase/firestore";
 import { ArrowLeft, User, Crown, LogOut, Trash2 } from "lucide-react";
 import Loader from "./Loader";
+import ConfirmDialog from "./ConfirmDialog";
+import { useSnackbar } from "notistack";
 
 const GroupMembers = () => {
   const { groupId } = useParams();
@@ -23,6 +25,9 @@ const GroupMembers = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
   const [copySuccess, setCopySuccess] = useState(false);
+  const [showLeaveDialog, setShowLeaveDialog] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const { enqueueSnackbar } = useSnackbar();
 
   useEffect(() => {
     const fetchGroupAndMembers = async () => {
@@ -70,10 +75,6 @@ const GroupMembers = () => {
   }, [groupId]);
 
   const handleLeaveGroup = async () => {
-    if (!window.confirm("Are you sure you want to leave this group?")) {
-      return;
-    }
-
     try {
       // Remove user from the group's members
       await updateDoc(doc(db, "groups", groupId), {
@@ -85,22 +86,31 @@ const GroupMembers = () => {
         groups: arrayRemove(groupId),
       });
 
+      enqueueSnackbar("Successfully left the group", {
+        variant: "success",
+        autoHideDuration: 3000,
+        anchorOrigin: {
+          vertical: "bottom",
+          horizontal: "center",
+        },
+      });
+
       navigate("/groups");
     } catch (error) {
       console.error("Error leaving group:", error);
+      enqueueSnackbar("Failed to leave group", {
+        variant: "error",
+        autoHideDuration: 3000,
+        anchorOrigin: {
+          vertical: "bottom",
+          horizontal: "center",
+        },
+      });
       setError("Failed to leave group");
     }
   };
 
   const handleDeleteGroup = async () => {
-    if (
-      !window.confirm(
-        "Are you sure you want to delete this group? This action cannot be undone."
-      )
-    ) {
-      return;
-    }
-
     try {
       // Remove group from all members' groups array
       const removePromises = members.map((member) =>
@@ -110,10 +120,7 @@ const GroupMembers = () => {
       );
 
       await Promise.all(removePromises);
-
-      // Delete the group document
       await deleteDoc(doc(db, "groups", groupId));
-
       navigate("/groups");
     } catch (error) {
       console.error("Error deleting group:", error);
@@ -348,7 +355,7 @@ const GroupMembers = () => {
         <div className="max-w-7xl">
           {currentUser.uid === group.createdBy ? (
             <button
-              onClick={handleDeleteGroup}
+              onClick={() => setShowDeleteDialog(true)}
               className={`w-full p-3 rounded-xl border ${
                 darkMode
                   ? "border-red-500/50 text-red-400 hover:bg-red-500/10"
@@ -360,7 +367,7 @@ const GroupMembers = () => {
             </button>
           ) : (
             <button
-              onClick={handleLeaveGroup}
+              onClick={() => setShowLeaveDialog(true)}
               className="w-full p-3 rounded-xl border border-red-500 text-red-500 font-medium hover:bg-red-50 transition-all hover:cursor-pointer flex items-center justify-center"
             >
               <LogOut size={18} className="mr-2" />
@@ -369,6 +376,27 @@ const GroupMembers = () => {
           )}
         </div>
       </div>
+      <ConfirmDialog
+        isOpen={showLeaveDialog}
+        onClose={() => setShowLeaveDialog(false)}
+        onConfirm={handleLeaveGroup}
+        title="Leave Group"
+        message="Are you sure you want to leave this group? You'll need a new invitation code to rejoin."
+        confirmText="Leave Group"
+        cancelText="Cancel"
+        type="warning"
+      />
+
+      <ConfirmDialog
+        isOpen={showDeleteDialog}
+        onClose={() => setShowDeleteDialog(false)}
+        onConfirm={handleDeleteGroup}
+        title="Delete Group"
+        message="Are you sure you want to delete this group? This action cannot be undone and all members will be removed."
+        confirmText="Delete Group"
+        cancelText="Cancel"
+        type="danger"
+      />
     </div>
   );
 };
