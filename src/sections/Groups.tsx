@@ -173,7 +173,6 @@ const Groups = () => {
           onClose={() => setShowCreateModal(false)}
           onGroupCreated={(newGroup) => {
             setUserGroups((prev) => [...prev, newGroup]);
-            setShowCreateModal(false);
           }}
         />
       )}
