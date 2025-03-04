@@ -18,6 +18,8 @@ import Footer from "./sections/Footer/Footer";
 import AuthPage from "./sections/AuthPage/AuthPage";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import { ThemeProvider } from "./contexts/ThemeContext";
+import Groups from "./sections/Groups";
+import GroupMembers from "./components/GroupMembers";
 
 // Protected Route component to handle auth redirects
 const ProtectedRoute = ({ children }) => {
@@ -98,6 +100,24 @@ const AppContent = () => {
                 element={
                   <ProtectedRoute>
                     <WhatToEat />
+                  </ProtectedRoute>
+                }
+              />
+
+              <Route
+                path="/groups"
+                element={
+                  <ProtectedRoute>
+                    <Groups />
+                  </ProtectedRoute>
+                }
+              />
+
+              <Route
+                path="/groups/:groupId/members"
+                element={
+                  <ProtectedRoute>
+                    <GroupMembers />
                   </ProtectedRoute>
                 }
               />
