@@ -13,6 +13,7 @@ import {
   getDoc,
 } from "firebase/firestore";
 import { X } from "lucide-react";
+import { useSnackbar } from "notistack";
 
 const JoinGroup = ({ onClose, onGroupJoined }) => {
   const { currentUser } = useAuth();
@@ -20,6 +21,7 @@ const JoinGroup = ({ onClose, onGroupJoined }) => {
   const [groupCode, setGroupCode] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
+  const { enqueueSnackbar } = useSnackbar();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -77,9 +79,26 @@ const JoinGroup = ({ onClose, onGroupJoined }) => {
         ...updatedGroupData,
       });
 
+      enqueueSnackbar("Successfully joined the group!", {
+        variant: "success",
+        autoHideDuration: 3000,
+        anchorOrigin: {
+          vertical: "bottom",
+          horizontal: "center",
+        },
+      });
+
       onClose(); // Close the modal after successful join
     } catch (error) {
       console.error("Error joining group:", error);
+      enqueueSnackbar("Failed to join group. Please try again.", {
+        variant: "error",
+        autoHideDuration: 3000,
+        anchorOrigin: {
+          vertical: "bottom",
+          horizontal: "center",
+        },
+      });
       setError("Failed to join group. Please try again.");
     } finally {
       setIsLoading(false);
