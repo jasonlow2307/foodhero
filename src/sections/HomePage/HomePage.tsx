@@ -21,9 +21,15 @@ import Loader from "../../components/Loader";
 import { useAuth } from "../../contexts/AuthContext";
 
 const HomePage = () => {
+  const { currentUser } = useAuth();
   const navigate = useNavigate();
   const { darkMode } = useTheme();
   const { data: locations, loading } = useFirestoreCollection("locations");
+  // Filter to only include user's own locations
+  const ownLocations = locations.filter(
+    (loc) => loc.userId === currentUser.uid
+  );
+
   const [images, setImages] = useState<Images>({});
   const { fetchUnsplashImage } = useUnsplash();
   const [stats, setStats] = useState({
@@ -41,8 +47,6 @@ const HomePage = () => {
   // Add these state variables to the component
   const [activeSlideIndex, setActiveSlideIndex] = useState(0);
   const carouselRef = useRef(null);
-
-  const { currentUser } = useAuth();
 
   // Update the effect that tracks horizontal scroll position
   useEffect(() => {
@@ -100,7 +104,7 @@ const HomePage = () => {
   useEffect(() => {
     const fetchImages = async () => {
       // First, sort locations by most recent visit
-      const sortedLocations = [...locations].sort((a, b) => {
+      const sortedLocations = [...ownLocations].sort((a, b) => {
         // Get the latest visit date from each location
         const getLatestVisitTimestamp = (loc) => {
           if (!loc.visits || loc.visits.length === 0) return 0;
@@ -174,11 +178,6 @@ const HomePage = () => {
   // Calculate stats
   useEffect(() => {
     if (locations.length > 0) {
-      // Filter to only include user's own locations
-      const ownLocations = locations.filter(
-        (loc) => loc.userId === currentUser.uid
-      );
-
       let perfectCount = 0;
       let totalVisits = 0;
       let locationVisits = new Map();
@@ -509,7 +508,7 @@ const HomePage = () => {
             className="flex overflow-x-auto pb-20 sm:pb-0 sm:grid sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 hide-scrollbar snap-x snap-mandatory"
             style={{ padding: 20 }}
           >
-            {locations
+            {ownLocations
               .sort((a, b) => {
                 // Get latest visit date
                 const aLatestVisit = a.visits.reduce(
@@ -553,7 +552,9 @@ const HomePage = () => {
                     e.currentTarget.style.boxShadow =
                       "0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.05)";
                   }}
-                  onClick={() => navigate("/list")}
+                  onClick={() => {
+                    navigate("/list?id=" + location.id);
+                  }}
                 >
                   <div className="h-36 sm:h-48 rounded-2xl bg-gray-100 mb-3 sm:mb-4 overflow-hidden">
                     <img
