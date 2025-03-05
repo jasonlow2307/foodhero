@@ -1183,7 +1183,11 @@ const LocationDialog = ({
                   {affectedGroups.map((group) => (
                     <span
                       key={group.id}
-                      className="inline-block px-3 py-1 mx-1 my-1 bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 rounded-full text-xs"
+                      className={`inline-block px-3 py-1 mx-1 my-1 rounded-full text-xs ${
+                        darkMode
+                          ? "bg-blue-900/30 text-blue-300"
+                          : "bg-blue-50 text-blue-700 border border-blue-200"
+                      }`}
                     >
                       {group.displayName}
                     </span>
@@ -1193,17 +1197,21 @@ const LocationDialog = ({
                 <div className="flex flex-col sm:flex-row gap-3 mt-6">
                   <button
                     onClick={() => removeSharing(userToRemove, false)}
-                    className={`flex-1 py-2 px-4 rounded-lg border ${
+                    className={`flex-1 py-2 px-4 rounded-lg text-sm transition-all duration-200 hover:cursor-pointer ${
                       darkMode
-                        ? "border-gray-700 bg-gray-700 hover:bg-gray-600"
-                        : "bg-gray-100 hover:bg-gray-200"
-                    } transition-all duration-200 hover:cursor-pointer`}
+                        ? "bg-gray-700 hover:bg-gray-600 text-gray-200 border border-gray-600"
+                        : "bg-white hover:bg-gray-50 text-gray-700 border border-gray-300 hover:border-gray-400"
+                    }`}
                   >
                     Remove just this user
                   </button>
                   <button
                     onClick={() => removeSharing(userToRemove, true)}
-                    className="flex-1 py-2 px-4 rounded-lg bg-red-600 hover:bg-red-700 text-white transition-all duration-200 hover:cursor-pointer"
+                    className={`flex-1 py-2 px-4 rounded-lg text-sm transition-all duration-200 hover:cursor-pointer ${
+                      darkMode
+                        ? "bg-rose-900/30 hover:bg-rose-900/50 text-rose-300 border border-rose-800"
+                        : "bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 hover:border-rose-300"
+                    }`}
                   >
                     Remove from entire{" "}
                     {affectedGroups.length === 1 ? "group" : "groups"}
@@ -1216,7 +1224,11 @@ const LocationDialog = ({
                     setUserToRemove(null);
                     setAffectedGroups([]);
                   }}
-                  className="w-full mt-3 py-2 px-4 rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-200 hover:cursor-pointer"
+                  className={`w-full mt-3 py-2 px-4 text-sm rounded-lg transition-all duration-200 hover:cursor-pointer ${
+                    darkMode
+                      ? "bg-gray-800 hover:bg-gray-700 text-gray-300 border border-gray-700"
+                      : "bg-gray-50 hover:bg-gray-100 text-gray-600 border border-gray-200 hover:border-gray-300"
+                  }`}
                 >
                   Cancel
                 </button>
