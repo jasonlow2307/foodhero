@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   addDoc,
+  arrayUnion,
   collection,
   doc,
   getDoc,
@@ -70,6 +71,10 @@ const LocationDialog = ({
   const [shareType, setShareType] = useState("user"); // 'user' or 'group'
   const [userGroups, setUserGroups] = useState([]);
   const [selectedGroupId, setSelectedGroupId] = useState("");
+
+  const [showGroupRemoveDialog, setShowGroupRemoveDialog] = useState(false);
+  const [userToRemove, setUserToRemove] = useState(null);
+  const [affectedGroups, setAffectedGroups] = useState([]);
 
   const { currentUser } = useAuth();
 
@@ -144,12 +149,59 @@ const LocationDialog = ({
     fetchUserGroups();
   }, [currentUser]);
 
-  useEffect(() => {
-    console.log("USERRGROUPS", userGroups);
-  }, [userGroups]);
+  const handleRemoveSharingClick = async (userId) => {
+    try {
+      // Check if the user is part of any groups that have this location shared
+      // With this more effective approach
+      const groupsQuery = query(collection(db, "groups"));
 
-  // Function to remove sharing permission
-  const removeSharing = async (userId) => {
+      const groupsSnapshot = await getDocs(groupsQuery);
+      const userGroups = [];
+
+      // Filter manually in JavaScript
+      groupsSnapshot.forEach((groupDoc) => {
+        const groupData = groupDoc.data();
+        const sharedLocations = groupData.sharedLocations || [];
+
+        // Check if any location in this group matches our criteria
+        const hasSharedLocation = sharedLocations.some(
+          (loc) =>
+            loc.locationId === selectedFood.id &&
+            loc.sharedBy === currentUser.uid
+        );
+
+        if (
+          hasSharedLocation &&
+          groupData.members &&
+          groupData.members.includes(userId)
+        ) {
+          userGroups.push({
+            id: groupDoc.id,
+            displayName: groupData.displayName,
+          });
+        }
+      });
+
+      if (userGroups.length > 0) {
+        // Show dialog for confirmation
+        setUserToRemove(userId);
+        setAffectedGroups(userGroups);
+        setShowGroupRemoveDialog(true);
+      } else {
+        // If not in any groups, proceed with normal removal
+        await removeSharing(userId, false);
+      }
+    } catch (error) {
+      console.error("Error checking group membership:", error);
+      enqueueSnackbar("Failed to remove sharing", {
+        variant: "error",
+        anchorOrigin: { vertical: "bottom", horizontal: "center" },
+      });
+    }
+  };
+
+  // Update the removeSharing function to handle group removal
+  const removeSharing = async (userId, removeFromGroups = false) => {
     try {
       const locationRef = doc(db, "locations", selectedFood.id);
       const locationDoc = await getDoc(locationRef);
@@ -164,10 +216,51 @@ const LocationDialog = ({
         (id) => id !== userId
       );
 
-      // Update Firestore first
-      await updateDoc(locationRef, {
-        sharedWith: updatedSharedWith,
-      });
+      // Group updates handling
+      const groupUpdates = [];
+
+      if (removeFromGroups) {
+        // Get all groups that have this location shared
+        const groupsQuery = query(collection(db, "groups"));
+        const groupsSnapshot = await getDocs(groupsQuery);
+
+        groupsSnapshot.forEach((groupDoc) => {
+          const groupData = groupDoc.data();
+          const sharedLocations = groupData.sharedLocations || [];
+
+          // Check if this group has the location shared
+          const hasSharedLocation = sharedLocations.some(
+            (loc) =>
+              loc.locationId === selectedFood.id &&
+              loc.sharedBy === currentUser.uid
+          );
+
+          // Only update groups that have the location shared AND the user is a member
+          if (
+            hasSharedLocation &&
+            groupData.members &&
+            groupData.members.includes(userId)
+          ) {
+            const updatedSharedLocations = sharedLocations.filter(
+              (item) => item.locationId !== selectedFood.id
+            );
+
+            groupUpdates.push(
+              updateDoc(doc(db, "groups", groupDoc.id), {
+                sharedLocations: updatedSharedLocations,
+              })
+            );
+          }
+        });
+      }
+
+      // Update Firestore
+      await Promise.all([
+        updateDoc(locationRef, {
+          sharedWith: updatedSharedWith,
+        }),
+        ...groupUpdates,
+      ]);
 
       // Update local states
       setSelectedFood((prev) => ({
@@ -177,19 +270,28 @@ const LocationDialog = ({
 
       setSharedUsers((prev) => prev.filter((user) => user.id !== userId));
 
-      // Show success message
-      const userToRemove = sharedUsers.find((user) => user.id === userId);
-      enqueueSnackbar(`Sharing removed for ${userToRemove?.email || "user"}`, {
-        variant: "success",
-        anchorOrigin: { vertical: "bottom", horizontal: "center" },
-      });
+      // Reset dialog state
+      setShowGroupRemoveDialog(false);
+      setUserToRemove(null);
+      setAffectedGroups([]);
 
-      // Close the dialog if no more shared users
+      // Show success message
+      const removedUser = sharedUsers.find((user) => user.id === userId);
+      enqueueSnackbar(
+        removeFromGroups
+          ? `Sharing removed for ${
+              removedUser?.email || "user"
+            } including group access`
+          : `Sharing removed for ${removedUser?.email || "user"}`,
+        {
+          variant: "success",
+          anchorOrigin: { vertical: "bottom", horizontal: "center" },
+        }
+      );
+
+      // Close dialog if no more shared users
       if (updatedSharedWith.length === 0) {
-        // Let the state updates complete before navigating
-        setTimeout(() => {
-          onClose(); // This should clear the URL params
-        }, 100);
+        setTimeout(() => onClose(), 100);
       }
     } catch (error) {
       console.error("Error removing shared user:", error);
@@ -406,40 +508,52 @@ const LocationDialog = ({
         }
       } else {
         // Group sharing logic
-        const groupDoc = await getDoc(doc(db, "groups", selectedGroupId));
+        const groupRef = doc(db, "groups", selectedGroupId);
+        const groupDoc = await getDoc(groupRef);
+
         if (!groupDoc.exists()) {
           enqueueSnackbar("Group not found", { variant: "error" });
           return;
         }
 
-        const groupData = groupDoc.data();
-        // Filter out the current user from the members array
-        const memberIds = (groupData.members || []).filter(
-          (memberId) => memberId !== currentUser.uid
-        );
-
-        // Update location's sharedWith array with filtered group members
+        // Update location's sharedWith array
         const locationRef = doc(db, "locations", selectedFood.id);
         const locationDoc = await getDoc(locationRef);
 
         if (locationDoc.exists()) {
           const currentData = locationDoc.data();
           const currentSharedWith = currentData.sharedWith || [];
+          const groupData = groupDoc.data();
 
           // Add filtered group members who aren't already shared with
+          const memberIds = groupData.members.filter(
+            (id) => id !== currentUser.uid
+          );
           const newSharedWith = [
             ...new Set([...currentSharedWith, ...memberIds]),
           ];
 
-          await updateDoc(locationRef, {
-            sharedWith: newSharedWith,
-          });
+          // Update both the location and the group
+          await Promise.all([
+            // Update location's sharedWith array
+            updateDoc(locationRef, {
+              sharedWith: newSharedWith,
+            }),
+            // Add location to group's sharedLocations array
+            updateDoc(groupRef, {
+              sharedLocations: arrayUnion({
+                locationId: selectedFood.id,
+                sharedBy: currentUser.uid,
+                sharedAt: new Date(),
+              }),
+            }),
+          ]);
 
           setIsShareMenuOpen(false);
           setSelectedGroupId("");
 
           enqueueSnackbar(
-            `Location shared successfully with group ${groupData.displayName}`,
+            `Location shared with group ${groupData.displayName}`,
             {
               variant: "success",
             }
@@ -1019,7 +1133,7 @@ const LocationDialog = ({
                           </span>
                         </div>
                         <button
-                          onClick={() => removeSharing(user.id)}
+                          onClick={() => handleRemoveSharingClick(user.id)}
                           className="text-red-500 hover:text-red-700 cursor-pointer p-2 rounded-full hover:bg-red-100 dark:hover:bg-red-900/30 transition-colors"
                           aria-label="Remove sharing"
                         >
@@ -1040,6 +1154,75 @@ const LocationDialog = ({
               </div>
             )}
           </div>
+        </div>
+        <div>
+          {showGroupRemoveDialog && (
+            <div className="fixed inset-0 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4 z-[60]">
+              <div
+                className={`${
+                  darkMode ? "bg-gray-800" : "bg-white"
+                } rounded-xl p-6 max-w-md w-full shadow-xl`}
+              >
+                <h3 className="text-lg font-semibold mb-2">
+                  Remove user from shared location
+                </h3>
+                <p className="mb-4 text-sm">
+                  This user is part of{" "}
+                  {affectedGroups.length === 1
+                    ? "a group"
+                    : `${affectedGroups.length} groups`}{" "}
+                  that
+                  {affectedGroups.length === 1 ? " has" : " have"} access to
+                  this location. Would you like to remove just this user or
+                  remove the location from the entire
+                  {affectedGroups.length === 1 ? " group" : " groups"}?
+                </p>
+
+                <p className="mb-4 text-sm font-medium">
+                  Affected {affectedGroups.length === 1 ? "group" : "groups"}:
+                  {affectedGroups.map((group) => (
+                    <span
+                      key={group.id}
+                      className="inline-block px-3 py-1 mx-1 my-1 bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 rounded-full text-xs"
+                    >
+                      {group.displayName}
+                    </span>
+                  ))}
+                </p>
+
+                <div className="flex flex-col sm:flex-row gap-3 mt-6">
+                  <button
+                    onClick={() => removeSharing(userToRemove, false)}
+                    className={`flex-1 py-2 px-4 rounded-lg border ${
+                      darkMode
+                        ? "border-gray-700 bg-gray-700 hover:bg-gray-600"
+                        : "bg-gray-100 hover:bg-gray-200"
+                    } transition-all duration-200 hover:cursor-pointer`}
+                  >
+                    Remove just this user
+                  </button>
+                  <button
+                    onClick={() => removeSharing(userToRemove, true)}
+                    className="flex-1 py-2 px-4 rounded-lg bg-red-600 hover:bg-red-700 text-white transition-all duration-200 hover:cursor-pointer"
+                  >
+                    Remove from entire{" "}
+                    {affectedGroups.length === 1 ? "group" : "groups"}
+                  </button>
+                </div>
+
+                <button
+                  onClick={() => {
+                    setShowGroupRemoveDialog(false);
+                    setUserToRemove(null);
+                    setAffectedGroups([]);
+                  }}
+                  className="w-full mt-3 py-2 px-4 rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-200 hover:cursor-pointer"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>

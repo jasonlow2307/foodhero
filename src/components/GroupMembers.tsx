@@ -9,11 +9,19 @@ import {
   updateDoc,
   arrayRemove,
   deleteDoc,
+  Timestamp,
 } from "firebase/firestore";
 import { ArrowLeft, User, Crown, LogOut, Trash2 } from "lucide-react";
 import Loader from "./Loader";
 import ConfirmDialog from "./ConfirmDialog";
 import { useSnackbar } from "notistack";
+import { formatDistance } from "date-fns";
+
+interface SharedLocation {
+  locationId: string;
+  sharedBy: string;
+  sharedAt: Timestamp;
+}
 
 const GroupMembers = () => {
   const { groupId } = useParams();
@@ -28,6 +36,49 @@ const GroupMembers = () => {
   const [showLeaveDialog, setShowLeaveDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const { enqueueSnackbar } = useSnackbar();
+  const [sharedLocations, setSharedLocations] = useState<SharedLocation[]>([]);
+  const [locationDetails, setLocationDetails] = useState<Map<string, any>>(
+    new Map()
+  );
+
+  useEffect(() => {
+    const fetchSharedLocations = async () => {
+      if (!groupId) return;
+
+      try {
+        const groupDoc = await getDoc(doc(db, "groups", groupId));
+        if (!groupDoc.exists()) return;
+
+        const groupData = groupDoc.data();
+        const sharedLocs = groupData.sharedLocations || [];
+        setSharedLocations(sharedLocs);
+
+        // Fetch details for each shared location
+        const locationPromises = sharedLocs.map(async (shared) => {
+          const locationDoc = await getDoc(
+            doc(db, "locations", shared.locationId)
+          );
+          if (locationDoc.exists()) {
+            return [
+              shared.locationId,
+              { id: locationDoc.id, ...locationDoc.data() },
+            ];
+          }
+          return null;
+        });
+
+        const locationResults = await Promise.all(locationPromises);
+        const locationMap = new Map(
+          locationResults.filter(Boolean) as [string, any][]
+        );
+        setLocationDetails(locationMap);
+      } catch (error) {
+        console.error("Error fetching shared locations:", error);
+      }
+    };
+
+    fetchSharedLocations();
+  }, [groupId]);
 
   useEffect(() => {
     const fetchGroupAndMembers = async () => {
@@ -125,6 +176,59 @@ const GroupMembers = () => {
     } catch (error) {
       console.error("Error deleting group:", error);
       setError("Failed to delete group");
+    }
+  };
+
+  const handleDeleteSharedLocation = async (locationId) => {
+    try {
+      // 1. Remove the location from group's sharedLocations array
+      const groupRef = doc(db, "groups", groupId);
+      const groupDoc = await getDoc(groupRef);
+
+      if (groupDoc.exists()) {
+        const groupData = groupDoc.data();
+        const updatedSharedLocations = (groupData.sharedLocations || []).filter(
+          (item) => item.locationId !== locationId
+        );
+
+        await updateDoc(groupRef, {
+          sharedLocations: updatedSharedLocations,
+        });
+
+        // 2. Remove all group members from location's sharedWith array
+        const locationRef = doc(db, "locations", locationId);
+        const locationDoc = await getDoc(locationRef);
+
+        if (locationDoc.exists()) {
+          const locationData = locationDoc.data();
+          const groupMemberIds = members.map((member) => member.id);
+
+          // Filter out all group members from sharedWith
+          const updatedSharedWith = (locationData.sharedWith || []).filter(
+            (id) => !groupMemberIds.includes(id)
+          );
+
+          await updateDoc(locationRef, {
+            sharedWith: updatedSharedWith,
+          });
+        }
+
+        // 3. Update local state
+        setSharedLocations((prev) =>
+          prev.filter((item) => item.locationId !== locationId)
+        );
+
+        enqueueSnackbar("Location sharing removed successfully", {
+          variant: "success",
+          anchorOrigin: { vertical: "bottom", horizontal: "center" },
+        });
+      }
+    } catch (error) {
+      console.error("Error removing shared location:", error);
+      enqueueSnackbar("Failed to remove shared location", {
+        variant: "error",
+        anchorOrigin: { vertical: "bottom", horizontal: "center" },
+      });
     }
   };
 
@@ -350,6 +454,102 @@ const GroupMembers = () => {
               ))}
             </div>
           </div>
+        </div>
+
+        <div className="my-8">
+          <h3
+            className={`text-lg font-semibold mb-4 ${
+              darkMode ? "text-white" : "text-gray-800"
+            }`}
+          >
+            Shared Locations
+          </h3>
+          {sharedLocations.length === 0 ? (
+            <p
+              className={`text-sm ${
+                darkMode ? "text-gray-400" : "text-gray-600"
+              }`}
+            >
+              No locations have been shared in this group yet
+            </p>
+          ) : (
+            <div className="space-y-4">
+              {sharedLocations.map((shared) => {
+                const location = locationDetails.get(shared.locationId);
+                if (!location) return null;
+
+                return (
+                  <div
+                    key={shared.locationId}
+                    className={`p-4 rounded-xl ${
+                      darkMode ? "bg-gray-800" : "bg-white"
+                    } shadow-sm hover:shadow-md transition-shadow`}
+                  >
+                    <div className="flex justify-between items-start">
+                      <div
+                        className="flex-1 cursor-pointer"
+                        onClick={() =>
+                          navigate(`/list?id=${shared.locationId}`)
+                        }
+                      >
+                        <h4
+                          className={`font-medium ${
+                            darkMode ? "text-white" : "text-gray-900"
+                          }`}
+                        >
+                          {location.location}
+                        </h4>
+                        <p
+                          className={`text-sm ${
+                            darkMode ? "text-gray-400" : "text-gray-600"
+                          }`}
+                        >
+                          Shared by{" "}
+                          {members.find((m) => m.id === shared.sharedBy)
+                            ?.displayName ||
+                            members.find((m) => m.id === shared.sharedBy)
+                              ?.email ||
+                            "Unknown"}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <span
+                          className={`text-xs ${
+                            darkMode ? "text-gray-500" : "text-gray-400"
+                          }`}
+                        >
+                          {formatDistance(
+                            shared.sharedAt.toDate(),
+                            new Date(),
+                            {
+                              addSuffix: true,
+                            }
+                          )}
+                        </span>
+                        {(currentUser.uid === group.createdBy ||
+                          currentUser.uid === shared.sharedBy) && (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDeleteSharedLocation(shared.locationId);
+                            }}
+                            className={`p-2 rounded-full ${
+                              darkMode
+                                ? "text-red-400 hover:bg-red-900/30"
+                                : "text-red-500 hover:bg-red-50"
+                            } transition-all duration-200 hover:cursor-pointer`}
+                            title="Remove shared location"
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </div>
 
         <div className="max-w-7xl">
