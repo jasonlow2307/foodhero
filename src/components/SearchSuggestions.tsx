@@ -175,6 +175,7 @@ const SearchSuggestions = ({ locations, onClose }: SearchSuggestionsProps) => {
         </div>
 
         {/* Category chips */}
+        {/*
         {categories.length > 0 && (
           <div className="flex flex-wrap gap-2 mb-4">
             {categories.map((category) => (
@@ -194,6 +195,7 @@ const SearchSuggestions = ({ locations, onClose }: SearchSuggestionsProps) => {
             ))}
           </div>
         )}
+          */}
 
         {/* Results list */}
         <div
