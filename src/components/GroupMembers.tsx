@@ -425,7 +425,7 @@ const GroupMembers = () => {
                           member.id === currentUser.uid ? "font-bold" : ""
                         }`}
                       >
-                        {member.displayName || member.email || "Unknown User"}
+                        {member.name || member.email || "Unknown User"}
                         {member.id === currentUser.uid && " (You)"}
                       </p>
                       <p
@@ -506,7 +506,7 @@ const GroupMembers = () => {
                         >
                           Shared by{" "}
                           {members.find((m) => m.id === shared.sharedBy)
-                            ?.displayName ||
+                            ?.name ||
                             members.find((m) => m.id === shared.sharedBy)
                               ?.email ||
                             "Unknown"}
