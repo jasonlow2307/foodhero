@@ -54,6 +54,7 @@ export function identifyFood(query: string) {
     "Briyani House": "Chicken briyani",
     "Western Fusion Café": "Wagyu beef steak",
     "Nasi Lemak": "Nasi lemak",
+    Noodle: "Soup Noodles",
 
     // More General Coverage
     Kopitiam: "Kaya butter toast & kopi o",
