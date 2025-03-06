@@ -7,12 +7,12 @@ import { getFirestore } from "firebase/firestore";
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
-  apiKey: "AIzaSyC3jyYM3o7MJ8N0-sfvY3vcJz9wrLDj9eU",
-  authDomain: "foodhero-47be8.firebaseapp.com",
-  projectId: "foodhero-47be8",
-  storageBucket: "foodhero-47be8.firebasestorage.app",
-  messagingSenderId: "291964340197",
-  appId: "1:291964340197:web:193903b4db48e07077510c",
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID,
 };
 
 // Initialize Firebase

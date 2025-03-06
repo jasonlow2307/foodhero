@@ -1,20 +1,20 @@
-# Food Hero
+# 🍽️ Food Hero
 
-Food Hero is a React application built with TypeScript and Vite that helps reduce food waste by allowing users to record their orders from their previous visits to prevent ordering excessively.
+Food Hero is a React application built with TypeScript and Vite that helps reduce 🗑️ food waste by allowing users to 📝 record their orders from their previous visits to prevent ordering excessively. 🌱
 
 ![Food Hero Homepage](./screenshots/landing_page.png)
 ![Food Hero Homepage Stats](./screenshots/landing_page_stats.jpeg)
 
 ## Features
 
-- User authentication and profiles
-- Track orders from past visits
-- Food listing management
-- Search and filter past food items
-- Location-based matching
-- What To Eat
-- Sharing between users
-- Groups
+- 🔐 User authentication and profiles
+- 📝 Track orders from past visits
+- 🍔 Food listing management
+- 🔍 Search and filter past food items
+- 📍 Location-based matching
+- 🤔 What To Eat
+- 🔄 Sharing between users
+- 👥 Groups
 
 ![Food Listings](./screenshots/my_places.jpeg)
 
@@ -60,6 +60,35 @@ Food Hero is a React application built with TypeScript and Vite that helps reduc
 
 - Node.js (v16+)
 - npm or yarn
+
+### Environment Configuration
+
+1. Create a `.env` file in the root directory of your project:
+
+```bash
+touch .env
+```
+
+2. Add your Firebase configuration to the .env file:
+
+```bash
+VITE_FIREBASE_API_KEY=your_api_key
+VITE_FIREBASE_AUTH_DOMAIN=your_auth_domain
+VITE_FIREBASE_PROJECT_ID=your_project_id
+VITE_FIREBASE_STORAGE_BUCKET=your_storage_bucket
+VITE_FIREBASE_MESSAGING_SENDER_ID=your_messaging_sender_id
+VITE_FIREBASE_APP_ID=your_app_id
+```
+
+3. Get these values from your Firebase console:
+
+4. Go to Firebase Console
+
+- Select your project
+- Click on the gear icon (⚙️) near "Project Overview"
+- Select "Project settings"
+- Scroll down to "Your apps" section
+- Copy the configuration values
 
 ### Installation
 
