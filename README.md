@@ -1,6 +1,6 @@
 # 🍽️ Food Hero
 
-Food Hero is a React application built with TypeScript and Vite that helps reduce 🗑️ food waste by allowing users to 📝 record their orders from their previous visits to prevent ordering excessively. 🌱
+Food Hero is a modern web application designed to combat food waste by enabling users to track their food orders and portions from previous restaurant visits. By recording and analyzing eating habits, users can make smarter ordering decisions, avoid excessive portions, and reduce personal food waste. The app features location tracking, meal history, portion satisfaction ratings, and social sharing functionality through user groups.
 
 ![Food Hero Homepage](./screenshots/landing_page.png)
 ![Food Hero Homepage Stats](./screenshots/landing_page_stats.jpeg)
