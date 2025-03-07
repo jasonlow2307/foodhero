@@ -20,6 +20,7 @@ export interface Visit {
   fullness: Fullness;
   notes?: string;
   mealType?: string;
+  rating?: number;
 }
 
 export interface LocationFormProp {

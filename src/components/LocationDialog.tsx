@@ -59,6 +59,7 @@ const LocationDialog = ({
     fullness: "perfect",
     notes: "",
     mealType: "",
+    rating: undefined,
   });
 
   const { enqueueSnackbar } = useSnackbar();
@@ -1081,6 +1082,64 @@ const LocationDialog = ({
                 </div>
               </div>
 
+              {/* Rating Selector */}
+              <div className="mt-4">
+                <label
+                  className={`block text-sm font-medium mb-2 ${
+                    darkMode ? "text-gray-300" : "text-gray-700"
+                  }`}
+                >
+                  Rate Your Experience (optional)
+                </label>
+                <div className="flex items-center gap-1">
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <button
+                      key={star}
+                      onClick={() =>
+                        setNewFood({
+                          ...newFood,
+                          rating: star === newFood.rating ? undefined : star,
+                        })
+                      }
+                      className="p-1 hover:transform hover:scale-110 transition-transform hover:cursor-pointer"
+                      title={`${star} star${star !== 1 ? "s" : ""}`}
+                    >
+                      {star <= (newFood.rating || 0) ? (
+                        <Icon
+                          icon="heroicons-solid:star"
+                          className="text-yellow-400"
+                          width="28"
+                          height="28"
+                        />
+                      ) : (
+                        <Icon
+                          icon="heroicons-outline:star"
+                          className={
+                            darkMode ? "text-gray-500" : "text-gray-300"
+                          }
+                          width="28"
+                          height="28"
+                        />
+                      )}
+                    </button>
+                  ))}
+                  {newFood.rating && (
+                    <button
+                      onClick={() =>
+                        setNewFood({ ...newFood, rating: undefined })
+                      }
+                      className={`ml-2 text-sm ${
+                        darkMode
+                          ? "text-gray-400 hover:text-gray-300"
+                          : "text-gray-500 hover:text-gray-600"
+                      } hover:cursor-pointer hover:underline`}
+                    >
+                      Clear
+                    </button>
+                  )}
+                </div>
+              </div>
+
               {/* Notes Input */}
               <div className="mt-4">
                 <label
@@ -1351,6 +1410,68 @@ const LocationDialog = ({
                   </div>
                 </div>
 
+                {/* Rating Selector */}
+                <div className="mt-4">
+                  <label
+                    className={`block text-sm font-medium mb-2 ${
+                      darkMode ? "text-gray-300" : "text-gray-700"
+                    }`}
+                  >
+                    Rate Your Experience (optional)
+                  </label>
+                  <div className="flex items-center gap-1">
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <button
+                        key={star}
+                        onClick={() =>
+                          setEditVisitData({
+                            ...editVisitData,
+                            rating:
+                              star === editVisitData.rating ? undefined : star,
+                          })
+                        }
+                        className="p-1 hover:transform hover:scale-110 transition-transform hover:cursor-pointer"
+                        title={`${star} star${star !== 1 ? "s" : ""}`}
+                      >
+                        {star <= (editVisitData.rating || 0) ? (
+                          <Icon
+                            icon="heroicons-solid:star"
+                            className="text-yellow-400"
+                            width="28"
+                            height="28"
+                          />
+                        ) : (
+                          <Icon
+                            icon="heroicons-outline:star"
+                            className={
+                              darkMode ? "text-gray-500" : "text-gray-300"
+                            }
+                            width="28"
+                            height="28"
+                          />
+                        )}
+                      </button>
+                    ))}
+                    {editVisitData.rating && (
+                      <button
+                        onClick={() =>
+                          setEditVisitData({
+                            ...editVisitData,
+                            rating: undefined,
+                          })
+                        }
+                        className={`ml-2 text-sm ${
+                          darkMode
+                            ? "text-gray-400 hover:text-gray-300"
+                            : "text-gray-500 hover:text-gray-600"
+                        } hover:cursor-pointer hover:underline`}
+                      >
+                        Clear
+                      </button>
+                    )}
+                  </div>
+                </div>
+
                 {/* Notes Input */}
                 <div className="mt-4">
                   <label
@@ -1522,6 +1643,32 @@ const LocationDialog = ({
                         <span>×{quantity}</span>
                       </div>
                     ))}
+                    {/* Display rating if available */}
+                    {visit.rating && (
+                      <div className="mt-2">
+                        <div className="flex items-center gap-0.5">
+                          {[1, 2, 3, 4, 5].map((star) => (
+                            <Icon
+                              key={star}
+                              icon={
+                                star <= visit.rating
+                                  ? "heroicons-solid:star"
+                                  : "heroicons-outline:star"
+                              }
+                              className={
+                                star <= visit.rating
+                                  ? "text-yellow-400"
+                                  : darkMode
+                                  ? "text-gray-600"
+                                  : "text-gray-300"
+                              }
+                              width="16"
+                              height="16"
+                            />
+                          ))}
+                        </div>
+                      </div>
+                    )}
                     {visit.notes && (
                       <div
                         className={`mt-2 pt-2 border-t ${
