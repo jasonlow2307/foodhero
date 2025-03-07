@@ -3,12 +3,13 @@ import { SelectChangeEvent } from "@mui/material";
 import debounce from "lodash.debounce";
 import Fuse from "fuse.js";
 import useFirestoreWrite from "../../firebase/useFirestoreWrite";
-import { useSnackbar } from "notistack";
+import { useSnackbar, closeSnackbar } from "notistack";
 import { Fullness, Location, LocationFormProp } from "../../utils/models";
 import { Search, Camera, Trash2, PlusCircle, Send } from "lucide-react";
 import useFirestoreCollection from "../../firebase/useFirestoreCollection";
 import { useAuth } from "../../contexts/AuthContext";
 import { useTheme } from "../../contexts/ThemeContext";
+import { Icon } from "@iconify/react/dist/iconify.js";
 
 interface Coordinates {
   latitude: number;
@@ -30,6 +31,7 @@ const LocationForm = () => {
         fullness: "perfect",
         notes: "",
         mealType: "",
+        rating: undefined,
       },
     ],
     selectedLocation: null,
@@ -107,6 +109,7 @@ const LocationForm = () => {
           fullness: currentVisit.fullness,
           notes: currentVisit.notes,
           mealType: currentVisit.mealType,
+          rating: currentVisit.rating,
         },
       ],
     });
@@ -130,6 +133,7 @@ const LocationForm = () => {
           fullness: formData?.visits[0].fullness,
           notes: formData?.visits[0].notes,
           mealType: formData?.visits[0].mealType,
+          rating: formData?.visits[0].rating,
         },
       ],
     });
@@ -164,7 +168,7 @@ const LocationForm = () => {
           <button
             onClick={() => {
               // @ts-ignore - Necessary because notistack types don't expose closeSnackbar
-              enqueueSnackbar.closeSnackbar(key);
+              closeSnackbar(key);
             }}
             className="text-white text-sm font-medium hover:cursor-pointer px-2 py-1 rounded hover:bg-white/20 transition-colors"
           >
@@ -580,7 +584,7 @@ const LocationForm = () => {
               ))}
             </div>
           </div>
-          {/* Meal Type Selector - Add this new section */}
+          {/* Meal Type Selector */}
           <div className="space-y-2">
             <label
               className={`${
@@ -624,6 +628,80 @@ const LocationForm = () => {
                   {label}
                 </button>
               ))}
+            </div>
+          </div>
+
+          {/* Rating Selector */}
+          <div className="space-y-2">
+            <label
+              className={`${
+                darkMode ? "text-white" : "text-gray-700"
+              } font-medium`}
+            >
+              Rate Your Experience (optional)
+            </label>
+            <div className="flex items-center gap-1">
+              {[1, 2, 3, 4, 5].map((star) => (
+                <button
+                  key={star}
+                  type="button"
+                  onClick={() =>
+                    setFormData({
+                      ...formData,
+                      visits: [
+                        {
+                          ...formData.visits[0],
+                          rating:
+                            star === formData.visits[0].rating
+                              ? undefined
+                              : star,
+                        },
+                      ],
+                    })
+                  }
+                  className="p-1 hover:transform hover:scale-110 transition-transform hover:cursor-pointer"
+                  title={`${star} star${star !== 1 ? "s" : ""}`}
+                >
+                  {star <= (formData.visits[0].rating || 0) ? (
+                    <Icon
+                      icon="heroicons-solid:star"
+                      className="text-yellow-400"
+                      width="32"
+                      height="32"
+                    />
+                  ) : (
+                    <Icon
+                      icon="heroicons-outline:star"
+                      className={darkMode ? "text-gray-500" : "text-gray-300"}
+                      width="32"
+                      height="32"
+                    />
+                  )}
+                </button>
+              ))}
+              {formData.visits[0].rating && (
+                <button
+                  type="button"
+                  onClick={() =>
+                    setFormData({
+                      ...formData,
+                      visits: [
+                        {
+                          ...formData.visits[0],
+                          rating: undefined,
+                        },
+                      ],
+                    })
+                  }
+                  className={`ml-2 text-sm ${
+                    darkMode
+                      ? "text-gray-400 hover:text-gray-300"
+                      : "text-gray-500 hover:text-gray-600"
+                  } hover:cursor-pointer hover:underline`}
+                >
+                  Clear
+                </button>
+              )}
             </div>
           </div>
 
