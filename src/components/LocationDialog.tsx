@@ -58,6 +58,7 @@ const LocationDialog = ({
     date: Timestamp.now(),
     fullness: "perfect",
     notes: "",
+    mealType: "",
   });
 
   const { enqueueSnackbar } = useSnackbar();
@@ -1040,6 +1041,46 @@ const LocationDialog = ({
                 ))}
               </div>
 
+              {/* Meal Type Selection - Add this new section */}
+              <div className="mt-4">
+                <label
+                  className={`block text-sm font-medium mb-2 ${
+                    darkMode ? "text-gray-300" : "text-gray-700"
+                  }`}
+                >
+                  Meal Type (optional)
+                </label>
+                <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
+                  {["breakfast", "lunch", "tea time", "dinner", ""].map(
+                    (mealType) => (
+                      <button
+                        key={mealType || "not-specified"}
+                        onClick={() => setNewFood({ ...newFood, mealType })}
+                        className={`py-2 px-2 rounded-xl border-2 transition-all hover:cursor-pointer ${
+                          newFood.mealType === mealType
+                            ? darkMode
+                              ? "border-purple-600 bg-purple-900/30 text-purple-400"
+                              : "border-purple-400 bg-purple-50 text-purple-600"
+                            : darkMode
+                            ? "border-gray-700 hover:border-purple-700"
+                            : "border-gray-200 hover:border-purple-200"
+                        }`}
+                      >
+                        {mealType === ""
+                          ? "Not Specified"
+                          : mealType === "breakfast"
+                          ? "🍳 Breakfast"
+                          : mealType === "lunch"
+                          ? "🥪 Lunch"
+                          : mealType === "tea time"
+                          ? "🫖 Tea Time"
+                          : "🍽️ Dinner"}
+                      </button>
+                    )
+                  )}
+                </div>
+              </div>
+
               {/* Notes Input */}
               <div className="mt-4">
                 <label
@@ -1266,6 +1307,50 @@ const LocationDialog = ({
                   ))}
                 </div>
 
+                <div className="mt-4">
+                  <label
+                    className={`block text-sm font-medium mb-2 ${
+                      darkMode ? "text-gray-300" : "text-gray-700"
+                    }`}
+                  >
+                    Meal Type (optional)
+                  </label>
+                  <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
+                    {["breakfast", "lunch", "tea time", "dinner", ""].map(
+                      (mealType) => (
+                        <button
+                          key={mealType || "not-specified"}
+                          onClick={() =>
+                            setEditVisitData({
+                              ...editVisitData,
+                              mealType,
+                            })
+                          }
+                          className={`py-2 px-2 rounded-xl border-2 transition-all hover:cursor-pointer ${
+                            editVisitData.mealType === mealType
+                              ? darkMode
+                                ? "border-purple-600 bg-purple-900/30 text-purple-400"
+                                : "border-purple-400 bg-purple-50 text-purple-600"
+                              : darkMode
+                              ? "border-gray-700 hover:border-purple-700"
+                              : "border-gray-200 hover:border-purple-200"
+                          }`}
+                        >
+                          {mealType === ""
+                            ? "Not Specified"
+                            : mealType === "breakfast"
+                            ? "🍳 Breakfast"
+                            : mealType === "lunch"
+                            ? "🥪 Lunch"
+                            : mealType === "tea time"
+                            ? "🫖 Tea Time"
+                            : "🍽️ Dinner"}
+                        </button>
+                      )
+                    )}
+                  </div>
+                </div>
+
                 {/* Notes Input */}
                 <div className="mt-4">
                   <label
@@ -1402,6 +1487,28 @@ const LocationDialog = ({
                       ? "😅 Too Much"
                       : "😋 Not Enough"}
                   </div>
+
+                  {/* Display meal type if available */}
+                  {visit.mealType && (
+                    <div
+                      className={`inline-flex items-center px-3 py-1 rounded-full text-sm
+      ${
+        darkMode
+          ? "bg-purple-900/50 text-purple-400"
+          : "bg-purple-100 text-purple-600"
+      }`}
+                    >
+                      {visit.mealType === "breakfast"
+                        ? "🍳 Breakfast"
+                        : visit.mealType === "lunch"
+                        ? "🥪 Lunch"
+                        : visit.mealType === "tea time"
+                        ? "🫖 Tea Time"
+                        : visit.mealType === "dinner"
+                        ? "🍽️ Dinner"
+                        : visit.mealType}
+                    </div>
+                  )}
 
                   <div className="space-y-1">
                     {Object.entries(visit.food).map(([foodName, quantity]) => (

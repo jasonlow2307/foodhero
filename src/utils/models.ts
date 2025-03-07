@@ -19,6 +19,7 @@ export interface Visit {
   date: Date | Timestamp;
   fullness: Fullness;
   notes?: string;
+  mealType?: string;
 }
 
 export interface LocationFormProp {
