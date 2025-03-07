@@ -57,6 +57,7 @@ const LocationDialog = ({
     food: { "": 1 },
     date: Timestamp.now(),
     fullness: "perfect",
+    notes: "",
   });
 
   const { enqueueSnackbar } = useSnackbar();
@@ -1039,6 +1040,34 @@ const LocationDialog = ({
                 ))}
               </div>
 
+              {/* Notes Input */}
+              <div className="mt-4">
+                <label
+                  htmlFor="visit-notes"
+                  className={`block text-sm font-medium mb-2 ${
+                    darkMode ? "text-gray-300" : "text-gray-700"
+                  }`}
+                >
+                  Notes (optional)
+                </label>
+                <textarea
+                  id="visit-notes"
+                  placeholder="Add any additional notes about your experience..."
+                  value={newFood.notes || ""}
+                  onChange={(e) =>
+                    setNewFood({
+                      ...newFood,
+                      notes: e.target.value,
+                    })
+                  }
+                  className={`w-full px-4 py-2 rounded-xl border-2 min-h-[100px] ${
+                    darkMode
+                      ? "border-gray-700 bg-gray-800 text-white focus:border-green-600"
+                      : "border-gray-200 focus:border-green-400"
+                  } focus:outline-none`}
+                />
+              </div>
+
               {/* Action Buttons */}
               <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 mt-10">
                 <button
@@ -1237,6 +1266,34 @@ const LocationDialog = ({
                   ))}
                 </div>
 
+                {/* Notes Input */}
+                <div className="mt-4">
+                  <label
+                    htmlFor="edit-visit-notes"
+                    className={`block text-sm font-medium mb-2 ${
+                      darkMode ? "text-gray-300" : "text-gray-700"
+                    }`}
+                  >
+                    Notes (optional)
+                  </label>
+                  <textarea
+                    id="edit-visit-notes"
+                    placeholder="Add any additional notes about your experience..."
+                    value={editVisitData.notes || ""}
+                    onChange={(e) =>
+                      setEditVisitData({
+                        ...editVisitData,
+                        notes: e.target.value,
+                      })
+                    }
+                    className={`w-full px-4 py-2 rounded-xl border-2 min-h-[100px] ${
+                      darkMode
+                        ? "border-gray-700 bg-gray-800 text-white focus:border-blue-600"
+                        : "border-gray-200 focus:border-blue-400"
+                    } focus:outline-none`}
+                  />
+                </div>
+
                 {/* Action Buttons */}
                 <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 mt-6">
                   <button
@@ -1323,7 +1380,6 @@ const LocationDialog = ({
                       )}
                   </div>
 
-                  {/* Rest of the visit display */}
                   <div
                     className={`inline-flex items-center px-3 py-1 rounded-full text-sm
         ${
@@ -1359,6 +1415,22 @@ const LocationDialog = ({
                         <span>×{quantity}</span>
                       </div>
                     ))}
+                    {visit.notes && (
+                      <div
+                        className={`mt-2 pt-2 border-t ${
+                          darkMode ? "border-gray-600" : "border-gray-200"
+                        }`}
+                      >
+                        <p
+                          className={`text-sm ${
+                            darkMode ? "text-gray-300" : "text-gray-600"
+                          }`}
+                        >
+                          <span className="font-medium">Notes:</span>{" "}
+                          {visit.notes}
+                        </p>
+                      </div>
+                    )}
                   </div>
                 </div>
               ))}

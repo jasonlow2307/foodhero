@@ -28,6 +28,7 @@ const LocationForm = () => {
         food: { "": 1 },
         date: new Date(),
         fullness: "perfect",
+        notes: "",
       },
     ],
     selectedLocation: null,
@@ -103,6 +104,7 @@ const LocationForm = () => {
           },
           date: currentVisit.date,
           fullness: currentVisit.fullness,
+          notes: currentVisit.notes,
         },
       ],
     });
@@ -124,6 +126,7 @@ const LocationForm = () => {
           food: currentFood,
           date: formData?.visits[0].date,
           fullness: formData?.visits[0].fullness,
+          notes: formData?.visits[0].notes,
         },
       ],
     });
@@ -154,6 +157,17 @@ const LocationForm = () => {
       enqueueSnackbar("Location added successfully! 🎉", {
         variant: "success",
         autoHideDuration: 3000,
+        action: (key) => (
+          <button
+            onClick={() => {
+              // @ts-ignore - Necessary because notistack types don't expose closeSnackbar
+              enqueueSnackbar.closeSnackbar(key);
+            }}
+            className="text-white text-sm font-medium hover:cursor-pointer px-2 py-1 rounded hover:bg-white/20 transition-colors"
+          >
+            Dismiss
+          </button>
+        ),
       });
       // Reset form
       setFormData({
@@ -166,6 +180,7 @@ const LocationForm = () => {
             food: { "": 1 },
             date: new Date(),
             fullness: "perfect",
+            notes: "",
           },
         ],
         selectedLocation: null,
@@ -560,6 +575,35 @@ const LocationForm = () => {
                 </button>
               ))}
             </div>
+          </div>
+          <div className="space-y-2">
+            <label
+              className={`block text-sm font-medium ${
+                darkMode ? "text-white" : "text-gray-700"
+              }`}
+            >
+              Notes (optional)
+            </label>
+            <textarea
+              placeholder="Add any additional notes about your experience..."
+              value={formData.visits[0].notes || ""}
+              onChange={(e) =>
+                setFormData({
+                  ...formData,
+                  visits: [
+                    {
+                      ...formData.visits[0],
+                      notes: e.target.value,
+                    },
+                  ],
+                })
+              }
+              className={`w-full px-4 py-3 rounded-xl border-2 min-h-[100px] resize-none ${
+                darkMode
+                  ? "border-gray-700 bg-gray-700 text-white placeholder-gray-400"
+                  : "border-gray-200 focus:border-green-400"
+              } focus:outline-none transition-colors`}
+            />
           </div>
 
           {/* Submit Button */}
