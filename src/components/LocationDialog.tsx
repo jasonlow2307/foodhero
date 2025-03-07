@@ -3,6 +3,7 @@ import {
   addDoc,
   arrayUnion,
   collection,
+  deleteDoc,
   doc,
   getDoc,
   getDocs,
@@ -82,6 +83,8 @@ const LocationDialog = ({
     null
   );
   const [editVisitData, setEditVisitData] = useState<Visit | null>(null);
+
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
   const { currentUser } = useAuth();
 
@@ -242,6 +245,70 @@ const LocationDialog = ({
       ...editVisitData,
       food: { ...editVisitData.food, "": 1 },
     });
+  };
+
+  const handleDeleteLocation = async () => {
+    try {
+      // Reference to location document
+      const locationRef = doc(db, "locations", selectedFood.id);
+
+      // If location is shared with groups, remove it from those groups
+      if (selectedFood.sharedWith && selectedFood.sharedWith.length > 0) {
+        // Get all groups
+        const groupsQuery = query(collection(db, "groups"));
+        const groupsSnapshot = await getDocs(groupsQuery);
+
+        // Create an array of promises for group updates
+        const groupUpdates = [];
+
+        groupsSnapshot.forEach((groupDoc) => {
+          const groupData = groupDoc.data();
+          const sharedLocations = groupData.sharedLocations || [];
+
+          // Check if this location is in the group's shared locations
+          const hasSharedLocation = sharedLocations.some(
+            (loc) => loc.locationId === selectedFood.id
+          );
+
+          if (hasSharedLocation) {
+            // Filter out this location from the group's sharedLocations
+            const updatedSharedLocations = sharedLocations.filter(
+              (item) => item.locationId !== selectedFood.id
+            );
+
+            // Add update promise to array
+            groupUpdates.push(
+              updateDoc(doc(db, "groups", groupDoc.id), {
+                sharedLocations: updatedSharedLocations,
+              })
+            );
+          }
+        });
+
+        // Execute all group updates in parallel
+        await Promise.all(groupUpdates);
+      }
+
+      // Delete the location document
+      await deleteDoc(locationRef);
+
+      // Show success message and close dialog
+      enqueueSnackbar("Location deleted successfully", {
+        variant: "success",
+        anchorOrigin: { vertical: "bottom", horizontal: "center" },
+      });
+
+      // Close the dialog
+      onClose();
+    } catch (error) {
+      console.error("Error deleting location:", error);
+      enqueueSnackbar("Failed to delete location", {
+        variant: "error",
+        anchorOrigin: { vertical: "bottom", horizontal: "center" },
+      });
+    } finally {
+      setShowDeleteDialog(false);
+    }
   };
 
   const handleRemoveSharingClick = async (userId) => {
@@ -709,19 +776,37 @@ const LocationDialog = ({
             darkMode ? "border-gray-700" : "border-gray-100"
           }`}
         >
-          <button
-            onClick={onClose}
-            className={`absolute right-4 md:right-6 top-4 md:top-6 ${
-              darkMode
-                ? "text-gray-400 hover:text-gray-200"
-                : "text-gray-400 hover:text-gray-600"
-            } transition-colors hover:cursor-pointer`}
-          >
-            <X size={24} />
-          </button>
-          <h2 className="text-xl md:text-2xl font-bold text-center bg-gradient-to-r from-green-400 to-blue-500 bg-clip-text text-transparent">
-            {selectedFood?.location}
-          </h2>
+          <div className="flex justify-between items-center">
+            <h2 className="text-xl md:text-2xl font-bold text-center bg-gradient-to-r from-green-400 to-blue-500 bg-clip-text text-transparent">
+              {selectedFood?.location}
+            </h2>
+            <div className="flex items-center">
+              {/* Only show delete button if user owns the location */}
+              {selectedFood && selectedFood.userId === currentUser.uid && (
+                <button
+                  onClick={() => setShowDeleteDialog(true)}
+                  className={`mr-4 ${
+                    darkMode
+                      ? "text-red-400 hover:text-red-300"
+                      : "text-red-500 hover:text-red-700"
+                  } transition-colors hover:cursor-pointer`}
+                  title="Delete location"
+                >
+                  <Trash2 size={18} />
+                </button>
+              )}
+              <button
+                onClick={onClose}
+                className={`${
+                  darkMode
+                    ? "text-gray-400 hover:text-gray-200"
+                    : "text-gray-400 hover:text-gray-600"
+                } transition-colors hover:cursor-pointer`}
+              >
+                <X size={24} />
+              </button>
+            </div>
+          </div>
         </div>
 
         {/* Content */}
@@ -1539,6 +1624,68 @@ const LocationDialog = ({
                 >
                   Cancel
                 </button>
+              </div>
+            </div>
+          )}
+          {/* Delete Location Confirmation Dialog */}
+          {showDeleteDialog && (
+            <div className="fixed inset-0 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4 z-[60]">
+              <div
+                className={`${
+                  darkMode ? "bg-gray-800" : "bg-white"
+                } rounded-xl p-6 max-w-md w-full shadow-xl`}
+              >
+                <h3 className="text-lg font-semibold mb-2">Delete Location</h3>
+                <p className="mb-4">
+                  Are you sure you want to delete "{selectedFood?.location}"?
+                  This action cannot be undone.
+                </p>
+
+                {selectedFood?.sharedWith?.length > 0 && (
+                  <div
+                    className={`p-3 mb-4 rounded-lg ${
+                      darkMode
+                        ? "bg-amber-900/20 border border-amber-800"
+                        : "bg-amber-50 border border-amber-200"
+                    }`}
+                  >
+                    <p
+                      className={`text-sm ${
+                        darkMode ? "text-amber-300" : "text-amber-700"
+                      }`}
+                    >
+                      <strong>Note:</strong> This location is shared with{" "}
+                      {selectedFood.sharedWith.length}
+                      {selectedFood.sharedWith.length === 1
+                        ? " person"
+                        : " people"}
+                      . Deleting it will remove access for all shared users.
+                    </p>
+                  </div>
+                )}
+
+                <div className="flex flex-col sm:flex-row gap-3 mt-6">
+                  <button
+                    onClick={() => setShowDeleteDialog(false)}
+                    className={`flex-1 py-2 px-4 rounded-lg text-sm font-medium transition-all duration-200 hover:cursor-pointer ${
+                      darkMode
+                        ? "bg-gray-700 hover:bg-gray-600 text-gray-200 border border-gray-600"
+                        : "bg-white hover:bg-gray-50 text-gray-700 border border-gray-300 hover:border-gray-400"
+                    }`}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleDeleteLocation}
+                    className={`flex-1 py-2 px-4 rounded-lg text-sm font-medium transition-all duration-200 hover:cursor-pointer ${
+                      darkMode
+                        ? "bg-rose-900/30 hover:bg-rose-900/50 text-rose-300 border border-rose-800"
+                        : "bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 hover:border-rose-300"
+                    }`}
+                  >
+                    Delete Location
+                  </button>
+                </div>
               </div>
             </div>
           )}
