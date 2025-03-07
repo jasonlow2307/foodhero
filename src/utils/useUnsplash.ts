@@ -2,7 +2,7 @@ import React from "react";
 import useFirestoreCollection from "../firebase/useFirestoreCollection";
 import useFirestoreWrite from "../firebase/useFirestoreWrite";
 
-const UNSPLASH_ACCESS_KEY = "FlB8RIHBAaH0Td-upGKwADP1DsRPTVWI1jzYAX6SN-0";
+const UNSPLASH_ACCESS_KEY = import.meta.env.VITE_UNSPLASH_ACCESS_KEY;
 
 export const useUnsplash = () => {
   const { writeData } = useFirestoreWrite();
