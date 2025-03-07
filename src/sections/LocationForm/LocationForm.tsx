@@ -29,6 +29,7 @@ const LocationForm = () => {
         date: new Date(),
         fullness: "perfect",
         notes: "",
+        mealType: "",
       },
     ],
     selectedLocation: null,
@@ -105,6 +106,7 @@ const LocationForm = () => {
           date: currentVisit.date,
           fullness: currentVisit.fullness,
           notes: currentVisit.notes,
+          mealType: currentVisit.mealType,
         },
       ],
     });
@@ -127,6 +129,7 @@ const LocationForm = () => {
           date: formData?.visits[0].date,
           fullness: formData?.visits[0].fullness,
           notes: formData?.visits[0].notes,
+          mealType: formData?.visits[0].mealType,
         },
       ],
     });
@@ -181,6 +184,7 @@ const LocationForm = () => {
             date: new Date(),
             fullness: "perfect",
             notes: "",
+            mealType: "",
           },
         ],
         selectedLocation: null,
@@ -576,6 +580,53 @@ const LocationForm = () => {
               ))}
             </div>
           </div>
+          {/* Meal Type Selector - Add this new section */}
+          <div className="space-y-2">
+            <label
+              className={`${
+                darkMode ? "text-white" : "text-gray-700"
+              } font-medium`}
+            >
+              Meal Type (optional)
+            </label>
+            <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 mt-2">
+              {[
+                { value: "breakfast", label: "🍳 Breakfast" },
+                { value: "lunch", label: "🥪 Lunch" },
+                { value: "tea time", label: "🫖 Tea Time" },
+                { value: "dinner", label: "🍽️ Dinner" },
+                { value: "", label: "Not Specified" },
+              ].map(({ value, label }) => (
+                <button
+                  key={value || "not-specified"}
+                  type="button"
+                  onClick={() =>
+                    setFormData({
+                      ...formData,
+                      visits: [
+                        {
+                          ...formData.visits[0],
+                          mealType: value,
+                        },
+                      ],
+                    })
+                  }
+                  className={`py-2 px-4 rounded-xl border-2 transition-all hover:cursor-pointer ${
+                    formData.visits[0].mealType === value
+                      ? darkMode
+                        ? "border-purple-600 bg-purple-900/30 text-purple-400"
+                        : "border-purple-400 bg-purple-50 text-purple-600"
+                      : darkMode
+                      ? "border-gray-700 hover:border-purple-700 text-gray-300"
+                      : "border-gray-200 hover:border-purple-200 text-gray-700"
+                  } flex items-center justify-center gap-2`}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          </div>
+
           <div className="space-y-2">
             <label
               className={`block text-sm font-medium ${
