@@ -76,6 +76,13 @@ const LocationDialog = ({
   const [userToRemove, setUserToRemove] = useState(null);
   const [affectedGroups, setAffectedGroups] = useState([]);
 
+  // Add these state variables
+  const [isEditingVisit, setIsEditingVisit] = useState(false);
+  const [editingVisitIndex, setEditingVisitIndex] = useState<number | null>(
+    null
+  );
+  const [editVisitData, setEditVisitData] = useState<Visit | null>(null);
+
   const { currentUser } = useAuth();
 
   const { darkMode } = useTheme();
@@ -148,6 +155,94 @@ const LocationDialog = ({
 
     fetchUserGroups();
   }, [currentUser]);
+
+  const handleStartEditVisit = (visit: Visit, index: number) => {
+    console.log("START");
+    setEditVisitData({
+      ...visit,
+      // Ensure date is properly handled with timestamp format
+      date:
+        visit.date instanceof Timestamp
+          ? visit.date
+          : Timestamp.fromDate(new Date(visit.date)),
+    });
+    setEditingVisitIndex(index);
+    setIsEditingVisit(true);
+    setIsAddingFood(false); // Close add form if open
+  };
+
+  const handleSaveEditedVisit = async () => {
+    if (!editVisitData || editingVisitIndex === null) return;
+
+    try {
+      // Create a copy of visits array
+      const updatedVisits = [...localVisits];
+      updatedVisits[editingVisitIndex] = editVisitData;
+
+      // Update local state first for immediate feedback
+      setLocalVisits(updatedVisits);
+
+      // Update Firestore
+      const locationRef = doc(db, "locations", selectedFood.id);
+      await updateDoc(locationRef, {
+        visits: updatedVisits,
+      });
+
+      // Update selected food state
+      setSelectedFood({
+        ...selectedFood,
+        visits: updatedVisits,
+      });
+
+      // Reset edit state
+      setIsEditingVisit(false);
+      setEditingVisitIndex(null);
+      setEditVisitData(null);
+
+      enqueueSnackbar("Visit updated successfully", {
+        variant: "success",
+        anchorOrigin: { vertical: "bottom", horizontal: "center" },
+      });
+    } catch (error) {
+      console.error("Error updating visit:", error);
+      enqueueSnackbar("Failed to update visit", {
+        variant: "error",
+        anchorOrigin: { vertical: "bottom", horizontal: "center" },
+      });
+    }
+  };
+
+  const handleEditFoodChange = (
+    key: string,
+    value: string | number,
+    type: "name" | "quantity"
+  ) => {
+    if (!editVisitData) return;
+
+    const updatedFood = { ...editVisitData.food };
+
+    if (type === "name") {
+      const oldValue = updatedFood[key];
+      delete updatedFood[key];
+      updatedFood[value as string] = oldValue;
+    } else {
+      updatedFood[key] = Number(value);
+    }
+
+    setEditVisitData({
+      ...editVisitData,
+      food: updatedFood,
+    });
+  };
+
+  const handleAddEditFoodItem = () => {
+    if (!editVisitData) return;
+
+    setEditVisitData({
+      ...editVisitData,
+      food: { ...editVisitData.food, "": 1 },
+    });
+  };
 
   const handleRemoveSharingClick = async (userId) => {
     try {
@@ -899,6 +994,199 @@ const LocationDialog = ({
             >
               Previous Visits
             </h3>
+
+            {isEditingVisit && editVisitData && (
+              <div className="mb-6 p-4 rounded-xl border-2 border-blue-500/50 space-y-4">
+                <h3
+                  className={`text-lg font-semibold ${
+                    darkMode ? "text-blue-400" : "text-blue-600"
+                  }`}
+                >
+                  Edit Visit
+                </h3>
+
+                {/* Food Input Fields */}
+                {Object.entries(editVisitData.food).map(
+                  ([name, quantity], index) => (
+                    <div key={index} className="flex gap-3">
+                      <div className="relative flex-1">
+                        <input
+                          type="text"
+                          placeholder="Food name"
+                          value={name}
+                          onChange={(e) =>
+                            handleEditFoodChange(name, e.target.value, "name")
+                          }
+                          onFocus={() => {
+                            setActiveInput(index + 100); // Use offset to differentiate from add form
+                            setShowSuggestions(true);
+                            setSuggestions(
+                              foodSuggestions.filter((s) =>
+                                s.name
+                                  .toLowerCase()
+                                  .includes(name.toLowerCase())
+                              )
+                            );
+                          }}
+                          onBlur={() => {
+                            setTimeout(() => {
+                              setShowSuggestions(false);
+                              setActiveInput(null);
+                            }, 200);
+                          }}
+                          className={`w-full px-4 py-2 rounded-xl border-2 ${
+                            darkMode
+                              ? "border-gray-700 bg-gray-800 text-white focus:border-blue-600"
+                              : "border-gray-200 focus:border-blue-400"
+                          } focus:outline-none`}
+                        />
+                        {showSuggestions &&
+                          activeInput === index + 100 &&
+                          suggestions.length > 0 && (
+                            <div
+                              className={`absolute z-10 w-full mt-1 ${
+                                darkMode
+                                  ? "bg-gray-800 border-gray-700"
+                                  : "bg-white border-gray-200"
+                              } rounded-xl shadow-lg border max-h-48 overflow-y-auto`}
+                            >
+                              {suggestions.map((suggestion) => (
+                                <div
+                                  key={suggestion.name}
+                                  className={`px-4 py-2 ${
+                                    darkMode
+                                      ? "hover:bg-gray-700 text-white"
+                                      : "hover:bg-gray-50 text-gray-800"
+                                  } cursor-pointer`}
+                                  onClick={() => {
+                                    handleEditFoodChange(
+                                      name,
+                                      suggestion.name,
+                                      "name"
+                                    );
+                                    setShowSuggestions(false);
+                                  }}
+                                >
+                                  <div className="font-medium">
+                                    {suggestion.name}
+                                  </div>
+                                  <div
+                                    className={`text-xs ${
+                                      darkMode
+                                        ? "text-gray-400"
+                                        : "text-gray-500"
+                                    }`}
+                                  >
+                                    Ordered {suggestion.count} time
+                                    {suggestion.count > 1 ? "s" : ""}
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                      </div>
+                      <input
+                        type="number"
+                        placeholder="Qty"
+                        value={quantity}
+                        onChange={(e) =>
+                          handleEditFoodChange(name, e.target.value, "quantity")
+                        }
+                        className={`w-24 px-4 py-2 rounded-xl border-2 ${
+                          darkMode
+                            ? "border-gray-700 bg-gray-800 text-white focus:border-blue-600"
+                            : "border-gray-200 focus:border-blue-400"
+                        } focus:outline-none`}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const updatedFood = { ...editVisitData.food };
+                          delete updatedFood[name];
+                          if (Object.keys(updatedFood).length === 0) {
+                            updatedFood[""] = 1;
+                          }
+                          setEditVisitData({
+                            ...editVisitData,
+                            food: updatedFood,
+                          });
+                        }}
+                        className={`p-2 ${
+                          darkMode
+                            ? "text-red-400 hover:bg-red-900/30"
+                            : "text-red-400 hover:bg-red-50"
+                        } rounded-lg transition-colors hover:cursor-pointer`}
+                        disabled={Object.keys(editVisitData.food).length <= 1}
+                      >
+                        <Trash2 size={20} />
+                      </button>
+                    </div>
+                  )
+                )}
+
+                {/* Fullness Selection */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-3">
+                  {["not enough", "perfect", "too much"].map((level) => (
+                    <button
+                      key={level}
+                      onClick={() =>
+                        setEditVisitData({
+                          ...editVisitData,
+                          fullness: level as Fullness,
+                        })
+                      }
+                      className={`py-2 px-4 rounded-xl border-2 transition-all hover:cursor-pointer ${
+                        editVisitData.fullness === level
+                          ? darkMode
+                            ? "border-blue-600 bg-blue-900/30 text-blue-400"
+                            : "border-blue-400 bg-blue-50 text-blue-600"
+                          : darkMode
+                          ? "border-gray-700 hover:border-blue-700"
+                          : "border-gray-200 hover:border-blue-200"
+                      }`}
+                    >
+                      {level === "not enough" && "😋 Still Hungry"}
+                      {level === "perfect" && "😊 Just Right"}
+                      {level === "too much" && "😅 Too Full"}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 mt-6">
+                  <button
+                    onClick={handleAddEditFoodItem}
+                    className={`flex-1 py-2 rounded-xl border-2 ${
+                      darkMode
+                        ? "border-gray-700 hover:border-blue-600 text-gray-300"
+                        : "border-gray-200 hover:border-blue-400"
+                    } transition-colors hover:cursor-pointer`}
+                  >
+                    Add Item
+                  </button>
+                  <button
+                    onClick={handleSaveEditedVisit}
+                    className="flex-1 py-2 rounded-xl bg-blue-500 text-white hover:bg-blue-600 transition-colors hover:cursor-pointer"
+                  >
+                    Save Changes
+                  </button>
+                  <button
+                    onClick={() => {
+                      setIsEditingVisit(false);
+                      setEditingVisitIndex(null);
+                      setEditVisitData(null);
+                    }}
+                    className={`flex-1 py-2 rounded-xl border-2 ${
+                      darkMode
+                        ? "border-red-900/50 text-red-400 hover:border-red-700"
+                        : "border-red-200 text-red-500 hover:border-red-400"
+                    } transition-colors hover:cursor-pointer`}
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            )}
             {[...localVisits]
               .sort((a, b) => {
                 const dateA =
@@ -918,35 +1206,54 @@ const LocationDialog = ({
                     darkMode ? "bg-gray-700" : "bg-gray-50"
                   } space-y-2`}
                 >
-                  <div
-                    className={`flex items-center gap-2 ${
-                      darkMode ? "text-gray-300" : "text-gray-600"
-                    }`}
-                  >
-                    <Clock size={16} />
-                    <span>
-                      {(visit.date instanceof Timestamp
-                        ? new Date(visit.date.seconds * 1000)
-                        : visit.date
-                      ).toLocaleDateString()}
-                    </span>
+                  <div className="flex justify-between items-start">
+                    <div
+                      className={`flex items-center gap-2 ${
+                        darkMode ? "text-gray-300" : "text-gray-600"
+                      }`}
+                    >
+                      <Clock size={16} />
+                      <span>
+                        {(visit.date instanceof Timestamp
+                          ? new Date(visit.date.seconds * 1000)
+                          : visit.date
+                        ).toLocaleDateString()}
+                      </span>
+                    </div>
+
+                    {/* Edit button */}
+                    {selectedFood &&
+                      selectedFood.userId === currentUser.uid && (
+                        <button
+                          onClick={() => handleStartEditVisit(visit, index)}
+                          className={`p-2 rounded-full ${
+                            darkMode
+                              ? "text-blue-400 hover:bg-blue-900/30"
+                              : "text-blue-500 hover:bg-blue-50"
+                          } transition-colors hover:cursor-pointer`}
+                          title="Edit visit"
+                        >
+                          <Icon icon="lucide:edit" width="16" height="16" />
+                        </button>
+                      )}
                   </div>
 
+                  {/* Rest of the visit display */}
                   <div
                     className={`inline-flex items-center px-3 py-1 rounded-full text-sm
-          ${
-            visit.fullness === "perfect"
-              ? darkMode
-                ? "bg-green-900/50 text-green-400"
-                : "bg-green-100 text-green-600"
-              : visit.fullness === "too much"
-              ? darkMode
-                ? "bg-red-900/50 text-red-400"
-                : "bg-red-100 text-red-600"
-              : darkMode
-              ? "bg-yellow-900/50 text-yellow-400"
-              : "bg-yellow-100 text-yellow-600"
-          }`}
+        ${
+          visit.fullness === "perfect"
+            ? darkMode
+              ? "bg-green-900/50 text-green-400"
+              : "bg-green-100 text-green-600"
+            : visit.fullness === "too much"
+            ? darkMode
+              ? "bg-red-900/50 text-red-400"
+              : "bg-red-100 text-red-600"
+            : darkMode
+            ? "bg-yellow-900/50 text-yellow-400"
+            : "bg-yellow-100 text-yellow-600"
+        }`}
                   >
                     {visit.fullness === "perfect"
                       ? "😊 Just Right"
