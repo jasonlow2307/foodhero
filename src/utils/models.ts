@@ -21,6 +21,7 @@ export interface Visit {
   notes?: string;
   mealType?: string;
   rating?: number;
+  imageUrl?: string;
 }
 
 export interface LocationFormProp {

@@ -17,9 +17,13 @@ import { Fullness, Visit } from "../utils/models";
 import { Icon } from "@iconify/react";
 import { X, Plus, Clock, Trash2, Share, User } from "lucide-react";
 import { useTheme } from "../contexts/ThemeContext";
-import { db } from "../firebase/firebase";
+import { db, storage } from "../firebase/firebase";
 import { useAuth } from "../contexts/AuthContext";
 import { useSnackbar } from "notistack";
+import ImageUploader from "./ImageUploader";
+import { sanitizeVisitData } from "../utils/foodUtils";
+import { ref as storageRef, deleteObject } from "firebase/storage";
+import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch";
 
 interface LocationDialogProps {
   open: boolean;
@@ -60,6 +64,7 @@ const LocationDialog = ({
     notes: "",
     mealType: "",
     rating: undefined,
+    imageUrl: undefined,
   });
 
   const { enqueueSnackbar } = useSnackbar();
@@ -89,9 +94,27 @@ const LocationDialog = ({
 
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
+  const [visitToDelete, setVisitToDelete] = useState<{
+    visit: Visit;
+    index: number;
+  } | null>(null);
+  const [showVisitDeleteDialog, setShowVisitDeleteDialog] = useState(false);
+
+  const [isImageViewerOpen, setIsImageViewerOpen] = useState(false);
+  const [viewedImageUrl, setViewedImageUrl] = useState<string | null>(null);
+
   const { currentUser } = useAuth();
 
   const { darkMode } = useTheme();
+
+  // Add this useEffect to show the confirmation dialog when a visit is selected for deletion
+  useEffect(() => {
+    if (visitToDelete) {
+      setShowVisitDeleteDialog(true);
+    } else {
+      setShowVisitDeleteDialog(false);
+    }
+  }, [visitToDelete]);
 
   // Add effect to load user details for shared users
   useEffect(() => {
@@ -162,6 +185,84 @@ const LocationDialog = ({
     fetchUserGroups();
   }, [currentUser]);
 
+  const handleImageClick = (imageUrl: string) => {
+    setViewedImageUrl(imageUrl);
+    setIsImageViewerOpen(true);
+  };
+
+  const handleDeleteVisit = async () => {
+    if (!visitToDelete) return;
+
+    try {
+      // Check if this is the last visit
+      if (localVisits.length <= 1) {
+        enqueueSnackbar(
+          "Cannot delete the last visit. A location must have at least one visit.",
+          {
+            variant: "warning",
+            anchorOrigin: { vertical: "bottom", horizontal: "center" },
+          }
+        );
+        setVisitToDelete(null);
+        return;
+      }
+
+      // Delete image from Firebase Storage if it exists
+      if (visitToDelete.visit.imageUrl) {
+        try {
+          // Extract the file path from the URL
+          const imageUrl = new URL(visitToDelete.visit.imageUrl);
+          const imagePath = decodeURIComponent(
+            imageUrl.pathname.split("/o/")[1].split("?")[0]
+          );
+
+          // Create a reference to the file in Firebase Storage
+          const imageRef = storageRef(storage, imagePath);
+
+          // Delete the file
+          await deleteObject(imageRef);
+          console.log("Image deleted successfully from storage");
+        } catch (imageError) {
+          console.error("Error deleting image:", imageError);
+          // Continue with visit deletion even if image deletion fails
+        }
+      }
+
+      // Continue with deletion as before...
+      const updatedVisits = [...localVisits];
+      updatedVisits.splice(visitToDelete.index, 1);
+
+      // Update local state first for immediate feedback
+      setLocalVisits(updatedVisits);
+
+      // Update Firestore
+      const locationRef = doc(db, "locations", selectedFood.id);
+      await updateDoc(locationRef, {
+        visits: updatedVisits,
+      });
+
+      // Update selected food state
+      setSelectedFood({
+        ...selectedFood,
+        visits: updatedVisits,
+      });
+
+      enqueueSnackbar("Visit deleted successfully", {
+        variant: "success",
+        anchorOrigin: { vertical: "bottom", horizontal: "center" },
+      });
+    } catch (error) {
+      console.error("Error deleting visit:", error);
+      enqueueSnackbar("Failed to delete visit", {
+        variant: "error",
+        anchorOrigin: { vertical: "bottom", horizontal: "center" },
+      });
+    } finally {
+      // Reset delete state
+      setVisitToDelete(null);
+    }
+  };
+
   const handleStartEditVisit = (visit: Visit, index: number) => {
     console.log("START");
     setEditVisitData({
@@ -175,6 +276,13 @@ const LocationDialog = ({
     setEditingVisitIndex(index);
     setIsEditingVisit(true);
     setIsAddingFood(false); // Close add form if open
+  };
+
+  const handleImageUploaded = (url: string) => {
+    setNewFood({
+      ...newFood,
+      imageUrl: url,
+    });
   };
 
   const handleSaveEditedVisit = async () => {
@@ -570,17 +678,23 @@ const LocationDialog = ({
 
   const handleNewFoodSubmit = async () => {
     if (Object.keys(newFood.food).length > 0) {
+      const sanitizedFood = sanitizeVisitData(newFood);
+
       // Optimistically update the UI
       setLocalVisits([...localVisits, newFood]);
       setIsAddingFood(false);
 
       try {
-        // Attempt to update the backend
-        await onAddNewFood(selectedFood.id, newFood);
+        // Attempt to update the backend with sanitized data
+        await onAddNewFood(selectedFood.id, sanitizedFood);
         setNewFood({
-          food: {},
+          food: { "": 1 },
           date: Timestamp.now(),
           fullness: "perfect",
+          notes: "",
+          mealType: "",
+          rating: undefined,
+          imageUrl: undefined,
         });
       } catch (error) {
         // If the backend update fails, revert the optimistic update
@@ -1082,6 +1196,22 @@ const LocationDialog = ({
                 </div>
               </div>
 
+              {isAddingFood && (
+                <div className="mt-4">
+                  <label
+                    className={`block text-sm font-medium mb-2 ${
+                      darkMode ? "text-gray-300" : "text-gray-700"
+                    }`}
+                  >
+                    Food Photo (optional)
+                  </label>
+                  <ImageUploader
+                    onImageUploaded={handleImageUploaded}
+                    folderPath={`users/${currentUser.uid}/food-images`}
+                  />
+                </div>
+              )}
+
               {/* Rating Selector */}
               <div className="mt-4">
                 <label
@@ -1208,7 +1338,6 @@ const LocationDialog = ({
             >
               Previous Visits
             </h3>
-
             {isEditingVisit && editVisitData && (
               <div className="mb-6 p-4 rounded-xl border-2 border-blue-500/50 space-y-4">
                 <h3
@@ -1499,6 +1628,30 @@ const LocationDialog = ({
                     } focus:outline-none`}
                   />
                 </div>
+                {isEditingVisit && editVisitData && (
+                  <div className="mt-4">
+                    <label
+                      className={`block text-sm font-medium mb-2 ${
+                        darkMode ? "text-gray-300" : "text-gray-700"
+                      }`}
+                    >
+                      Food Photo (optional)
+                    </label>
+                    <ImageUploader
+                      onImageUploaded={(url) =>
+                        setEditVisitData({ ...editVisitData, imageUrl: url })
+                      }
+                      folderPath={`users/${currentUser.uid}/food-images`}
+                    />
+                    {editVisitData.imageUrl && (
+                      <div className="mt-2 flex items-center gap-2">
+                        <span className="text-sm text-gray-500">
+                          Current image will be replaced if you upload a new one
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                )}
 
                 {/* Action Buttons */}
                 <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 mt-6">
@@ -1535,6 +1688,7 @@ const LocationDialog = ({
                 </div>
               </div>
             )}
+
             {[...localVisits]
               .sort((a, b) => {
                 const dateA =
@@ -1568,23 +1722,100 @@ const LocationDialog = ({
                         ).toLocaleDateString()}
                       </span>
                     </div>
-
                     {/* Edit button */}
                     {selectedFood &&
                       selectedFood.userId === currentUser.uid && (
-                        <button
-                          onClick={() => handleStartEditVisit(visit, index)}
-                          className={`p-2 rounded-full ${
-                            darkMode
-                              ? "text-blue-400 hover:bg-blue-900/30"
-                              : "text-blue-500 hover:bg-blue-50"
-                          } transition-colors hover:cursor-pointer`}
-                          title="Edit visit"
-                        >
-                          <Icon icon="lucide:edit" width="16" height="16" />
-                        </button>
+                        <div className="flex items-center gap-1">
+                          {/* Edit button */}
+                          <button
+                            onClick={() => handleStartEditVisit(visit, index)}
+                            className={`p-2 rounded-full ${
+                              darkMode
+                                ? "text-blue-400 hover:bg-blue-900/30"
+                                : "text-blue-500 hover:bg-blue-50"
+                            } transition-colors hover:cursor-pointer`}
+                            title="Edit visit"
+                          >
+                            <Icon icon="lucide:edit" width="16" height="16" />
+                          </button>
+                          {/* Delete button - Add this */}
+                          <button
+                            onClick={() => {
+                              // Find the actual index of this visit in the unsorted localVisits array
+                              const actualIndex = localVisits.findIndex((v) => {
+                                // Compare date and food content to ensure we identify the correct visit
+                                const sameDate =
+                                  v.date instanceof Timestamp &&
+                                  visit.date instanceof Timestamp
+                                    ? v.date.seconds === visit.date.seconds
+                                    : v.date === visit.date;
+
+                                // Compare the first food item as an additional check
+                                const firstFoodMatch =
+                                  Object.keys(v.food)[0] ===
+                                  Object.keys(visit.food)[0];
+
+                                return sameDate && firstFoodMatch;
+                              });
+
+                              if (actualIndex !== -1) {
+                                setVisitToDelete({ visit, index: actualIndex });
+                              } else {
+                                console.error(
+                                  "Could not find matching visit to delete"
+                                );
+                                enqueueSnackbar(
+                                  "Error identifying visit to delete",
+                                  {
+                                    variant: "error",
+                                    anchorOrigin: {
+                                      vertical: "bottom",
+                                      horizontal: "center",
+                                    },
+                                  }
+                                );
+                              }
+                            }}
+                            className={`p-2 rounded-full ${
+                              darkMode
+                                ? "text-red-400 hover:bg-red-900/30"
+                                : "text-red-400 hover:bg-red-50"
+                            } transition-colors hover:cursor-pointer`}
+                            title="Delete visit"
+                          >
+                            <Icon
+                              icon="lucide:trash-2"
+                              width="16"
+                              height="16"
+                            />
+                          </button>
+                        </div>
                       )}
                   </div>
+                  {/* Image Section - Full Width If Available */}
+                  {visit.imageUrl && (
+                    <div className="relative w-full h-56 overflow-hidden">
+                      <img
+                        src={visit.imageUrl}
+                        alt="Food"
+                        className="w-full h-full object-cover transition-transform duration-500 hover:scale-105 rounded-2xl cursor-pointer"
+                        onClick={() => handleImageClick(visit.imageUrl!)}
+                      />
+                      <div className="absolute top-2 right-2 flex gap-1">
+                        <button
+                          onClick={() => handleImageClick(visit.imageUrl!)}
+                          className={`p-2 rounded-full ${
+                            darkMode
+                              ? "bg-gray-800/70 text-white hover:bg-gray-800/90"
+                              : "bg-white/70 text-gray-700 hover:bg-white/90"
+                          } transition-colors shadow-md`}
+                          title="View full image"
+                        >
+                          <Icon icon="lucide:maximize" width="16" height="16" />
+                        </button>
+                      </div>
+                    </div>
+                  )}
 
                   <div
                     className={`inline-flex items-center px-3 py-1 rounded-full text-sm
@@ -1688,7 +1919,6 @@ const LocationDialog = ({
                   </div>
                 </div>
               ))}
-
             {selectedFood && selectedFood.userId === currentUser.uid && (
               <div className="mt-4 border-t pt-4 border-gray-200 dark:border-gray-700">
                 {selectedFood && selectedFood.userId === currentUser.uid && (
@@ -1874,6 +2104,81 @@ const LocationDialog = ({
           </div>
         </div>
         <div>
+          {/* Visit Delete Confirmation Dialog */}
+          {showVisitDeleteDialog && visitToDelete && (
+            <div className="fixed inset-0 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4 z-[60]">
+              <div
+                className={`${
+                  darkMode ? "bg-gray-800" : "bg-white"
+                } rounded-xl p-6 max-w-md w-full shadow-xl`}
+              >
+                <h3 className="text-lg font-semibold mb-2">Delete Visit</h3>
+                <p className="mb-4">
+                  Are you sure you want to delete this visit from{" "}
+                  {selectedFood?.location}?
+                  {visitToDelete.visit.imageUrl &&
+                    " The associated image will also be deleted. "}
+                  This action cannot be undone.
+                </p>
+                <div
+                  className={`p-4 rounded-lg mb-4 ${
+                    darkMode ? "bg-gray-700" : "bg-gray-50"
+                  }`}
+                >
+                  <div className="flex items-center gap-2 mb-2">
+                    <Clock
+                      size={16}
+                      className={darkMode ? "text-gray-400" : "text-gray-500"}
+                    />
+                    <span
+                      className={darkMode ? "text-gray-300" : "text-gray-600"}
+                    >
+                      {(visitToDelete.visit.date instanceof Timestamp
+                        ? new Date(visitToDelete.visit.date.seconds * 1000)
+                        : visitToDelete.visit.date
+                      ).toLocaleDateString()}
+                    </span>
+                  </div>
+
+                  {Object.entries(visitToDelete.visit.food).map(
+                    ([foodName, quantity]) => (
+                      <div
+                        key={foodName}
+                        className={`flex justify-between text-sm ${
+                          darkMode ? "text-gray-400" : "text-gray-600"
+                        }`}
+                      >
+                        <span>{foodName}</span>
+                        <span>×{quantity}</span>
+                      </div>
+                    )
+                  )}
+                </div>
+                <div className="flex flex-col sm:flex-row gap-3 mt-6">
+                  <button
+                    onClick={() => setVisitToDelete(null)}
+                    className={`flex-1 py-2 px-4 rounded-lg text-sm transition-all duration-200 hover:cursor-pointer ${
+                      darkMode
+                        ? "bg-gray-700 hover:bg-gray-600 text-gray-200 border border-gray-600"
+                        : "bg-white hover:bg-gray-50 text-gray-700 border border-gray-300 hover:border-gray-400"
+                    }`}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleDeleteVisit}
+                    className={`flex-1 py-2 px-4 rounded-lg text-sm transition-all duration-200 hover:cursor-pointer ${
+                      darkMode
+                        ? "bg-rose-900/30 hover:bg-rose-900/50 text-rose-300 border border-rose-800"
+                        : "bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 hover:border-rose-300"
+                    }`}
+                  >
+                    Delete Visit
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
           {showGroupRemoveDialog && (
             <div className="fixed inset-0 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4 z-[60]">
               <div
@@ -1950,6 +2255,92 @@ const LocationDialog = ({
                 >
                   Cancel
                 </button>
+              </div>
+            </div>
+          )}
+          {/* Image Viewer Modal */}
+          {isImageViewerOpen && viewedImageUrl && (
+            <div
+              className="fixed inset-0 bg-black/90 flex items-center justify-center p-4 z-[70]"
+              onClick={() => setIsImageViewerOpen(false)}
+            >
+              <div className="relative max-w-screen-xl max-h-screen w-full h-full flex items-center justify-center">
+                {/* Close button */}
+                <button
+                  onClick={() => setIsImageViewerOpen(false)}
+                  className="absolute top-4 right-4 z-10 p-2 rounded-full bg-black/50 text-white hover:bg-black/70 transition-colors"
+                >
+                  <X size={24} />
+                </button>
+
+                {/* Image with zoom capabilities */}
+                <div
+                  className="relative w-full h-full max-h-[90vh] flex items-center justify-center overflow-hidden"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <TransformWrapper
+                    initialScale={1}
+                    initialPositionX={0}
+                    initialPositionY={0}
+                    minScale={0.5}
+                    maxScale={4}
+                    wheel={{ step: 0.1 }}
+                    doubleClick={{ mode: "reset" }}
+                  >
+                    {({ zoomIn, zoomOut, resetTransform }) => (
+                      <>
+                        <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 z-10 flex gap-2">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              zoomIn();
+                            }}
+                            className="p-2 rounded-full bg-black/50 text-white hover:bg-black/70 transition-colors"
+                          >
+                            <Icon
+                              icon="lucide:zoom-in"
+                              width="20"
+                              height="20"
+                            />
+                          </button>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              zoomOut();
+                            }}
+                            className="p-2 rounded-full bg-black/50 text-white hover:bg-black/70 transition-colors"
+                          >
+                            <Icon
+                              icon="lucide:zoom-out"
+                              width="20"
+                              height="20"
+                            />
+                          </button>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              resetTransform();
+                            }}
+                            className="p-2 rounded-full bg-black/50 text-white hover:bg-black/70 transition-colors"
+                          >
+                            <Icon
+                              icon="lucide:refresh-cw"
+                              width="20"
+                              height="20"
+                            />
+                          </button>
+                        </div>
+                        <TransformComponent>
+                          <img
+                            src={viewedImageUrl}
+                            alt="Food"
+                            className="max-w-full max-h-full object-contain"
+                          />
+                        </TransformComponent>
+                      </>
+                    )}
+                  </TransformWrapper>
+                </div>
               </div>
             </div>
           )}
