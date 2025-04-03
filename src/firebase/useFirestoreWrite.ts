@@ -20,8 +20,10 @@ const useFirestoreWrite = () => {
         // If no docId, create a new document
         await addDoc(collection(db, collectionName), data);
       }
+      console.log("SUCESS");
       setSuccess(true);
     } catch (err) {
+      console.log("ERR", err);
       setError((err as any).message);
     } finally {
       setLoading(false);
