@@ -518,11 +518,18 @@ const LocationList: React.FC<LocationListProps> = ({
       const locationRef = doc(db, "locations", foodId);
       const locationDoc = await getDoc(locationRef);
 
+      // Sanitize the visit data to remove undefined values
+      const sanitizedVisit = Object.fromEntries(
+        Object.entries(newVisit).filter(([_, v]) => v !== undefined)
+      );
+
+      console.log("NEW", sanitizedVisit);
+
       if (locationDoc.exists()) {
         const currentData = locationDoc.data();
         const updatedVisit = Array.isArray(currentData.visits)
-          ? [...currentData.visits, newVisit]
-          : [currentData.visits, newVisit];
+          ? [...currentData.visits, sanitizedVisit]
+          : [currentData.visits, sanitizedVisit];
 
         await updateDoc(locationRef, {
           visits: updatedVisit,
