@@ -10,6 +10,8 @@ import useFirestoreCollection from "../../firebase/useFirestoreCollection";
 import { useAuth } from "../../contexts/AuthContext";
 import { useTheme } from "../../contexts/ThemeContext";
 import { Icon } from "@iconify/react/dist/iconify.js";
+import ImageUploader from "../../components/ImageUploader";
+import { sanitizeVisitData } from "../../utils/foodUtils";
 
 interface Coordinates {
   latitude: number;
@@ -32,6 +34,7 @@ const LocationForm = () => {
         notes: "",
         mealType: "",
         rating: undefined,
+        imageUrl: undefined,
       },
     ],
     selectedLocation: null,
@@ -47,6 +50,18 @@ const LocationForm = () => {
   const [userCoordinates, setUserCoordinates] = useState<Coordinates | null>(
     null
   );
+
+  const handleImageUploaded = (url: string) => {
+    setFormData({
+      ...formData,
+      visits: [
+        {
+          ...formData.visits[0],
+          imageUrl: url,
+        },
+      ],
+    });
+  };
 
   // Update the handleFoodChange function to handle empty keys better
   const handleFoodChange = (
@@ -159,6 +174,7 @@ const LocationForm = () => {
         index: getNextIndex(),
         name: currentUser.displayName,
         userId: currentUser.uid,
+        visits: [sanitizeVisitData(formData.visits[0])],
       };
       await writeData("locations", formDataWithIndex);
       enqueueSnackbar("Location added successfully! 🎉", {
@@ -189,6 +205,8 @@ const LocationForm = () => {
             fullness: "perfect",
             notes: "",
             mealType: "",
+            rating: undefined,
+            imageUrl: undefined,
           },
         ],
         selectedLocation: null,
@@ -733,6 +751,37 @@ const LocationForm = () => {
                   : "border-gray-200 focus:border-green-400"
               } focus:outline-none transition-colors`}
             />
+          </div>
+
+          {/* Image Upload Section */}
+          <div className="space-y-2">
+            <label
+              className={`block text-sm font-medium ${
+                darkMode ? "text-white" : "text-gray-700"
+              }`}
+            >
+              Food Photo (optional)
+            </label>
+            <div
+              className={`rounded-xl border-2 ${
+                darkMode ? "border-gray-700 bg-gray-700" : "border-gray-200"
+              } p-4`}
+            >
+              <ImageUploader
+                onImageUploaded={handleImageUploaded}
+                folderPath={`users/${currentUser?.uid}/food-images`}
+              />
+              {formData.visits[0].imageUrl && (
+                <div className="mt-3 flex items-center gap-2 text-sm text-green-500">
+                  <Icon
+                    icon="heroicons-solid:check-circle"
+                    width="16"
+                    height="16"
+                  />
+                  <span>Image uploaded successfully!</span>
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Submit Button */}

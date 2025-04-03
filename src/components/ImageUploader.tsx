@@ -90,6 +90,7 @@ const ImageUploader = ({
 
       {!previewUrl ? (
         <button
+          type="button"
           onClick={handleButtonClick}
           className={`w-full h-32 border-2 border-dashed rounded-xl flex flex-col items-center justify-center transition-all hover: cursor-pointer 
             ${
@@ -123,6 +124,7 @@ const ImageUploader = ({
             </div>
           )}
           <button
+            type="button"
             onClick={handleCancel}
             className="absolute top-2 right-2 p-1 rounded-full bg-gray-900/70 text-white hover:bg-red-500/70 transition-colors"
             disabled={uploading}

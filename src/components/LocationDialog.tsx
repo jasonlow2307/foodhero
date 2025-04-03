@@ -21,6 +21,7 @@ import { db } from "../firebase/firebase";
 import { useAuth } from "../contexts/AuthContext";
 import { useSnackbar } from "notistack";
 import ImageUploader from "./ImageUploader";
+import { sanitizeVisitData } from "../utils/foodUtils";
 
 interface LocationDialogProps {
   open: boolean;
@@ -184,20 +185,6 @@ const LocationDialog = ({
       ...newFood,
       imageUrl: url,
     });
-  };
-
-  const sanitizeVisitData = (visit: Visit): Visit => {
-    // Create a deep copy of the visit object
-    const sanitized = { ...visit };
-
-    // Remove undefined values
-    Object.keys(sanitized).forEach((key) => {
-      if (sanitized[key] === undefined) {
-        delete sanitized[key];
-      }
-    });
-
-    return sanitized;
   };
 
   const handleSaveEditedVisit = async () => {
