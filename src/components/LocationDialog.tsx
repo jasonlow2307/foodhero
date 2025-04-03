@@ -20,6 +20,7 @@ import { useTheme } from "../contexts/ThemeContext";
 import { db } from "../firebase/firebase";
 import { useAuth } from "../contexts/AuthContext";
 import { useSnackbar } from "notistack";
+import ImageUploader from "./ImageUploader";
 
 interface LocationDialogProps {
   open: boolean;
@@ -60,6 +61,7 @@ const LocationDialog = ({
     notes: "",
     mealType: "",
     rating: undefined,
+    imageUrl: undefined,
   });
 
   const { enqueueSnackbar } = useSnackbar();
@@ -177,10 +179,33 @@ const LocationDialog = ({
     setIsAddingFood(false); // Close add form if open
   };
 
+  const handleImageUploaded = (url: string) => {
+    setNewFood({
+      ...newFood,
+      imageUrl: url,
+    });
+  };
+
+  const sanitizeVisitData = (visit: Visit): Visit => {
+    // Create a deep copy of the visit object
+    const sanitized = { ...visit };
+
+    // Remove undefined values
+    Object.keys(sanitized).forEach((key) => {
+      if (sanitized[key] === undefined) {
+        delete sanitized[key];
+      }
+    });
+
+    return sanitized;
+  };
+
   const handleSaveEditedVisit = async () => {
     if (!editVisitData || editingVisitIndex === null) return;
 
     try {
+      const sanitizedVisitData = sanitizeVisitData(editVisitData);
+
       // Create a copy of visits array
       const updatedVisits = [...localVisits];
       updatedVisits[editingVisitIndex] = editVisitData;
@@ -570,17 +595,23 @@ const LocationDialog = ({
 
   const handleNewFoodSubmit = async () => {
     if (Object.keys(newFood.food).length > 0) {
+      const sanitizedFood = sanitizeVisitData(newFood);
+
       // Optimistically update the UI
       setLocalVisits([...localVisits, newFood]);
       setIsAddingFood(false);
 
       try {
-        // Attempt to update the backend
-        await onAddNewFood(selectedFood.id, newFood);
+        // Attempt to update the backend with sanitized data
+        await onAddNewFood(selectedFood.id, sanitizedFood);
         setNewFood({
-          food: {},
+          food: { "": 1 },
           date: Timestamp.now(),
           fullness: "perfect",
+          notes: "",
+          mealType: "",
+          rating: undefined,
+          imageUrl: undefined,
         });
       } catch (error) {
         // If the backend update fails, revert the optimistic update
@@ -1082,6 +1113,22 @@ const LocationDialog = ({
                 </div>
               </div>
 
+              {isAddingFood && (
+                <div className="mt-4">
+                  <label
+                    className={`block text-sm font-medium mb-2 ${
+                      darkMode ? "text-gray-300" : "text-gray-700"
+                    }`}
+                  >
+                    Food Photo (optional)
+                  </label>
+                  <ImageUploader
+                    onImageUploaded={handleImageUploaded}
+                    folderPath={`users/${currentUser.uid}/food-images`}
+                  />
+                </div>
+              )}
+
               {/* Rating Selector */}
               <div className="mt-4">
                 <label
@@ -1208,7 +1255,6 @@ const LocationDialog = ({
             >
               Previous Visits
             </h3>
-
             {isEditingVisit && editVisitData && (
               <div className="mb-6 p-4 rounded-xl border-2 border-blue-500/50 space-y-4">
                 <h3
@@ -1499,6 +1545,30 @@ const LocationDialog = ({
                     } focus:outline-none`}
                   />
                 </div>
+                {isEditingVisit && editVisitData && (
+                  <div className="mt-4">
+                    <label
+                      className={`block text-sm font-medium mb-2 ${
+                        darkMode ? "text-gray-300" : "text-gray-700"
+                      }`}
+                    >
+                      Food Photo (optional)
+                    </label>
+                    <ImageUploader
+                      onImageUploaded={(url) =>
+                        setEditVisitData({ ...editVisitData, imageUrl: url })
+                      }
+                      folderPath={`users/${currentUser.uid}/food-images`}
+                    />
+                    {editVisitData.imageUrl && (
+                      <div className="mt-2 flex items-center gap-2">
+                        <span className="text-sm text-gray-500">
+                          Current image will be replaced if you upload a new one
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                )}
 
                 {/* Action Buttons */}
                 <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 mt-6">
@@ -1535,6 +1605,7 @@ const LocationDialog = ({
                 </div>
               </div>
             )}
+
             {[...localVisits]
               .sort((a, b) => {
                 const dateA =
@@ -1568,7 +1639,6 @@ const LocationDialog = ({
                         ).toLocaleDateString()}
                       </span>
                     </div>
-
                     {/* Edit button */}
                     {selectedFood &&
                       selectedFood.userId === currentUser.uid && (
@@ -1585,6 +1655,16 @@ const LocationDialog = ({
                         </button>
                       )}
                   </div>
+                  {/* Image Section - Full Width If Available */}
+                  {visit.imageUrl && (
+                    <div className="relative w-full h-56 overflow-hidden">
+                      <img
+                        src={visit.imageUrl}
+                        alt="Food"
+                        className="w-full h-full object-cover transition-transform duration-500 hover:scale-105 rounded-2xl"
+                      />
+                    </div>
+                  )}
 
                   <div
                     className={`inline-flex items-center px-3 py-1 rounded-full text-sm
@@ -1688,7 +1768,6 @@ const LocationDialog = ({
                   </div>
                 </div>
               ))}
-
             {selectedFood && selectedFood.userId === currentUser.uid && (
               <div className="mt-4 border-t pt-4 border-gray-200 dark:border-gray-700">
                 {selectedFood && selectedFood.userId === currentUser.uid && (
