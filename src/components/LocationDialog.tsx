@@ -23,6 +23,7 @@ import { useSnackbar } from "notistack";
 import ImageUploader from "./ImageUploader";
 import { sanitizeVisitData } from "../utils/foodUtils";
 import { ref as storageRef, deleteObject } from "firebase/storage";
+import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch";
 
 interface LocationDialogProps {
   open: boolean;
@@ -98,6 +99,9 @@ const LocationDialog = ({
     index: number;
   } | null>(null);
   const [showVisitDeleteDialog, setShowVisitDeleteDialog] = useState(false);
+
+  const [isImageViewerOpen, setIsImageViewerOpen] = useState(false);
+  const [viewedImageUrl, setViewedImageUrl] = useState<string | null>(null);
 
   const { currentUser } = useAuth();
 
@@ -180,6 +184,11 @@ const LocationDialog = ({
 
     fetchUserGroups();
   }, [currentUser]);
+
+  const handleImageClick = (imageUrl: string) => {
+    setViewedImageUrl(imageUrl);
+    setIsImageViewerOpen(true);
+  };
 
   const handleDeleteVisit = async () => {
     if (!visitToDelete) return;
@@ -1789,8 +1798,22 @@ const LocationDialog = ({
                       <img
                         src={visit.imageUrl}
                         alt="Food"
-                        className="w-full h-full object-cover transition-transform duration-500 hover:scale-105 rounded-2xl"
+                        className="w-full h-full object-cover transition-transform duration-500 hover:scale-105 rounded-2xl cursor-pointer"
+                        onClick={() => handleImageClick(visit.imageUrl!)}
                       />
+                      <div className="absolute top-2 right-2 flex gap-1">
+                        <button
+                          onClick={() => handleImageClick(visit.imageUrl!)}
+                          className={`p-2 rounded-full ${
+                            darkMode
+                              ? "bg-gray-800/70 text-white hover:bg-gray-800/90"
+                              : "bg-white/70 text-gray-700 hover:bg-white/90"
+                          } transition-colors shadow-md`}
+                          title="View full image"
+                        >
+                          <Icon icon="lucide:maximize" width="16" height="16" />
+                        </button>
+                      </div>
                     </div>
                   )}
 
@@ -2232,6 +2255,92 @@ const LocationDialog = ({
                 >
                   Cancel
                 </button>
+              </div>
+            </div>
+          )}
+          {/* Image Viewer Modal */}
+          {isImageViewerOpen && viewedImageUrl && (
+            <div
+              className="fixed inset-0 bg-black/90 flex items-center justify-center p-4 z-[70]"
+              onClick={() => setIsImageViewerOpen(false)}
+            >
+              <div className="relative max-w-screen-xl max-h-screen w-full h-full flex items-center justify-center">
+                {/* Close button */}
+                <button
+                  onClick={() => setIsImageViewerOpen(false)}
+                  className="absolute top-4 right-4 z-10 p-2 rounded-full bg-black/50 text-white hover:bg-black/70 transition-colors"
+                >
+                  <X size={24} />
+                </button>
+
+                {/* Image with zoom capabilities */}
+                <div
+                  className="relative w-full h-full max-h-[90vh] flex items-center justify-center overflow-hidden"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <TransformWrapper
+                    initialScale={1}
+                    initialPositionX={0}
+                    initialPositionY={0}
+                    minScale={0.5}
+                    maxScale={4}
+                    wheel={{ step: 0.1 }}
+                    doubleClick={{ mode: "reset" }}
+                  >
+                    {({ zoomIn, zoomOut, resetTransform }) => (
+                      <>
+                        <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 z-10 flex gap-2">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              zoomIn();
+                            }}
+                            className="p-2 rounded-full bg-black/50 text-white hover:bg-black/70 transition-colors"
+                          >
+                            <Icon
+                              icon="lucide:zoom-in"
+                              width="20"
+                              height="20"
+                            />
+                          </button>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              zoomOut();
+                            }}
+                            className="p-2 rounded-full bg-black/50 text-white hover:bg-black/70 transition-colors"
+                          >
+                            <Icon
+                              icon="lucide:zoom-out"
+                              width="20"
+                              height="20"
+                            />
+                          </button>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              resetTransform();
+                            }}
+                            className="p-2 rounded-full bg-black/50 text-white hover:bg-black/70 transition-colors"
+                          >
+                            <Icon
+                              icon="lucide:refresh-cw"
+                              width="20"
+                              height="20"
+                            />
+                          </button>
+                        </div>
+                        <TransformComponent>
+                          <img
+                            src={viewedImageUrl}
+                            alt="Food"
+                            className="max-w-full max-h-full object-contain"
+                          />
+                        </TransformComponent>
+                      </>
+                    )}
+                  </TransformWrapper>
+                </div>
               </div>
             </div>
           )}
