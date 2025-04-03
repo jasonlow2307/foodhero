@@ -17,11 +17,12 @@ import { Fullness, Visit } from "../utils/models";
 import { Icon } from "@iconify/react";
 import { X, Plus, Clock, Trash2, Share, User } from "lucide-react";
 import { useTheme } from "../contexts/ThemeContext";
-import { db } from "../firebase/firebase";
+import { db, storage } from "../firebase/firebase";
 import { useAuth } from "../contexts/AuthContext";
 import { useSnackbar } from "notistack";
 import ImageUploader from "./ImageUploader";
 import { sanitizeVisitData } from "../utils/foodUtils";
+import { ref as storageRef, deleteObject } from "firebase/storage";
 
 interface LocationDialogProps {
   open: boolean;
@@ -195,6 +196,27 @@ const LocationDialog = ({
         );
         setVisitToDelete(null);
         return;
+      }
+
+      // Delete image from Firebase Storage if it exists
+      if (visitToDelete.visit.imageUrl) {
+        try {
+          // Extract the file path from the URL
+          const imageUrl = new URL(visitToDelete.visit.imageUrl);
+          const imagePath = decodeURIComponent(
+            imageUrl.pathname.split("/o/")[1].split("?")[0]
+          );
+
+          // Create a reference to the file in Firebase Storage
+          const imageRef = storageRef(storage, imagePath);
+
+          // Delete the file
+          await deleteObject(imageRef);
+          console.log("Image deleted successfully from storage");
+        } catch (imageError) {
+          console.error("Error deleting image:", imageError);
+          // Continue with visit deletion even if image deletion fails
+        }
       }
 
       // Continue with deletion as before...
@@ -2070,9 +2092,11 @@ const LocationDialog = ({
                 <h3 className="text-lg font-semibold mb-2">Delete Visit</h3>
                 <p className="mb-4">
                   Are you sure you want to delete this visit from{" "}
-                  {selectedFood?.location}? This action cannot be undone.
+                  {selectedFood?.location}?
+                  {visitToDelete.visit.imageUrl &&
+                    " The associated image will also be deleted. "}
+                  This action cannot be undone.
                 </p>
-
                 <div
                   className={`p-4 rounded-lg mb-4 ${
                     darkMode ? "bg-gray-700" : "bg-gray-50"
@@ -2107,7 +2131,6 @@ const LocationDialog = ({
                     )
                   )}
                 </div>
-
                 <div className="flex flex-col sm:flex-row gap-3 mt-6">
                   <button
                     onClick={() => setVisitToDelete(null)}
