@@ -479,6 +479,170 @@ const HomePage = () => {
                 Average Fullness
               </p>
             </div>
+          </div>{" "}
+        </div>
+      </div>
+
+      {/* SDG Goal 2 Section */}
+      <div
+        className={`py-12 sm:py-16 md:py-20 ${
+          darkMode ? "bg-gray-900" : "bg-white"
+        } relative overflow-hidden`}
+      >
+        {/* Background decoration */}
+        <div className="absolute inset-0 opacity-5">
+          <div className="absolute top-10 left-10 text-6xl">🌍</div>
+          <div className="absolute top-20 right-20 text-5xl">🎯</div>
+          <div className="absolute bottom-20 left-20 text-5xl">🤝</div>
+          <div className="absolute bottom-10 right-10 text-6xl">♻️</div>
+        </div>{" "}
+        <div className="container mx-auto px-4 relative z-10">
+          <div className="max-w-6xl mx-auto">
+            {/* SDG Section with Icon on Left and Content on Right */}
+            <div className="flex flex-col lg:flex-row items-center gap-8 lg:gap-12">
+              {/* Left Side - SDG Icon */}
+              <div className="flex-shrink-0 lg:w-1/3">
+                <div className="flex flex-col items-center">
+                  {/* SDG Icon Placeholder - Replace with actual icon */}
+                  <div className="w-48 h-48 sm:w-64 sm:h-64 lg:w-80 lg:h-80 rounded-2xl bg-gradient-to-br from-orange-400 via-red-500 to-yellow-500 flex items-center justify-center shadow-2xl">
+                    {/* Add your SDG Goal 2 icon/image here */}
+                    <img
+                      src="/SDG_2.png"
+                      alt="SDG Goal 2: Zero Hunger"
+                      className="w-full h-full object-contain rounded-2xl"
+                      onError={(e) => {
+                        // Fallback if image doesn't load
+                        const target = e.target as HTMLImageElement;
+                        const nextSibling = target.nextSibling as HTMLElement;
+                        target.style.display = "none";
+                        if (nextSibling) {
+                          nextSibling.style.display = "flex";
+                        }
+                      }}
+                    />
+                    {/* Fallback content */}
+                    <div
+                      className="text-white text-center p-6"
+                      style={{ display: "none" }}
+                    >
+                      <div className="text-4xl font-bold mb-2">2</div>
+                      <div className="text-lg">ZERO HUNGER</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Right Side - Content */}
+              <div className="flex-1 lg:w-2/3 text-center lg:text-left">
+                {/* Main heading */}
+                <h2 className="text-2xl xs:text-3xl md:text-4xl lg:text-5xl font-bold mb-4 sm:mb-6">
+                  <span className="bg-gradient-to-r from-green-500 to-blue-500 bg-clip-text text-transparent">
+                    Supporting Zero Hunger
+                  </span>
+                </h2>
+                <p
+                  className={`text-base sm:text-lg md:text-xl mb-6 sm:mb-8 leading-relaxed ${
+                    darkMode ? "text-gray-300" : "text-gray-700"
+                  }`}
+                >
+                  Every meal you track contributes to{" "}
+                  <strong>SDG Goal 2: Zero Hunger</strong>. By reducing food
+                  waste, we're working towards a world where nutritious food is
+                  available to everyone while protecting our planet's resources.
+                </p>{" "}
+                {/* Impact statistics */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 mb-8 sm:mb-10">
+                  <div
+                    className={`${
+                      darkMode
+                        ? "bg-gray-800 border-gray-700"
+                        : "bg-blue-50 border-blue-100"
+                    } rounded-2xl p-4 sm:p-6 border-2 hover:scale-105 transition-transform duration-300`}
+                  >
+                    <div className="text-2xl sm:text-3xl font-bold text-blue-500 mb-2">
+                      1/3
+                    </div>
+                    <p
+                      className={`text-sm sm:text-base ${
+                        darkMode ? "text-gray-300" : "text-gray-700"
+                      }`}
+                    >
+                      of food produced globally is wasted
+                    </p>
+                  </div>
+
+                  <div
+                    className={`${
+                      darkMode
+                        ? "bg-gray-800 border-gray-700"
+                        : "bg-green-50 border-green-100"
+                    } rounded-2xl p-4 sm:p-6 border-2 hover:scale-105 transition-transform duration-300`}
+                  >
+                    <div className="text-2xl sm:text-3xl font-bold text-green-500 mb-2">
+                      828M
+                    </div>
+                    <p
+                      className={`text-sm sm:text-base ${
+                        darkMode ? "text-gray-300" : "text-gray-700"
+                      }`}
+                    >
+                      people still face hunger worldwide
+                    </p>
+                  </div>
+
+                  <div
+                    className={`${
+                      darkMode
+                        ? "bg-gray-800 border-gray-700"
+                        : "bg-orange-50 border-orange-100"
+                    } rounded-2xl p-4 sm:p-6 border-2 hover:scale-105 transition-transform duration-300`}
+                  >
+                    <div className="text-2xl sm:text-3xl font-bold text-orange-500 mb-2">
+                      8-10%
+                    </div>
+                    <p
+                      className={`text-sm sm:text-base ${
+                        darkMode ? "text-gray-300" : "text-gray-700"
+                      }`}
+                    >
+                      of global emissions from food waste
+                    </p>
+                  </div>
+                </div>
+                {/* Call to action */}
+                <div
+                  className={`${
+                    darkMode
+                      ? "bg-gray-800"
+                      : "bg-gradient-to-r from-green-100 to-blue-100"
+                  } rounded-3xl p-6 sm:p-8`}
+                >
+                  <h3
+                    className={`text-lg sm:text-xl font-bold mb-3 sm:mb-4 ${
+                      darkMode ? "text-white" : "text-gray-800"
+                    }`}
+                  >
+                    Your Impact Matters
+                  </h3>
+                  <p
+                    className={`text-sm sm:text-base mb-4 sm:mb-6 ${
+                      darkMode ? "text-gray-300" : "text-gray-700"
+                    }`}
+                  >
+                    Together, we can create a sustainable food system where
+                    waste is minimized and hunger becomes history. Every portion
+                    you track is a step towards this goal.
+                  </p>
+                  <button
+                    onClick={() => navigate("/add")}
+                    className="inline-flex items-center gap-2 px-6 sm:px-8 py-3 sm:py-4 rounded-xl bg-gradient-to-r from-green-500 to-blue-500 text-white font-bold text-sm sm:text-base hover:opacity-90 transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-1 hover:cursor-pointer"
+                  >
+                    <span>Start Tracking Today</span>
+                    <ArrowRight size={16} className="sm:w-5 sm:h-5" />
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
