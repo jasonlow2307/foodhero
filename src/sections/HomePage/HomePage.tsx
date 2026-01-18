@@ -246,7 +246,7 @@ const HomePage = () => {
       <ScrollingHero frameCount={192}>
         <div className="container mx-auto px-4 z-10 text-center">
           <div className="max-w-5xl mx-auto">
-            <h1 className="text-5xl xs:text-6xl md:text-9xl font-black text-white mb-8 sm:mb-10 drop-shadow-[0_5px_5px_rgba(0,0,0,0.8)] uppercase tracking-tighter">
+            <h1 className="text-5xl xs:text-6xl md:text-9xl font-black mb-8 sm:mb-10 drop-shadow-[0_5px_5px_rgba(0,0,0,0.8)] uppercase tracking-tighter bg-gradient-to-r from-green-400 via-emerald-400 to-teal-400 bg-clip-text text-transparent">
               Reduce Food Waste
             </h1>
             <p className="text-xl xs:text-2xl md:text-4xl font-bold text-white mb-8 sm:mb-12 drop-shadow-[0_3px_3px_rgba(0,0,0,0.8)] max-w-4xl mx-auto leading-tight">
