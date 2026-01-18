@@ -19,6 +19,7 @@ import { useNavigate } from "react-router-dom";
 import { useTheme } from "../../contexts/ThemeContext";
 import Loader from "../../components/Loader";
 import { useAuth } from "../../contexts/AuthContext";
+import ScrollingHero from "../../components/ScrollingHero";
 
 const HomePage = () => {
   const { currentUser } = useAuth();
@@ -39,7 +40,6 @@ const HomePage = () => {
     topLocation: "",
     averageFullness: "",
   });
-  const [heroImage, setHeroImage] = useState<string | null>(null);
   const [scrollPosition, setScrollPosition] = useState(0);
   const [isScrollIndicatorVisible, setIsScrollIndicatorVisible] =
     useState(true);
@@ -159,22 +159,6 @@ const HomePage = () => {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  // Fetch hero image - Modified to wait for Firestore cache
-  useEffect(() => {
-    const fetchHeroImage = async () => {
-      try {
-        // Only fetch if we're not already loading
-        if (!loading) {
-          const image = await fetchUnsplashImage("healthy food plate");
-          setHeroImage(image);
-        }
-      } catch (error) {
-        console.error("Error fetching hero image:", error);
-      }
-    };
-    fetchHeroImage();
-  }, [loading]); // Add loading as a dependency
-
   // Calculate stats
   useEffect(() => {
     if (locations.length > 0) {
@@ -259,76 +243,17 @@ const HomePage = () => {
 
   return (
     <div className="min-h-screen">
-      {/* Hero Section with Parallax Effect - Optimized for mobile */}
-      <div
-        className="relative h-[100vh] sm:h-[90vh] flex items-center justify-center overflow-hidden"
-        style={{
-          backgroundImage: heroImage
-            ? `linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.8)), url(${heroImage})`
-            : "linear-gradient(to right, #22c55e, #0ea5e9)",
-          backgroundSize: "cover",
-          backgroundPosition: "center",
-          backgroundAttachment: "fixed",
-        }}
-      >
-        {/* Floating food emojis - hidden on very small screens */}
-        <div className="absolute inset-0 pointer-events-none hidden xs:block">
-          <div
-            className="absolute text-4xl sm:text-5xl"
-            style={{
-              top: `${10 + scrollPosition * 0.05}%`,
-              left: "10%",
-              opacity: 0.7,
-              transform: `translateY(${scrollPosition * -0.2}px)`,
-            }}
-          >
-            🥗
-          </div>
-          <div
-            className="absolute text-4xl sm:text-5xl"
-            style={{
-              top: `${20 + scrollPosition * 0.03}%`,
-              right: "15%",
-              opacity: 0.6,
-              transform: `translateY(${scrollPosition * -0.3}px)`,
-            }}
-          >
-            🍲
-          </div>
-          <div
-            className="absolute text-4xl sm:text-5xl"
-            style={{
-              top: `${60 - scrollPosition * 0.04}%`,
-              left: "20%",
-              opacity: 0.8,
-              transform: `translateY(${scrollPosition * -0.1}px)`,
-            }}
-          >
-            🍱
-          </div>
-          <div
-            className="absolute text-4xl sm:text-5xl"
-            style={{
-              top: `${50 - scrollPosition * 0.02}%`,
-              right: "25%",
-              opacity: 0.7,
-              transform: `translateY(${scrollPosition * -0.25}px)`,
-            }}
-          >
-            🥑
-          </div>
-        </div>
-
+      <ScrollingHero frameCount={192}>
         <div className="container mx-auto px-4 z-10 text-center">
-          <div className="max-w-3xl mx-auto">
-            <h1 className="text-3xl xs:text-4xl md:text-6xl font-bold text-white mb-4 sm:mb-6 drop-shadow-lg">
-              Reduce Food Waste, One Meal at a Time
+          <div className="max-w-5xl mx-auto">
+            <h1 className="text-5xl xs:text-6xl md:text-9xl font-black text-white mb-8 sm:mb-10 drop-shadow-[0_5px_5px_rgba(0,0,0,0.8)] uppercase tracking-tighter">
+              Reduce Food Waste
             </h1>
-            <p className="text-lg xs:text-xl md:text-2xl text-white mb-6 sm:mb-8 drop-shadow-md">
+            <p className="text-xl xs:text-2xl md:text-4xl font-bold text-white mb-8 sm:mb-12 drop-shadow-[0_3px_3px_rgba(0,0,0,0.8)] max-w-4xl mx-auto leading-tight">
               Track your portions, save the planet, and never order too much
               again.
             </p>
-            <div className="flex flex-col xs:flex-row gap-3 sm:gap-4 justify-center">
+            <div className="flex flex-col xs:flex-row gap-4 sm:gap-6 justify-center scale-110">
               <button
                 onClick={() => navigate("/list")}
                 className="px-6 sm:px-8 py-3 sm:py-4 rounded-xl bg-white text-green-600 font-bold text-base sm:text-lg hover:bg-opacity-90 transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-1 hover:cursor-pointer"
@@ -354,7 +279,7 @@ const HomePage = () => {
             </div>
           </div>
         )}
-      </div>
+      </ScrollingHero>
 
       {/* Stats Section */}
       <div
